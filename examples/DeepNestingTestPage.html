@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Deep Nesting Test Page</title>
+  
+    <link rel="stylesheet" type="text/css" href="resources/css/webviews.css" />
+
+    <script language="javascript" src="../webviews-debug.js"></script>
+    <script language="javascript">
+    
+        WV.init(function() {
+
+            var top = WV.PageView,
+                v, i = 0;
+
+            WV.PageView.setStyle('border', '1px solid black');
+
+//            for (var h = top.getHeight(), w = top.getWidth();/* i < 1000; i++*/ h > 0 && w > 0; (h -= 6, w -= 6))
+            while (top.h > 6 && top.w > 6)
+            {
+                v = new WV.View({
+                    superView: top,
+                    x: 3,
+                    y: 3,
+                    h: top.h - 6,
+                    w: top.w - 6,                               
+                    autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
+                    style: {
+                        border: '1px solid black'
+                    }
+                });
+                top = v;
+                i++;
+            }
+
+//            console.log('Created ', i, ' views');
+
+        });
+  </script>
+</head>
+
+</html>

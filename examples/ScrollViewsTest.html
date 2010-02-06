@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+        
+<html>
+<head>
+  <title>ScrollViews Test Page</title>
+
+    <link rel="stylesheet" type="text/css" href="resources/css/webviews.css" />
+
+    <script language="javascript" src="../webviews-debug.js"></script>
+    <script language="javascript">
+        
+
+        WV.init(function() {
+
+            var e1 = new WV.ScrollView({
+                superView: this,
+                id: 'e1',
+                autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX,
+                x: 0,
+                y: 0,
+                h: this.h,
+                w: this.w,
+                style: {
+                    backgroundColor: 'red'
+                },
+                subViews: [{
+                    id: 'e2',
+                    vtype: 'scrollview',
+                    x: 300,
+                    y: 500,
+                    h: 500,
+                    w: 500,
+                    style: {
+                        backgroundColor: 'green'
+                    },
+                    subViews: [
+                    {
+                        id: 'e3',
+                        vtype: 'scrollview',
+                        x: 150,
+                        y: 200,
+                        h: 300,
+                        w: 400,
+                        style: {
+                            backgroundColor: 'blue'
+                        },
+                        subViews: [{
+                            id: 'e4',
+                            x: 200,
+                            y: 150,
+                            w: 400,
+                            h: 200,
+                            style: {
+                                backgroundColor: 'yellow',
+                                borderRadius: '20px'
+                            },
+                            mouseDown: function(e)
+                            {
+                                this.setStyle('backgroundColor', 'grey');
+                            },
+                            mouseUp: function(e)
+                            {
+                                this.setStyle('backgroundColor', 'yellow');
+                            },
+                            mouseEntered: function(e)
+                            {
+                                this.setStyle('border', '5px solid black');
+                            },
+                            mouseExited: function(e)
+                            {
+                                this.setStyle('border', '');
+                                this.setStyle('backgroundColor', 'yellow');
+                            }
+                        }]
+                    }]
+                }]
+            });
+        });
+  </script>
+</head>
+
+</html>
