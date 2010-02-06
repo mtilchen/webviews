@@ -11,7 +11,7 @@ WebViews is distributed under the LGPL v3 license. Please refer to 'license.txt'
 BUILDING
 ----------------------------------
 
-- Install Java 5 or higher in necessary
+- Install Java 5 or higher if necessary
 - From project root, run: ./build.sh (.\build.bat on Windows)
 - Build will be saved in 'build/webviews-x.x.x' in project root
 
