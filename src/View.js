@@ -538,7 +538,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             this.initDom();
 
             end = new Date();
-//            console.log('Init Dom time: ', end.getTime() - start.getTime(), 'ms');
+            WV.log('Init Dom time: ', end.getTime() - start.getTime(), 'ms');
             
             return this;
         }

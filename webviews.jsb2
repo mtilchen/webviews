@@ -10,6 +10,9 @@
             text: "ext-core-debug.js",
             path: "lib/ext-core/"
         },{
+            text: "ECMA-Additions.js",
+            path: "src/"
+        },{
             text: "Base.js",
             path: "src/"
         },{

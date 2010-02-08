@@ -62,16 +62,13 @@ WV.Responder = {
     },
     dragStart: function(e)
     {
-        e.dataTransfer.setData('text/plain', 'This text may be dragged');
-//        console.log(this.id, ' (Drag Start) ', e.browserEvent.layerX, ', ', e.browserEvent.layerY);
+//        e.dataTransfer.setData('text/plain', 'This text may be dragged');
     },
     drag: function(e)
     {
-//        console.log(this.id, ' (Drag) ', e.browserEvent);
     },
     dragEnd: function(e)
     {
-//        console.log(this.id, ' (Drag End) ', e.browserEvent);
     }
 };
 

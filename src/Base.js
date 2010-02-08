@@ -7,7 +7,9 @@ WV = (function() {
          zCount = 0,
          initializers = [],
          vtypes = {},
-         cache = {};
+         cache = {},
+         logEnabled = window.console !== undefined &&
+                      typeof window.console.log === 'function';
 
     var pub = {
 
@@ -52,6 +54,7 @@ WV = (function() {
 
         destroy: function(view)
         {
+            view.dom = undefined;
             Ext.removeNode(view.dom);
             view.destroyed = true;
             delete cache[view.id];
@@ -105,7 +108,21 @@ WV = (function() {
             if (vtype) { WV.registerVType(vtype, newCls); }
 
             return newCls;
-        }
+        },
+
+        emptyFn: function() {},
+
+        log: logEnabled ? function() {
+                               var newArgs = ['<',(new Date()).toLogString(), '> '],
+                                   i, l = arguments.length;
+                               for (i = 0; i < l; i++)
+                               {
+                                   newArgs[newArgs.length] = arguments[i];
+                               }
+
+                               console.log.apply(console, newArgs);
+                          }
+                        : function() {}
     };
 
     Ext.onReady(function() {
@@ -133,7 +150,7 @@ WV = (function() {
 
                 this.constructor.prototype.layoutSubViews.call(this);
                 end = new Date();
-//                console.log('Layout time: ', end.getTime() - start.getTime(), 'ms');
+                WV.log('Layout time: ', end.getTime() - start.getTime(), 'ms');
             }
         });
 
@@ -167,7 +184,7 @@ WV = (function() {
         WV.PageView.deferSubViewRender = false;
 
         end = new Date();
-//        console.log('Render time: ', end.getTime() - start.getTime(), 'ms');
+        WV.log('Render time: ', end.getTime() - start.getTime(), 'ms');
     });
 
     return pub;

@@ -16,7 +16,6 @@
 
             WV.PageView.setStyle('border', '1px solid black');
 
-//            for (var h = top.getHeight(), w = top.getWidth();/* i < 1000; i++*/ h > 0 && w > 0; (h -= 6, w -= 6))
             while (top.h > 6 && top.w > 6)
             {
                 v = new WV.View({
@@ -34,8 +33,7 @@
                 i++;
             }
 
-//            console.log('Created ', i, ' views');
-
+            WV.log('Created ', i, ' views');
         });
   </script>
 </head>
