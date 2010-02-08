@@ -41,7 +41,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         this.id = config.id || WV.id();
         this.z = WV.z();
 
-        // Accumulate default styles into a reusable base style object
+        // Accumulate default styles into a reusable base style object on a per-class basis
         if (!this.constructor._style)
         {
             this.constructor._style = WV.accumulate(this.constructor, 'style');
@@ -111,15 +111,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         if (!(view instanceof WV.View) && (typeof view === 'object'))
         {
-            // TODO: Lookup vtype
-            if (view.vtype)
-            {
-                view = WV.create(view.vtype, view);
-            }
-            else
-            {
-                view = new WV.View(view);
-            }
+            view = view.vtype ? WV.create(view.vtype, view) : new WV.View(view);
         }
         if (this !== sv)
         {
