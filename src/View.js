@@ -291,11 +291,12 @@ WV.View = WV.extend(Ext.util.Observable, {
     },
 
     // private
-    // Converts a percentage of superview to a concrete value
+    // Converts a string expression of a dimension relative to the superview to a number
     convertRelative: function(dim, val)
     {
         var sv = this.superView,
-            convVal;
+            convVal,
+            result;
 
         if (!sv) { return 0; }
 
@@ -317,25 +318,60 @@ WV.View = WV.extend(Ext.util.Observable, {
                 throw Error(dim + ' is not a valid dimension spec');
         }
 
-        return (parseFloat(val, 10) / 100) * convVal;
+        if (val.indexOf('%') > 0)
+        {
+            result = (parseFloat(val, 10) / 100) * convVal;
+        }
+        else if (val === 'center')
+        {
+            if (dim === 'x')
+            {
+                result = (sv.w / 2) - (this.w / 2);
+            }
+            else if (dim === 'y')
+            {
+                result = (sv.h / 2) - (this.h / 2);
+            }
+            else
+            {
+                throw Error('\'center\' cannot be applied to dimension: ' + dim);
+            }
+        }
+        // Try to evaluate the expression as a dynamic function passing in the dimensions of the superview
+        else
+        {
+            var funcBody = 'return ' + val + ';',
+                fn;
+
+            fn = new Function(['x', 'y', 'w', 'h'], funcBody);
+
+
+            try
+            {
+                result = fn.call(this, this.superView.x, this.superView.y, this.superView.w, this.superView.h);
+            }
+            catch(e)
+            {
+                WV.log(e);
+                throw Error('Invalid relative size expression: ' + val);    
+            }
+            if (typeof result !== 'number')
+            {
+                throw Error('Result of a relative size expression must be a Number. Got: ' + result);
+            }
+        }
+
+        return result;
     },
 
     convertDimensions: function()
     {
-        var sv = this.superView;
+        if (!this.superView) { return this; }
 
-        if (!sv) { return this; }
-
-        if (typeof this.w === 'string') { this.w = (parseFloat(this.w, 10) / 100) * sv.w; }
-        if (typeof this.h === 'string') { this.h = (parseFloat(this.h, 10) / 100) * sv.h; }
-        if (typeof this.x === 'string')
-        {
-            this.x = this.x === 'center' ? (sv.w / 2) - (this.w / 2) : (parseFloat(this.x, 10) / 100) * sv.w;
-        }
-        if (typeof this.y === 'string')
-        {
-            this.y = this.y === 'center' ? (sv.h / 2) - (this.h / 2) : (parseFloat(this.y, 10) / 100) * sv.h;
-        }
+        if (typeof this.w === 'string') { this.w = this.convertRelative('width', this.w); }
+        if (typeof this.h === 'string') { this.h = this.convertRelative('height', this.h); }
+        if (typeof this.x === 'string') { this.x = this.convertRelative('x', this.x); }
+        if (typeof this.y === 'string') { this.y = this.convertRelative('y', this.y); }
 
         return this;
     },
