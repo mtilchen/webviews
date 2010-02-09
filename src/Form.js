@@ -31,7 +31,7 @@ WV.TextComponent = WV.extend(WV.View, {
             y: 2,
             h: this.h - 4,
             w: this.w - 4,
-            autoResizeMask: WV.RESIZE_WIDTH_FLEX,
+            autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX,
             tag: this.componentTag,
             text: this.text,
             type: this.type,
