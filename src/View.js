@@ -341,10 +341,18 @@ WV.View = WV.extend(Ext.util.Observable, {
         else
         {
             var funcBody = 'return ' + val + ';',
+                idRegExp = /{([^}]+)}/g,
+                lastMatch,
                 fn;
 
-            fn = new Function(['x', 'y', 'w', 'h'], funcBody);
+            // Replaces: {id} with: WV.get('id')
+            while (lastMatch = idRegExp.exec(funcBody))
+            {
+                funcBody = funcBody.replace(lastMatch[0], 'WV.get(\'' + lastMatch[1] + '\')');
+            }
 
+            // Expression can reference the x,y,w,h of the superView
+            fn = new Function(['x', 'y', 'w', 'h'], funcBody);
 
             try
             {
