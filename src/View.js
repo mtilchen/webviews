@@ -76,11 +76,14 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         WV.addToCache(this);
 
-        // TODO: convert to for loop
-        Ext.each(config.subViews, function(view) {
-            this.addSubView(view);
-        }, this);
-
+        if (config.subViews)
+        {
+            for (var i = 0; i < config.subViews.length; i++)
+            {
+                this.addSubView(config.subViews[i]);
+            }
+        }
+        
         if (this.superView)
         {
             // We have not really been added to a superview yet so prevent confusion by removing the reference
