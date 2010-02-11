@@ -1,5 +1,6 @@
 
 Ext.USE_NATIVE_JSON = true;
+Ext.enableGarbageCollector = false;
 
 WV = (function() {
 
