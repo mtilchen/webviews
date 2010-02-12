@@ -9,6 +9,7 @@ WV.RESIZE_HEIGHT_FLEX = 1 << 5;
 
 WV.View = WV.extend(Ext.util.Observable, {
     vtype: 'view',
+    mixins: [WV.Responder],
     x: 0,
     y: 0,
     h: 0,

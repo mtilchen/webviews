@@ -71,5 +71,3 @@ WV.Responder = {
     {
     }
 };
-
-WV.mixin(WV.View, WV.Responder);

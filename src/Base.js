@@ -100,10 +100,18 @@ WV = (function() {
             var vtype = overrides.vtype,
                 newCls;
 
-            delete overrides.vtype;
-
+            // Set up the vtype for the class if provided
             newCls = Ext.extend(baseCls, overrides);
             if (vtype) { WV.registerVType(vtype, newCls); }
+
+            // Add the mixins for the new class if defined
+            if (newCls.prototype.mixins)
+            {
+                for (var i = 0; i < newCls.prototype.mixins.length; i++)
+                {
+                    WV.mixin(newCls, newCls.prototype.mixins[i]);
+                }
+            }
 
             return newCls;
         },
@@ -133,6 +141,7 @@ WV = (function() {
             dom: document.body,
             clipSubViews: true,
             deferSubViewRender: true,
+            firstResponder: undefined,
             x: 0,
             y: 0,
             w: Ext.lib.Dom.getViewportWidth(),
@@ -149,6 +158,25 @@ WV = (function() {
                 this.constructor.prototype.layoutSubViews.call(this);
                 end = new Date();
                 WV.log('Layout time: ', end.getTime() - start.getTime(), 'ms');
+            },
+            makeFirstResponder: function(newResponder)
+            {
+                if (this.firstResponder)
+                {
+                    if (this.firstResponder.resignFirstResponder() === true &&
+                        newResponder.becomeFirstResponder() === true)
+                    {
+                        this.firstResponder = newResponder;
+                        return true;
+                    }
+                }
+                else if (newResponder.becomeFirstResponder() === true)
+                {
+                    this.firstResponder = newResponder;
+                    return true;
+                }
+
+                return false;
             }
         });
 

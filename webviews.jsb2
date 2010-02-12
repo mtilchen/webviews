@@ -19,6 +19,9 @@
             text: "EventMonitor.js",
             path: "src/"  
         },{
+            text: "Responder.js",
+            path: "src/"
+        },{
             text: "View.js",
             path: "src/"
         },{
@@ -29,9 +32,6 @@
             path: "src/"
         },{
             text: "CanvasView.js",
-            path: "src/"
-        },{
-            text: "Responder.js",
             path: "src/"
         },{
             text: "Sound.js",
