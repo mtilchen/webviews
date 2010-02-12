@@ -1,3 +1,23 @@
+WV.FormView = WV.extend(WV.View, {
+    vtype: 'form',
+    tag: 'form',
+    method: 'POST',
+    action: null,
+    accept: null,
+    acceptCharset: null,
+    contentType: 'application/x-www-form-urlencoded',
+    domTpl: { method: '{method}', action: '{action}', enctype: '{contentType}', 'accept-charset': '{acceptCharset}' }
+});
+
+WV.Button = WV.extend(WV.View, {
+    vtype: 'button',
+    h: 21,
+    w: 300,
+    tag: 'input',
+    text: 'Button',
+    type: 'button',
+    domTpl: { html: '{text}', type: '{type}', name: '{name}' }
+});
 
 WV.TextComponentStyle = {
     field: {

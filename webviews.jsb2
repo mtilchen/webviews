@@ -22,6 +22,9 @@
             text: "View.js",
             path: "src/"
         },{
+            text: "View-Extensions.js",
+            path: "src/"
+        },{
             text: "Form.js",
             path: "src/"
         },{
