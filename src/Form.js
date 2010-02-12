@@ -16,7 +16,7 @@ WV.Button = WV.extend(WV.View, {
     tag: 'input',
     text: 'Button',
     type: 'button',
-    domTpl: { html: '{text}', type: '{type}', name: '{name}' }
+    domTpl: { type: '{type}', name: '{name}', value: '{text}' }
 });
 
 WV.TextComponentStyle = {
@@ -86,5 +86,13 @@ WV.PasswordField = WV.extend(WV.TextField, {
 WV.TextArea = WV.extend(WV.TextComponent, {
     h: 105,
     componentTag: 'textarea',
-    componentTpl: { html: '{text}' }
+    componentTpl: { html: '{text}' },
+    afterRender: function()
+    {
+        WV.TextArea.superclass.afterRender.call(this);
+
+        // TODO: Set the form reference of the dom element to the containing form
+
+        return this;
+    }
 });
