@@ -48,17 +48,14 @@ WV = (function() {
             cache[view.id] = view;
         },
 
+        removeFromCache: function(view)
+        {
+            delete cache[view.id];
+        },
+
         get: function(id)
         {
             return cache[id];
-        },
-
-        destroy: function(view)
-        {
-            view.dom = undefined;
-            Ext.removeNode(view.dom);
-            view.destroyed = true;
-            delete cache[view.id];
         },
 
         accumulate: function(cls, prop)

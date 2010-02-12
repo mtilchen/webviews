@@ -95,19 +95,6 @@ WV.View = WV.extend(Ext.util.Observable, {
         return this;
     },
 
-    layoutSubViews: function()
-    {
-        if (!this.resizeSubViews) { return; }
-
-        var subs = this.subViews;
-        for (var i = 0, len = subs.length; i < len; i++)
-        {
-            subs[i].doAutoResize(); // Will call layoutSubviews recursively as sizes change
-        }
-
-        return this;
-    },
-
     addSubView: function(view)
     {
         var sv = view.superView;
@@ -476,6 +463,32 @@ WV.View = WV.extend(Ext.util.Observable, {
         return this;
     },
 
+    buildStyle: function()
+    {
+        var prop, trans, buf = [],
+            re = /([A-Z])/g,
+            bw = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
+
+        function deCamel(c) { return '-' + c.toLowerCase(); }
+
+        buf[buf.length] = 'width: ' + this.w + 'px';
+        buf[buf.length] = 'height: ' + this.h + 'px';
+        buf[buf.length] = 'left: ' + (this.x - bw) + 'px';
+        buf[buf.length] = 'top: ' + (this.y - bw) + 'px';
+        buf[buf.length] = 'z-index: ' + this.z;
+
+        for (prop in this.style)
+        {
+            trans = WV.styleLib[prop] || prop;
+            trans = trans.replace(re, deCamel);
+            buf[buf.length] = trans + ': ' + this.style[prop];
+        }
+
+        buf[buf.length - 1] += ';';
+
+        return buf.join('; ');
+    },
+    
     setBorder: function(b)
     {
         var vals = b.split(' '),
@@ -607,33 +620,37 @@ WV.View = WV.extend(Ext.util.Observable, {
         }
     },
 
-
-    buildStyle: function()
+    destroy: function(top)
     {
-        var prop, trans, buf = [],
-            re = /([A-Z])/g,
-            bw = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
-
-        function deCamel(c) { return '-' + c.toLowerCase(); }
-
-        buf[buf.length] = 'width: ' + this.w + 'px';
-        buf[buf.length] = 'height: ' + this.h + 'px';
-        buf[buf.length] = 'left: ' + (this.x - bw) + 'px';
-        buf[buf.length] = 'top: ' + (this.y - bw) + 'px';
-        buf[buf.length] = 'z-index: ' + this.z;
-
-        for (prop in this.style)
+        for (var i = 0,len = this.subViews.length; i < len; i++)
         {
-            trans = WV.styleLib[prop] || prop;
-            trans = trans.replace(re, deCamel);
-            buf[buf.length] = trans + ': ' + this.style[prop];
+            this.subViews[i].destroy(false);
         }
 
-        buf[buf.length - 1] += ';';
+        WV.removeFromCache(this);
+        this.id = undefined;
 
-        return buf.join('; ');
+        if (top !== false && this.rendered)
+        {
+            this.removeFromSuperView();
+        }
+        this.dom = undefined;
+        this.rendered = false;
     },
     
+    layoutSubViews: function()
+    {
+        if (!this.resizeSubViews) { return; }
+
+        var subs = this.subViews;
+        for (var i = 0, len = subs.length; i < len; i++)
+        {
+            subs[i].doAutoResize(); // Will call layoutSubviews recursively as sizes change
+        }
+
+        return this;
+    },
+
     doAutoResize: function()
     {
         var sv = this.superView,
