@@ -34,7 +34,6 @@ sub{vertical-align:baseline;}
 legend{color:#000;}
 input,button,textarea,select,optgroup,option{font-family:inherit;font-size:inherit;font-style:inherit;font-weight:inherit;}
 input,button,textarea,select{*font-size:100%;}
-
-*:focus {
-    outline: 0;
-}
+*:focus {outline: 0;}
+::selection { background: transparent; }
+::-moz-selection { background: transparent; }
