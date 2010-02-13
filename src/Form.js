@@ -75,7 +75,8 @@ WV.Button = WV.extend(WV.View, {
         });
 
 		// Label
-		new WV.Label({
+		this.addSubView({
+            vtype: 'label',
             superView: this,
             autoResizeMask: WV.RESIZE_NONE,
 			x: 3,
