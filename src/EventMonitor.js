@@ -10,8 +10,8 @@ WV.EventMonitor = (function() {
         wasDragged,
         wasCancelled = false,
         be, // browserEvent
-        sharedMouseEvent = { cancel: function() { be.preventDefault(); be.stopPropagation(); be.cancelBubble = true; wasCancelled = true; }},
-        sharedKeyEvent = {},
+        sharedMouseEvent = { cancel: function() { be.preventDefault(); be.stopPropagation(); be.cancelBubble = true; be.returnValue = false; wasCancelled = true; }},
+        sharedKeyEvent = { cancel: function() { be.preventDefault(); be.stopPropagation(); be.cancelBubble = true; be.returnValue = false; wasCancelled = true; }},
         posProp = Ext.isIE ? 'offset' : 'layer',
         posPropX = posProp + 'X',
         posPropY = posProp + 'Y',
@@ -157,6 +157,14 @@ WV.EventMonitor = (function() {
                         return false;
                     }
                 }
+            },
+            keyDown: {
+                before: WV.emptyFn,
+                after: WV.emptyFn
+            },
+            keyUp: {
+                before: WV.emptyFn,
+                after: WV.emptyFn
             }
         },
 
@@ -205,6 +213,24 @@ WV.EventMonitor = (function() {
         }
     }
 
+    function createKeyEvent(target, e)
+    {
+        be = e.browserEvent;
+        var ske = sharedKeyEvent;
+
+        ske.keyCode = e.getKey();
+        ske.charCode = e.getCharCode();
+        ske.shiftKey = e.shiftKey;
+        ske.altKey = e.altKey;
+        ske.ctrlKey = be.ctrlKey;
+        ske.metaKey = be.metaKey;
+        ske.targetView = target;
+        ske.targetElement = be.target;
+
+        ske.character = ske.shiftKey ? String.fromCharCode(ske.charCode)
+                                     : String.fromCharCode(ske.charCode).toLowerCase();  
+    }
+
     return {
         monitorEvent: function(name)
         {
@@ -212,21 +238,37 @@ WV.EventMonitor = (function() {
 
                 var el = e.target,
                         targetV,
-                        proceed;
+                        proceed,
+                        isKeyEvent = name.indexOf('key') === 0;
 
                 wasCancelled = false;
 
                 if (!el) { return wasCancelled; }
 
-                targetV = WV.PageView.hitTest({ x: e.browserEvent.clientX,
+                if (isKeyEvent)
+                {
+                    targetV = WV.Window.firstResponder || WV.Window;
+                }
+                else
+                {
+                    targetV = WV.Window.hitTest({ x: e.browserEvent.clientX,
                                                 y: e.browserEvent.clientY });
+                }
 
                 proceed = monitors[name].before ? monitors[name].before(targetV, e) : true;
 
                 if (proceed !== false && targetV && targetV[name])
                 {
-                    createMouseEvent(targetV, e);
-                    targetV[name](sharedMouseEvent);
+                    if (isKeyEvent)
+                    {
+                        createKeyEvent(targetV, e);
+                        targetV[name](sharedKeyEvent);
+                    }
+                    else
+                    {
+                        createMouseEvent(targetV, e);
+                        targetV[name](sharedMouseEvent);    
+                    }
                 }
 
                 if (monitors[name].after) { monitors[name].after(targetV, e); }

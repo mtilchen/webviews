@@ -1,17 +1,52 @@
 
 WV.Responder = {
     nextResponder: null,
-    acceptsFirstResponder: function()
-    {
-        return false;
-    },
+    isFirstResponder: false,
+    canBecomeFirstResponder: false,
+    canResignFirstResponder: true,
     becomeFirstResponder: function()
     {
-        return true;
+        if (this.isFirstResponder === true) { return true; }
+
+        else if (this.canBecomeFirstResponder === true)
+        {
+            if (WV.Window.firstResponder)
+            {
+                if (WV.Window.firstResponder.resignFirstResponder() === true)
+                {
+                    WV.Window.firstResponder = this;
+                    this.isFirstResponder = true;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                WV.Window.firstResponder = this;
+                this.isFirstResponder = true;
+                return true;
+            }
+        }
+        return false;
     },
     resignFirstResponder: function()
     {
-        return true;
+        if (this.canResignFirstResponder === true)
+        {
+            if (this === WV.Window.firstResponder)
+            {
+                WV.Window.firstResponder = undefined;
+            }
+            this.isFirstResponder = false;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     },
     noResponderFor: function(eName, e)
     {
@@ -26,6 +61,10 @@ WV.Responder = {
 //        {
 //            console.log('Right Button');
 //            e.cancel();
+//        }
+//        if (eName.indexOf('key') === 0)
+//        {
+//            WV.log('Key: ', e.character);
 //        }
     },
     mouseDown: function(e)
@@ -69,5 +108,13 @@ WV.Responder = {
     },
     dragEnd: function(e)
     {
+    },
+    keyDown: function(e)
+    {
+        this.nextResponder ? this.nextResponder.keyDown(e) : this.noResponderFor('keyDown', e);
+    },
+    keyUp: function(e)
+    {
+        this.nextResponder ? this.nextResponder.keyUp(e) : this.noResponderFor('keyUp', e);
     }
 };
