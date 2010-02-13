@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Layout Test Page</title>
+
+    <link rel="stylesheet" type="text/css" href="../resources/css/webviews.css" />
+
+    <script language="javascript" src="../webviews.js"></script>
+    <script language="javascript">
+        WV.init(function() {
+            var body = WV.Window;
+            var e1 = new WV.View({
+                superView: body,
+                id: 'e1',
+                autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
+                x: 30,
+                y: 30,
+                h: body.h - 60,
+                w: body.w - 60,
+                style: {
+                    backgroundColor: '#D8D8D8',
+                    border: '1px solid #989898',
+                    borderRadius: '2px'
+                }
+            });
+            
+            new WV.Label({
+                superView: e1,
+                autoResizeMask: WV.RESIZE_NONE,
+                x: 17,
+                y: 10,
+                w: 200,
+                text: 'To',
+                style: {
+                    fontWeight: 'bold'
+                }
+            });
+
+            new WV.TextField({
+                superView: e1,
+                id: 'to',
+                autoResizeMask: WV.RESIZE_WIDTH_FLEX,
+                x: 15,
+                y: 28,
+                w: e1.w - 30
+            });
+
+            new WV.Label({
+                superView: e1,
+                autoResizeMask: WV.RESIZE_NONE,
+                x: 17,
+                y: 58,
+                w: 200,
+                text: 'Subject',
+                style: {
+                    fontWeight: 'bold'
+                }
+            });
+
+            new WV.TextField({
+                superView: e1,
+                id: 'subject',
+                autoResizeMask: WV.RESIZE_WIDTH_FLEX,
+                x: 15,
+                y: 76,
+                w: e1.w - 30
+            });
+
+            new WV.Label({
+                superView: e1,
+                autoResizeMask: WV.RESIZE_NONE,
+                x: 17,
+                y: 144,
+                w: 200,
+                text: 'Message',
+                style: {
+                    fontWeight: 'bold'
+                }
+            });
+            
+            new WV.TextArea({
+                superView: e1,
+                autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
+                x: 15,
+                y: 162,
+                w: e1.w - 30,
+                h: e1.h - 215
+            });
+            
+            new WV.Label({
+                superView: e1,
+                autoResizeMask: WV.RESIZE_NONE,
+                x: 17,
+                y: 104,
+                w: 200,
+                text: 'Account',
+                style: {
+                    fontWeight: 'bold'
+                }
+            });
+            
+            new WV.RadioButton({
+                superView: e1,
+                x: 15,
+                y: 120,
+                text: 'email@me.com'
+            });
+            
+            new WV.RadioButton({
+                superView: e1,
+                x: 170,
+                y: 120,
+                text: 'email@gmail.com',
+                checked: 'checked'
+            });
+
+            new WV.CheckBox({
+                superView: e1,
+                autoResizeMask: WV.RESIZE_LEFT_FLEX,
+                x: e1.w - 112,
+                y: 120,
+                text: 'Use Signature'
+            });
+                        
+            new WV.Button({
+                superView: e1,
+                autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_LEFT_FLEX,
+                x: e1.w - 110,
+                y: e1.h - 40,
+                text: 'Send'
+            });
+            
+            new WV.Button({
+                superView: e1,
+                autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_RIGHT_FLEX,
+                x: 15,
+                y: e1.h - 40,
+                text: 'Cancel'
+            });
+        });
+  </script>
+</head>
+
+</html>
