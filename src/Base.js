@@ -80,7 +80,9 @@ WV = (function() {
 
         mixin: function(targetClass, mixin)
         {
-            Ext.apply(targetClass.prototype, mixin);
+            // Mixins can either be classes (constructor function) or objects
+            typeof mixin === 'function' ? Ext.apply(targetClass.prototype, mixin.prototype)
+                                        : Ext.apply(targetClass.prototype, mixin);
             return targetClass;
         },
 
@@ -136,7 +138,7 @@ WV = (function() {
         // Hide the vertical scrollbar in IE
         if (Ext.isIE) { Ext.select('html').setStyle('overflow', 'hidden'); }
 
-        WV.PageView = new WV.View({
+        WV.Window = new WV.View({
             superView: null,
             dom: document.body,
             clipSubViews: true,
@@ -161,53 +163,39 @@ WV = (function() {
             },
             makeFirstResponder: function(newResponder)
             {
-                if (this.firstResponder)
-                {
-                    if (this.firstResponder.resignFirstResponder() === true &&
-                        newResponder.becomeFirstResponder() === true)
-                    {
-                        this.firstResponder = newResponder;
-                        return true;
-                    }
-                }
-                else if (newResponder.becomeFirstResponder() === true)
-                {
-                    this.firstResponder = newResponder;
-                    return true;
-                }
-
-                return false;
+                return newResponder ? newResponder.becomeFirstResponder() : false;
             }
         });
 
         Ext.EventManager.addListener(window, 'resize', function() {
 
-            WV.PageView.setSize(
+            WV.Window.setSize(
                     Ext.lib.Dom.getViewportWidth(),
                     Ext.lib.Dom.getViewportHeight());
-        }, WV.PageView, { buffer: 10 });
+        }, WV.Window, { buffer: 10 });
 
         WV.EventMonitor.monitorEvent('mouseDown');
         WV.EventMonitor.monitorEvent('mouseUp');
         WV.EventMonitor.monitorEvent('mouseMove');
-//        WV.EventMonitor.monitorEvent('mouseOver');
         WV.EventMonitor.monitorEvent('mouseOut');
         WV.EventMonitor.monitorEvent('mouseWheel');
         WV.EventMonitor.monitorEvent('contextMenu');
         WV.EventMonitor.monitorEvent('dragStart');
         WV.EventMonitor.monitorEvent('drag');
         WV.EventMonitor.monitorEvent('dragEnd');
+        WV.EventMonitor.monitorEvent('keyDown');
+        WV.EventMonitor.monitorEvent('keyUp');
 
         for (var i = 0, l = initializers.length; i < l; i++)
         {
-            initializers[i].call(WV.PageView);
+            initializers[i].call(WV.Window);
         }
 
         var start = new Date(),
                         end;
 
-        WV.PageView.render();
-        WV.PageView.deferSubViewRender = false;
+        WV.Window.render();
+        WV.Window.deferSubViewRender = false;
 
         end = new Date();
         WV.log('Render time: ', end.getTime() - start.getTime(), 'ms');

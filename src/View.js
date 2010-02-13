@@ -757,14 +757,14 @@ WV.View = WV.extend(Ext.util.Observable, {
                point.y >= parseInt(rect.y) && point.y < parseInt(rect.y + rect.h);
     },
 
-    // view passed in must be an ancestor for now, if no ancestor passed, assumes PageView
+    // view passed in must be an ancestor for now, if no ancestor passed, assumes Window
     convertPointFromView: function(point, ancestor)
     {
         var convX = point.x,
             convY = point.y,
             v = this;
 
-            ancestor = ancestor || WV.PageView;
+            ancestor = ancestor || WV.Window;
 
         while (v !== ancestor && v.superView)
         {
