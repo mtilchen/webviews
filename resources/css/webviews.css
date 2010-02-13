@@ -35,17 +35,6 @@ legend{color:#000;}
 input,button,textarea,select,optgroup,option{font-family:inherit;font-size:inherit;font-style:inherit;font-weight:inherit;}
 input,button,textarea,select{*font-size:100%;}
 
-/* Misc */
-@font-face {
-  font-family: 'Swiss721';
-  src: url(../fonts/Swiss721.ttf);
-}
-
-@font-face {
-  font-family: 'Swiss721 Bold';
-  src: url('../fonts/Swiss721_Bold.ttf');
-}
-
 *:focus {
     outline: 0;
 }

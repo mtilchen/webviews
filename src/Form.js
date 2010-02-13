@@ -88,7 +88,7 @@ WV.Button = WV.extend(WV.View, {
 				fontSize: '11px',
 				fontWeight: 'normal',
 				lineHeight: ( this.h - 6 ) + 'px',
-			    textAlign: 'center',
+			    textAlign: 'center'
 			}
         });
     }
