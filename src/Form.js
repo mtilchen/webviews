@@ -462,8 +462,8 @@ WV.CheckBox = WV.extend(WV.View, {
 });
 
 WV.RadioButton = WV.extend(WV.View, {
-    h: 14,
-    w: 14,
+    h: 13,
+    w: 13,
 	autoResizeMask: WV.RESIZE_NONE,
 	cls: 'wv-radio-button',
     tag: 'div',
@@ -479,7 +479,7 @@ WV.RadioButton = WV.extend(WV.View, {
         WV.RadioButton.superclass.constructor.call(this, config);
 		
 		if ( this.checked ) {
-			this.style.backgroundPosition = '0 -14px';
+			this.style.backgroundPosition = '0 -13px';
 		}
 		
 		// Label
