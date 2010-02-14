@@ -62,6 +62,13 @@ WV.EventMonitor = (function() {
             mouseUp: {
                 before: function(target, e)
                 {
+                    // Always call mouseUp on the mouseDownOwner after a drag
+                    if (wasDragged && mouseDownOwner)
+                    {
+                        createMouseEvent(target, e);
+                        mouseDownOwner.mouseUp(sharedMouseEvent);
+                        return false;
+                    }
                 },
                 after: function(target, e)
                 {
@@ -130,11 +137,19 @@ WV.EventMonitor = (function() {
                         var be = e.browserEvent,
                             domTarget = be.target;
 
-                        if (domTarget.nodeType === 1 && domTarget.tagName.toLowerCase !== 'img' &&
-                                                        domTarget.tagName.toLowerCase !== 'a')
+                        if (domTarget.nodeType === 1)
+                        {
+                            if (domTarget.tagName.toLowerCase !== 'img' &&
+                                domTarget.tagName.toLowerCase !== 'a')
+                            {
+                                be.preventDefault();
+                            }
+                        }
+                        else
                         {
                             be.preventDefault();
                         }
+
                         return false;
                     }
                 }
@@ -183,7 +198,7 @@ WV.EventMonitor = (function() {
         sme.displayPoint = { x: be.screenX,   y: be.screenY };
         sme.elementPoint = { x: be[posPropX], y: be[posPropY] };
         sme.timestamp = be.timeStamp;
-        sme.targetView = target;
+        sme.target = target;
         sme.targetElement = be.target;
         sme.clickCount = clickCount;
         sme.leftButton = clickCount > 0 && (e.button === 0);
@@ -224,7 +239,7 @@ WV.EventMonitor = (function() {
         ske.altKey = e.altKey;
         ske.ctrlKey = be.ctrlKey;
         ske.metaKey = be.metaKey;
-        ske.targetView = target;
+        ske.target = target;
         ske.targetElement = be.target;
 
         ske.character = ske.shiftKey ? String.fromCharCode(ske.charCode)
@@ -252,7 +267,7 @@ WV.EventMonitor = (function() {
                 else
                 {
                     targetV = WV.Window.hitTest({ x: e.browserEvent.clientX,
-                                                y: e.browserEvent.clientY });
+                                                  y: e.browserEvent.clientY });
                 }
 
                 proceed = monitors[name].before ? monitors[name].before(targetV, e) : true;

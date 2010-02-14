@@ -100,7 +100,7 @@ WV.Responder = {
         this.nextResponder ? this.nextResponder.contextMenu(e) : this.noResponderFor('contextMenu', e);
     },
     dragStart: function(e)
-    {
+    {               
 //        e.dataTransfer.setData('text/plain', 'This text may be dragged');
     },
     drag: function(e)

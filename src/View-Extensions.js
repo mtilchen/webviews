@@ -1,10 +1,16 @@
 WV.Label = WV.extend(WV.View, {
     vtype: 'label',
-    h: 21,
-    w: 100,
-    tag: 'span',
-    text: 'Label',
-    domTpl: { html: '{text}', type: '{type}', name: '{name}' }
+    h: 18,
+    w: 38,
+	cls: 'wv-label',
+    text: '',
+    domTpl: { html: '{text}' },
+	style: {
+        color: '#000',
+        fontFamily: 'Verdana',
+		fontSize: '11px',
+		fontWeight: 'normal'
+	}
 });
 
 WV.Image = WV.extend(WV.View, {

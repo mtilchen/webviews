@@ -15,6 +15,8 @@ WV = (function() {
     var pub = {
 
         version: '0.0.1',
+
+        style: {},
         
         id: function()
         {
@@ -78,13 +80,13 @@ WV = (function() {
             return new Ext.Template(s, { compiled: true });
         },
 
-        mixin: function(targetClass, mixin)
-        {
-            // Mixins can either be classes (constructor function) or objects
-            typeof mixin === 'function' ? Ext.apply(targetClass.prototype, mixin.prototype)
-                                        : Ext.apply(targetClass.prototype, mixin);
-            return targetClass;
-        },
+//        mixin: function(targetClass, mixin)
+//        {
+//            // Mixins can either be classes (constructor function) or objects
+//            typeof mixin === 'function' ? Ext.apply(targetClass.prototype, mixin.prototype)
+//                                        : Ext.apply(targetClass.prototype, mixin);
+//            return targetClass;
+//        },
 
         create: function(vtype, config)
         {
@@ -97,26 +99,37 @@ WV = (function() {
             cls.vtype = vtype;
         },
 
+        // Shallow copy only
+        clone: function(obj, overrides)
+        {
+            return Ext.apply({}, overrides, obj);    
+        },
+
         extend: function(baseCls, overrides)
         {
             var vtype = overrides.vtype,
                 newCls;
 
+            // Add the mixins for the new class if defined
+            if (overrides.mixins)
+            {
+                for (var i = 0; i < overrides.mixins.length; i++)
+                {
+                    // Mixins can either be classes (constructor function) or objects
+                    typeof overrides.mixins[i] === 'function' ? Ext.apply(overrides, overrides.mixins[i].prototype)
+                                                              : Ext.apply(overrides, overrides.mixins[i]);
+                }
+            }
+            
             // Set up the vtype for the class if provided
             newCls = Ext.extend(baseCls, overrides);
             if (vtype) { WV.registerVType(vtype, newCls); }
 
-            // Add the mixins for the new class if defined
-            if (newCls.prototype.mixins)
-            {
-                for (var i = 0; i < newCls.prototype.mixins.length; i++)
-                {
-                    WV.mixin(newCls, newCls.prototype.mixins[i]);
-                }
-            }
-
             return newCls;
         },
+
+        apply: Ext.apply,
+        applyIf: Ext.applyIf,
 
         emptyFn: function() {},
 

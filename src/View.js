@@ -62,16 +62,16 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             this.rendered = true;
             this.dom.id = this.id;
-            this.bWOffSet = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
-            this.dom.style.left = (this.x - this.bWOffSet) + 'px';
-            this.dom.style.top = (this.y - this.bWOffSet) + 'px';
+            this.bwOffset = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
+            this.dom.style.left = (this.x - this.bwOffset) + 'px';
+            this.dom.style.top = (this.y - this.bwOffset) + 'px';
             this.dom.style.width =  this.w + 'px';
             this.dom.style.height =  this.h + 'px';
             this.dom.style.zIndex = this.z;
             this.setDraggable(this.draggable === true);
         }
 
-        this.setStyle(styles);
+        this.setStyle(styles, true);
         this.setVisible(this.visible);
         this.setClipSubViews(this.clipSubViews);
 
@@ -190,7 +190,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         this.y = (typeof frame.y === 'number') ? frame.y : this.convertRelative('y', frame.y) || this.y;
         this.w = (typeof frame.w === 'number') ? frame.w : this.convertRelative('width', frame.w) || this.w;
         this.h = (typeof frame.h === 'number') ? frame.h : this.convertRelative('height', frame.h) || this.h;
-        this.bWOffSet = sv ? parseInt(sv.style.borderWidth, 10) || 0 : 0;
+        this.bwOffset = sv ? parseInt(sv.style.borderWidth, 10) || 0 : 0;
 
         if (!Ext.isGecko && sv)
         {
@@ -206,8 +206,8 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         if (this.rendered)
         {
-            if (this.x !== previousX || this.bwOffset !== previousBw) { this.dom.style.left = (this.x - this.bWOffSet) + 'px'; }
-            if (this.y !== previousY || this.bwOffset !== previousBw) { this.dom.style.top =  (this.y - this.bWOffSet) + 'px'; }
+            if (this.x !== previousX || this.bwOffset !== previousBw) { this.dom.style.left = (this.x - this.bwOffset) + 'px'; }
+            if (this.y !== previousY || this.bwOffset !== previousBw) { this.dom.style.top =  (this.y - this.bwOffset) + 'px'; }
             if (this.w !== this.previousW) { this.dom.style.width =  this.w + 'px'; needsLayout = true; }
             if (this.h !== this.previousH) { this.dom.style.height = this.h + 'px'; needsLayout = true; }
         }
@@ -269,12 +269,12 @@ WV.View = WV.extend(Ext.util.Observable, {
         this.x = (typeof x === 'number') ? x : this.convertRelative('x', x) || this.x;
         this.y = (typeof y === 'number') ? y : this.convertRelative('y', y) || this.y;
         this.z = (typeof z === 'number') ? z : this.z;
-        this.bWOffSet = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
+        this.bwOffset = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
 
         if (this.rendered)
         {
-            if (this.x !== previousX || this.bwOffset !== previousBw) { this.dom.style.left = (this.x - this.bWOffSet) + 'px'; }
-            if (this.y !== previousY || this.bwOffset !== previousBw) { this.dom.style.top =  (this.y - this.bWOffSet) + 'px'; }
+            if (this.x !== previousX || this.bwOffset !== previousBw) { this.dom.style.left = (this.x - this.bwOffset) + 'px'; }
+            if (this.y !== previousY || this.bwOffset !== previousBw) { this.dom.style.top =  (this.y - this.bwOffset) + 'px'; }
             if (this.z !== previousZ) { this.dom.style.zIndex = this.z; }
         }
 
@@ -289,7 +289,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             convVal,
             result;
 
-        if (!sv) { return 0; }
+        if (!sv || !(typeof val === 'string')) { return undefined; }
 
         switch(dim)
         {
@@ -434,10 +434,24 @@ WV.View = WV.extend(Ext.util.Observable, {
         return this;
     },
 
+    // name can be an object and value === true specifies that the "set" is additive, it will not remove styles not present in the new style object
+    // Otherwise, name and value act as one would expect
     setStyle: function(name, value)
     {
         if (typeof name === 'object')
         {
+            // Remove styles not present in the new object unless we are told to be additive (value param === true)
+            if (value !== true)
+            {
+                for (var x in this.style)
+                {
+                    if (!name.hasOwnProperty(x) && x !== 'position' && x !== 'boxSizing' && x.indexOf('overflow') !== 0)
+                    {
+                        this.setStyle(x, '');
+                        delete this.style[x];
+                    }
+                }
+            }
             for (var s in name)
             {
                 this.setStyle(s, name[s]);
@@ -462,6 +476,11 @@ WV.View = WV.extend(Ext.util.Observable, {
             }
         }
         return this;
+    },
+
+    addStyle: function(style)
+    {
+        return this.setStyle(style, true);
     },
 
     buildStyle: function()
@@ -779,6 +798,24 @@ WV.View = WV.extend(Ext.util.Observable, {
         }
         
         return { x: Math.ceil(convX), y: Math.ceil(convY) };
+    },
+
+    isDescendantOf: function(view)
+    {
+        if (view === this) { return true; }
+
+        var sv = this.superView;
+
+        while (sv)
+        {
+            if (sv === view)
+            {
+                return true;
+            }
+            sv = sv.superView;
+        }
+
+        return false;
     },
 
     toString: function()
