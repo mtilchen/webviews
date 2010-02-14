@@ -12,8 +12,8 @@ WV.EventMonitor = (function() {
         ev, // Current Ext event
         be, // Current browserEvent
         targetV, // Current target View
-        sharedMouseEvent = { cancel: function() { ev.stopEvent(); wasCancelled = true; }},
-        sharedKeyEvent = { cancel: function() { ev.stopEvent(); wasCancelled = true; }},
+        sharedMouseEvent = { cancel: cancel },
+        sharedKeyEvent = { cancel: cancel },
         posProp = Ext.isIE ? 'offset' : 'layer',
         posPropX = posProp + 'X',
         posPropY = posProp + 'Y',
@@ -139,14 +139,12 @@ WV.EventMonitor = (function() {
                             if (domTarget.tagName.toLowerCase !== 'img' &&
                                 domTarget.tagName.toLowerCase !== 'a')
                             {
-                                ev.stopEvent();
-                                wasCancelled = true;
+                                cancel();
                             }
                         }
                         else
                         {
-                            ev.stopEvent();
-                            wasCancelled = true;
+                            cancel();
                         }
 
                         return false;
@@ -199,6 +197,21 @@ WV.EventMonitor = (function() {
         }
         return false;
     }
+
+    function cancel()
+    {
+        if (be.preventDefault)
+        {
+            be.preventDefault();
+        }
+        else
+        {
+            be.returnValue = false;
+        }
+
+        wasCancelled = true;
+    }
+
 
     function createMouseEvent()
     {
@@ -262,14 +275,15 @@ WV.EventMonitor = (function() {
         {
             Ext.EventManager.addListener(document, name.toLowerCase(), function(e) {
 
+                // Set these four shared objects before processing the event
                 ev = e;
                 be = e.browserEvent;
+                wasCancelled = false;
+                targetV = undefined;
 
                 var el = ev.target,
                         proceed,
                         isKeyEvent = name.indexOf('key') === 0;
-
-                wasCancelled = false;
 
                 if (!el) { return wasCancelled; }
 
@@ -283,7 +297,7 @@ WV.EventMonitor = (function() {
                                                   y: be.clientY });
                 }
 
-                if (targetV && checkDisabled(targetV) !== true)
+                if (targetV && (checkDisabled(targetV) !== true))
                 {
                     proceed = monitors[name].before ? monitors[name].before() : true;
 
@@ -308,8 +322,7 @@ WV.EventMonitor = (function() {
                 }
                 else
                 {
-                    ev.stopEvent();
-                    wasCancelled = true;
+                    cancel();
                 }
 
                 return wasCancelled;
