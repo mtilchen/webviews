@@ -9,33 +9,34 @@ WV.EventMonitor = (function() {
         clickCount = 0,
         wasDragged,
         wasCancelled = false,
-        be, // browserEvent
-        sharedMouseEvent = { cancel: function() { be.preventDefault(); be.stopPropagation(); be.cancelBubble = true; be.returnValue = false; wasCancelled = true; }},
-        sharedKeyEvent = { cancel: function() { be.preventDefault(); be.stopPropagation(); be.cancelBubble = true; be.returnValue = false; wasCancelled = true; }},
+        ev, // Current Ext event
+        be, // Current browserEvent
+        targetV, // Current target View
+        sharedMouseEvent = { cancel: function() { ev.stopEvent(); wasCancelled = true; }},
+        sharedKeyEvent = { cancel: function() { ev.stopEvent(); wasCancelled = true; }},
         posProp = Ext.isIE ? 'offset' : 'layer',
         posPropX = posProp + 'X',
         posPropY = posProp + 'Y',
         monitors = {
             mouseDown: {
-                before: function(target, e)
+                before: function()
                 {
-                    var be = e.browserEvent;
                     clickCount++;
                     clickReset.delay(500);
                     downX = be.clientX, downY = be.clientY;
-                    mouseDownOwner = target;
+                    mouseDownOwner = targetV;
                 }
             },
             mouseMove: {
-                before: function(target, e)
+                before: function()
                 {
                     var prevOver = mouseOverOwner;
-                    mouseOverOwner = target;
+                    mouseOverOwner = targetV;
 
                     // Mouse entered/exited
                     if (prevOver !== mouseOverOwner)
                     {
-                        createMouseEvent(target, e);
+                        createMouseEvent();
                         if (prevOver)
                         {
                             prevOver.mouseExited(sharedMouseEvent);
@@ -44,13 +45,13 @@ WV.EventMonitor = (function() {
                         mouseOverOwner.mouseEntered(sharedMouseEvent);
                     }
 
-                    if (mouseDownOwner === target)
+                    if (mouseDownOwner === targetV)
                     {
                         // 'draggable' here refers to drag and drop functionality
-                        if (target.draggable === false)
+                        if (targetV.draggable === false)
                         {
                             wasDragged = true;
-                            createMouseEvent(target, e);
+                            createMouseEvent();
                             mouseDownOwner.mouseDragged(sharedMouseEvent);
                         }
 
@@ -60,17 +61,17 @@ WV.EventMonitor = (function() {
             },
 
             mouseUp: {
-                before: function(target, e)
+                before: function()
                 {
                     // Always call mouseUp on the mouseDownOwner after a drag
                     if (wasDragged && mouseDownOwner)
                     {
-                        createMouseEvent(target, e);
+                        createMouseEvent();
                         mouseDownOwner.mouseUp(sharedMouseEvent);
                         return false;
                     }
                 },
-                after: function(target, e)
+                after: function()
                 {
                     mouseDownOwner = null;
                     wasDragged = false;
@@ -78,37 +79,34 @@ WV.EventMonitor = (function() {
                 }
             },
             mouseOut: {
-                before: function(target, e)
+                before: function()
                 {
                     // Make sure we do not get stuck in a drag if the mouse leaves the page while down
-                    if (e.xy[0] < 0 || e.xy[1] < 0 ||
-                        e.xy[0] >= Ext.lib.Dom.getViewportWidth() || e.xy[1] >= Ext.lib.Dom.getViewportHeight())
+                    if (ev.xy[0] < 0 || ev.xy[1] < 0 ||
+                        ev.xy[0] >= Ext.lib.Dom.getViewportWidth() || ev.xy[1] >= Ext.lib.Dom.getViewportHeight())
                     {
                         mouseDownOwner = null;
                         wasDragged = false;
 
                         if (mouseOverOwner)
                         {
-                            createMouseEvent(target, e);
+                            createMouseEvent();
                             mouseOverOwner.mouseExited(sharedMouseEvent);
                             mouseOverOwner = null;
                         }
                     }
-
                     return false;
                 }
             },
             mouseOver: {
-                before: function(target, e)
+                before: function()
                 {
 
                 }
             },
             mouseWheel: {
-                before: function(target, e)
+                before: function()
                 {
-                    var be = e.browserEvent;
-
                     if (be.wheelDelta)
                     {
                         wheelDelta = be.wheelDelta / -120;
@@ -118,36 +116,37 @@ WV.EventMonitor = (function() {
                         wheelDelta = be.detail;
                     }
                 },
-                after: function(target, e)
+                after: function()
                 {
                     wheelDelta = 0;
                 }
             },
             contextMenu: {
-                before: function(target, e)
+                before: function()
                 {
 
                 }
             },
             dragStart: {
-                before: function(target, e)
+                before: function()
                 {
-                    if (target.draggable === false)
+                    if (targetV.draggable === false)
                     {
-                        var be = e.browserEvent,
-                            domTarget = be.target;
+                        var domTarget = be.target;
 
                         if (domTarget.nodeType === 1)
                         {
                             if (domTarget.tagName.toLowerCase !== 'img' &&
                                 domTarget.tagName.toLowerCase !== 'a')
                             {
-                                be.preventDefault();
+                                ev.stopEvent();
+                                wasCancelled = true;
                             }
                         }
                         else
                         {
-                            be.preventDefault();
+                            ev.stopEvent();
+                            wasCancelled = true;
                         }
 
                         return false;
@@ -155,19 +154,19 @@ WV.EventMonitor = (function() {
                 }
             },
             drag: {
-                before: function(target, e)
+                before: function()
                 {
-                    if (target.draggable === false)
+                    if (targetV.draggable === false)
                     {
                         return false;
                     }
                 }
             },
             dragEnd: {
-                before: function(target, e)
+                before: function()
                 {
                     mouseDownOwner = null;
-                    if (target.draggable === false)
+                    if (targetV.draggable === false)
                     {
                         return false;
                     }
@@ -187,9 +186,22 @@ WV.EventMonitor = (function() {
         clickCount = 0;
     });
 
-    function createMouseEvent(target, e)
+    // Returns true if the view is a descendant of a disabled view
+    function checkDisabled(view)
     {
-        be = e.browserEvent;
+        while (view)
+        {
+            if (view.disabled === true)
+            {
+                return true;
+            }
+            view = view.superView;
+        }
+        return false;
+    }
+
+    function createMouseEvent()
+    {
         var sme = sharedMouseEvent;
             
 //        sme.x = x < 0 ? 0 : Math.min(x, target.w);
@@ -198,12 +210,12 @@ WV.EventMonitor = (function() {
         sme.displayPoint = { x: be.screenX,   y: be.screenY };
         sme.elementPoint = { x: be[posPropX], y: be[posPropY] };
         sme.timestamp = be.timeStamp;
-        sme.target = target;
+        sme.target = targetV;
         sme.targetElement = be.target;
         sme.clickCount = clickCount;
-        sme.leftButton = clickCount > 0 && (e.button === 0);
-        sme.middleButton = clickCount > 0 && (e.button === 1);
-        sme.rightButton = clickCount > 0 && (e.button === 2);
+        sme.leftButton = clickCount > 0 && (ev.button === 0);
+        sme.middleButton = clickCount > 0 && (ev.button === 1);
+        sme.rightButton = clickCount > 0 && (ev.button === 2);
 
         if (wasDragged === true)
         {
@@ -228,18 +240,17 @@ WV.EventMonitor = (function() {
         }
     }
 
-    function createKeyEvent(target, e)
+    function createKeyEvent()
     {
-        be = e.browserEvent;
         var ske = sharedKeyEvent;
 
-        ske.keyCode = e.getKey();
-        ske.charCode = e.getCharCode();
-        ske.shiftKey = e.shiftKey;
-        ske.altKey = e.altKey;
+        ske.keyCode = ev.getKey();
+        ske.charCode = ev.getCharCode();
+        ske.shiftKey = ev.shiftKey;
+        ske.altKey = ev.altKey;
         ske.ctrlKey = be.ctrlKey;
         ske.metaKey = be.metaKey;
-        ske.target = target;
+        ske.target = targetV;
         ske.targetElement = be.target;
 
         ske.character = ske.shiftKey ? String.fromCharCode(ske.charCode)
@@ -251,8 +262,10 @@ WV.EventMonitor = (function() {
         {
             Ext.EventManager.addListener(document, name.toLowerCase(), function(e) {
 
-                var el = e.target,
-                        targetV,
+                ev = e;
+                be = e.browserEvent;
+
+                var el = ev.target,
                         proceed,
                         isKeyEvent = name.indexOf('key') === 0;
 
@@ -266,27 +279,38 @@ WV.EventMonitor = (function() {
                 }
                 else
                 {
-                    targetV = WV.Window.hitTest({ x: e.browserEvent.clientX,
-                                                  y: e.browserEvent.clientY });
+                    targetV = WV.Window.hitTest({ x: be.clientX,
+                                                  y: be.clientY });
                 }
 
-                proceed = monitors[name].before ? monitors[name].before(targetV, e) : true;
-
-                if (proceed !== false && targetV && targetV[name])
+                if (targetV && checkDisabled(targetV) !== true)
                 {
-                    if (isKeyEvent)
+                    proceed = monitors[name].before ? monitors[name].before() : true;
+
+                    if (proceed !== false && targetV[name])
                     {
-                        createKeyEvent(targetV, e);
-                        targetV[name](sharedKeyEvent);
+                        if (isKeyEvent)
+                        {
+                            createKeyEvent();
+                            targetV[name](sharedKeyEvent);
+                        }
+                        else
+                        {
+                            createMouseEvent();
+                            targetV[name](sharedMouseEvent);
+                        }
                     }
-                    else
+
+                    if (monitors[name].after)
                     {
-                        createMouseEvent(targetV, e);
-                        targetV[name](sharedMouseEvent);    
+                        monitors[name].after();
                     }
                 }
-
-                if (monitors[name].after) { monitors[name].after(targetV, e); }
+                else
+                {
+                    ev.stopEvent();
+                    wasCancelled = true;
+                }
 
                 return wasCancelled;
             });
