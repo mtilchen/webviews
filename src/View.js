@@ -24,6 +24,7 @@ WV.View = WV.extend(Ext.util.Observable, {
     rendered: false,
     resizeSubViews: true,
     clipSubViews: false,
+    disabled: false,
     draggable: false,
 
     style: {
@@ -74,6 +75,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         this.setStyle(styles, true);
         this.setVisible(this.visible);
         this.setClipSubViews(this.clipSubViews);
+        this.setDisabled(this.disabled);
 
         WV.addToCache(this);
 
@@ -424,6 +426,18 @@ WV.View = WV.extend(Ext.util.Observable, {
         return this;
     },
 
+    setDisabled: function(disabled)
+    {
+        this.disabled = disabled === true;
+        if (this.disabled)
+        {
+            this.canResignFirstResponder = true;
+            this.resignFirstResponder();
+        }
+        this.setStyle('opacity',  this.disabled ? 0.33 : '');
+        return this;
+    },
+
     setDraggable: function(draggable)
     {
         this.draggable = draggable === true;
@@ -445,7 +459,9 @@ WV.View = WV.extend(Ext.util.Observable, {
             {
                 for (var x in this.style)
                 {
-                    if (!name.hasOwnProperty(x) && x !== 'position' && x !== 'boxSizing' && x.indexOf('overflow') !== 0)
+                    // Never remove some important styles
+                    if (!name.hasOwnProperty(x) && x !== 'position' && x !== 'boxSizing'
+                                                && x.indexOf('overflow') !== 0 && x !== 'display')
                     {
                         this.setStyle(x, '');
                         delete this.style[x];

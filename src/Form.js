@@ -231,7 +231,7 @@ WV.Button = WV.extend(WV.View, {
         {
             WV.log('Action trigger: ', this.id);
         }
-        
+
         return WV.Button.superclass.mouseUp.call(this, e);
     },
 
@@ -301,7 +301,7 @@ WV.Button = WV.extend(WV.View, {
     resignFirstResponder: function()
     {
         var result = WV.Button.superclass.resignFirstResponder.call(this);
-        if (result === true)
+        if (result === true && this.rendered)
         {
             this.setStyle(WV.style.Button.base.normal);
             this.subViews[0].setStyle(WV.style.Button.border.normal);
