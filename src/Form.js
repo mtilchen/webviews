@@ -41,10 +41,10 @@ WV.style.Button = {
         active: {},
         hover: {},
         focus: {
-            borderTopColor: '#4D78A4',
-            borderRightColor: '#4D78A4',
             borderBottomColor: '#4D78A4',
             borderLeftColor: '#4D78A4',
+            borderRightColor: '#4D78A4',
+            borderTopColor: '#4D78A4',
             borderWidth: '2px'
         }
 	},
@@ -65,16 +65,14 @@ WV.style.Button = {
             backgroundImage: 'url(resources/images/form/shadow-x.png)',
             backgroundRepeat: 'repeat-x',
             borderBottomColor: '#4D4D4D',
-            borderLeftColor: '#3D3D3D',
+            borderLeftColor: '#3D3D3D',            
+            borderRadius: '0',
             borderRightColor: '#5C5C5C',
             borderTopColor: '#515151'
         },
         hover: {},
         focus: {
-            borderTopColor: 'transparent',
-            borderRightColor: 'transparent',
-            borderBottomColor: 'transparent',
-            borderLeftColor: 'transparent'
+            borderRadius: '0'
         }
 	},
     button: {
@@ -96,11 +94,14 @@ WV.style.Button = {
             backgroundRepeat: 'repeat-y',
             borderBottomColor: '#A7A9AB',
             borderLeftColor: '#666',
+            borderRadius: '0',
             borderRightColor: 'transparent',
             borderTopColor: '#777'
         },
         hover: {},
-        focus: {}
+        focus: {
+            borderRadius: '0'
+        }
 	},
     label: {
         defaults: {
@@ -111,7 +112,10 @@ WV.style.Button = {
             textAlign: 'center'
         },
         normal: {},
-        active: {},
+        active: {
+            marginLeft: '1px',
+            marginTop: '1px'
+        },
         hover: {},
         focus: {}
 	}
@@ -448,16 +452,6 @@ WV.CheckBox = WV.extend(WV.View, {
 			src: 'resources/images/form/checkmark.png',
 			domTpl: { src: '{src}' }
 		});
-		
-		// Label
-		new WV.Label({
-            superView: this,
-            autoResizeMask: WV.RESIZE_NONE,
-            x: 18,
-            y: -1,
-            w: 100,
-            text: this.text
-        });
     }
 });
 
@@ -476,20 +470,6 @@ WV.RadioButton = WV.extend(WV.View, {
 	},
 	constructor: function(config)
     {
-        WV.RadioButton.superclass.constructor.call(this, config);
-		
-		if ( this.checked ) {
-			this.style.backgroundPosition = '0 -13px';
-		}
-		
-		// Label
-		new WV.Label({
-            superView: this,
-            autoResizeMask: WV.RESIZE_NONE,
-            x: 18,
-            y: 0,
-            w: 100,
-            text: this.text
-        });
+        WV.RadioButton.superclass.constructor.call(this, config);		
     }
 });
