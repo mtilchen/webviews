@@ -210,8 +210,8 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             if (this.x !== previousX || this.bwOffset !== previousBw) { this.dom.style.left = (this.x - this.bwOffset) + 'px'; }
             if (this.y !== previousY || this.bwOffset !== previousBw) { this.dom.style.top =  (this.y - this.bwOffset) + 'px'; }
-            if (this.w !== this.previousW) { this.dom.style.width =  this.w + 'px'; needsLayout = true; }
-            if (this.h !== this.previousH) { this.dom.style.height = this.h + 'px'; needsLayout = true; }
+            if (this.w !== this.previousW) { this.dom.style.width = Math.max(this.w, 0) + 'px'; needsLayout = true; }
+            if (this.h !== this.previousH) { this.dom.style.height = Math.max(this.h, 0) + 'px'; needsLayout = true; }
         }
 
         if (needsLayout)
@@ -241,8 +241,8 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         if (this.rendered)
         {
-            if (this.w !== this.previousW) { this.dom.style.width =  this.w + 'px'; needsLayout = true; }
-            if (this.h !== this.previousH) { this.dom.style.height = this.h + 'px'; needsLayout = true; }
+            if (this.w !== this.previousW) { this.dom.style.width =  Math.max(this.w, 0) + 'px'; needsLayout = true; }
+            if (this.h !== this.previousH) { this.dom.style.height = Math.max(this.h, 0) + 'px'; needsLayout = true; }
         }
 
         if (needsLayout)
@@ -429,11 +429,13 @@ WV.View = WV.extend(Ext.util.Observable, {
     setDisabled: function(disabled)
     {
         this.disabled = disabled === true;
+        // TODO: Look for Window.firstResponder in descendants and resign it? 
         if (this.disabled)
         {
             this.canResignFirstResponder = true;
             this.resignFirstResponder();
         }
+        // TODO: Remember opacity if there is a current value before disabling
         this.setStyle('opacity',  this.disabled ? 0.33 : '');
         return this;
     },
