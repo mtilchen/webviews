@@ -9,8 +9,31 @@ WV = (function() {
          initializers = [],
          vtypes = {},
          cache = {},
+         vtagIndex = {},
          logEnabled = window.console !== undefined &&
                       typeof window.console.log === 'function';
+
+    function addToVtagIndex(view)
+    {
+        if ((typeof view.vtag === 'string') && view.vtag.length > 0)
+        {
+            vtagIndex[view.vtag] = vtagIndex[view.vtag] || [];
+            view._vtagIdx = vtagIndex[view.vtag].length;
+            vtagIndex[view.vtag][view._vtagIdx] = view;
+        }
+    }
+
+    function removeFromVtagIndex(view)
+    {
+        if ((typeof view._vtagIdx === 'number') && vtagIndex[view.vtag])
+        {
+            for (var i = view._vtagIdx + 1; i < vtagIndex[view.vtag].length; i++)
+            {
+                vtagIndex[view.vtag][i]._vtagIdx -= 1;
+            }
+            vtagIndex[view.vtag].splice(view._vtagIdx, 1);
+        }
+    }
 
     var pub = {
 
@@ -48,16 +71,23 @@ WV = (function() {
         addToCache: function(view)
         {
             cache[view.id] = view;
+            addToVtagIndex(view);
         },
 
         removeFromCache: function(view)
         {
+            removeFromVtagIndex(view);
             delete cache[view.id];
         },
 
         get: function(id)
         {
             return cache[id];
+        },
+
+        findByVtag: function(vtag)
+        {
+            return vtagIndex[vtag];
         },
 
         accumulate: function(cls, prop)
@@ -130,6 +160,7 @@ WV = (function() {
 
         apply: Ext.apply,
         applyIf: Ext.applyIf,
+        isArray: Ext.isArray,
 
         emptyFn: function() {},
 

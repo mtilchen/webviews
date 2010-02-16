@@ -36,6 +36,8 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     domTpl: { id: '{id}', tag: '{tag}', cls: '{cls}', html: '{html}{_subViewHtml}', title: '{title}', style: '{_styleString}' },
 
+    subViews: [],
+
     constructor: function(config)
     {
         config = config || {};
@@ -57,6 +59,8 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         Ext.apply(this, config);
 
+        // Put all the subViews we wish to add together (class level and config level) and add them all at once
+        var subViewsToAdd =  this.constructor.prototype.subViews.concat(config.subViews || []);
         this.subViews = [];
 
         if (this.dom)
@@ -79,14 +83,11 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         WV.addToCache(this);
 
-        if (config.subViews)
+        for (var i = 0; i < subViewsToAdd.length; i++)
         {
-            for (var i = 0; i < config.subViews.length; i++)
-            {
-                this.addSubView(config.subViews[i]);
-            }
+            this.addSubView(subViewsToAdd[i]);
         }
-        
+
         if (this.superView)
         {
             // We have not really been added to a superview yet so prevent confusion by removing the reference
@@ -100,7 +101,8 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     addSubView: function(view)
     {
-        var sv = view.superView;
+        var sv = view.superView,
+            vtag;
 
         if (!(view instanceof WV.View) && (typeof view === 'object'))
         {
@@ -141,23 +143,45 @@ WV.View = WV.extend(Ext.util.Observable, {
             }
             view.subViewIndex = this.subViews.length;
             this.subViews[this.subViews.length] = view;
+
+            // Manage the vtag of the new subView if present. If this view already has a view with the same vtag
+            // then turn the reference into an Array and store all siblings with identical vtags in it
+            if (typeof view.vtag === 'string')
+            {
+                vtag = this.subViews[view.vtag];
+
+                if (!vtag)
+                {
+                    this.subViews[view.vtag] = view;
+                }
+                else if (WV.isArray(vtag))
+                {
+                    this.subViews[view.vtag].push(view);
+                }
+                else
+                {
+                    this.subViews[view.vtag] = [vtag, view];
+                }
+            }
         }
         return this;
     },
 
     removeFromSuperView: function()
     {
-        if (!this.superView) { return this; }
-
-        if (typeof this.subViewIndex === 'number')
+        if (this.superView && (typeof this.subViewIndex === 'number'))
         {
-            var superSubs = this.superView.subViews;
+            var i, superSubs = this.superView.subViews;
+            for (i = this.subViewIndex + 1; i < superSubs.length; i++)
+            {
+                superSubs[i].subViewIndex -= 1;
+            }
             superSubs.splice(this.subViewIndex, 1);
         }
 
-        if (this.superView.rendered)
+        if (this.dom && this.dom.parentNode)
         {
-            this.superView.dom.removeChild(this.dom);
+            this.dom.parentNode.removeChild(this.dom);
         }
 
         this.superView = undefined;
@@ -836,6 +860,24 @@ WV.View = WV.extend(Ext.util.Observable, {
         return false;
     },
 
+    find: function(vtag)
+    {
+        var i, views = WV.findByVtag(vtag),
+            hits = [];
+
+        if (!views) { return null; }
+        else
+        {
+            for (i = 0; i < views.length; i++)
+            {
+                if (views[i].isDescendantOf(this))
+                {
+                    hits[hits.length] = views[i];
+                }
+            }
+            return hits.length > 0 ? hits : null;
+        }
+    },
     toString: function()
     {
         return ['id: ', this.id, '\n',

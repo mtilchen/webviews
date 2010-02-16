@@ -70,9 +70,8 @@ WV.style.Button = {
             borderRightColor: '#5C5C5C',
             borderTopColor: '#515151'
         },
-        hover: {},
         focus: {
-            borderRadius: '0'
+            borderRadius: '0px'
         }
 	},
     button: {
@@ -94,13 +93,12 @@ WV.style.Button = {
             backgroundRepeat: 'repeat-y',
             borderBottomColor: '#A7A9AB',
             borderLeftColor: '#666',
-            borderRadius: '0',
+            borderRadius: '0px',
             borderRightColor: 'transparent',
             borderTopColor: '#777'
         },
-        hover: {},
         focus: {
-            borderRadius: '0'
+            borderRadius: '0px'
         }
 	},
     label: {
@@ -115,9 +113,7 @@ WV.style.Button = {
         active: {
             marginLeft: '1px',
             marginTop: '1px'
-        },
-        hover: {},
-        focus: {}
+        }
 	}
 };
 
@@ -129,19 +125,20 @@ WV.Button = WV.extend(WV.View, {
     tag: 'div',
     text: '',
     canBecomeFirstResponder: true,
-    clipSubViews: true, 
-	style: WV.style.Button.base.normal,
-    border: {
+    clipSubViews: true,
+    styleObject: WV.style.Button,
+    state: 'normal',
+    subViews: [{
+        vtag: 'border',
         x: 1,
         y: 1,
         h: 'h - 2',
         w: 'w - 2',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX,
         cls: 'wv-button-border',
-        tag: 'div',
-        style: WV.style.Button.border.normal
-    },
-    button: {
+        tag: 'div'
+    },{
+        vtag: 'button',
         vtype: 'input',
         x: 2,
         y: 2,
@@ -149,60 +146,108 @@ WV.Button = WV.extend(WV.View, {
         w: 'w - 4',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX,
         cls: 'wv-button-button',
-        type: 'button',
-        style: WV.style.Button.button.normal
-    },
-    label: {
+        type: 'button'
+    },{
+        vtag: 'label',
         vtype: 'label',
-        autoResizeMask: WV.RESIZE_NONE,
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX,
         cls: 'wv-button-label',
         draggable: false,
         x: 3,
         y: 3,
         h: 'h - 6',
-        w: 'w - 6',
-        style: WV.style.Button.label.normal
-    },
+        w: 'w - 6'
+    }],
 	constructor: function(config)
     {
-        // Copy the defaults into the styles once
-        if (!WV.Button.prototype._initStyles)
-        {
-            for (var s in WV.style.Button)
-            {
-                WV.apply(WV.style.Button[s].normal, WV.style.Button[s].defaults);
-                WV.apply(WV.style.Button[s].active, WV.style.Button[s].defaults);
-                WV.applyIf(WV.style.Button[s].hover, WV.style.Button[s].defaults);
-                WV.applyIf(WV.style.Button[s].focus, WV.style.Button[s].defaults);
-            }
-
-            WV.Button.prototype._initStyles = true;
-        }
-
         WV.Button.superclass.constructor.call(this, config);
 
-        // Do not overwrite the text property of the label in the prototype
-        if (this.label === WV.Button.prototype.label)
+        if (this.subViews.label)
         {
-            this.label = WV.clone(this.label, { text: this.text });
-        }
-        else
-        {
-            this.label.text = this.text;
+            this.subViews.label.text = this.text;
         }
 
-        this.addSubView(this.border);
-        this.addSubView(this.button);
-        this.addSubView(this.label);
+        this.setState(this.state);
+        
+        return this;
     },
 
+    setState: function(newState)
+    {
+        if (typeof newState === 'string')
+        {
+            var i, s, newStyle, hits,
+                styleObj = this.styleObject,
+                styles = newState.split(/\s*,\s*/);
+
+            this.state = newState;
+
+            // Starting with the defaults, apply each style found in the new state string, overriding at each step
+            newStyle = WV.apply({}, styleObj['base'].defaults);
+
+            // Do this view first using 'base'
+            for (s = 0; s < styles.length; s++)
+            {
+                WV.apply(newStyle, styleObj['base'][styles[s]]);
+            }
+
+            this.setStyle(newStyle);
+
+            for (var vtag in styleObj)
+            {
+                if (vtag !== 'base')
+                {
+                    hits = this.find(vtag);
+
+                    if (hits.length > 0)
+                    {
+                        newStyle = WV.apply({}, styleObj[vtag].defaults);
+
+                        for (s = 0; s < styles.length; s++)
+                        {
+                            WV.apply(newStyle, styleObj[vtag][styles[s]]);
+                        }
+                        for (i = 0; i < hits.length; i++)
+                        {
+                            hits[i].setStyle(newStyle);
+                        }
+                    }
+                }
+            }
+        }
+
+        return this;
+    },
+    addState: function(state)
+    {
+        if (typeof state === 'string' && this.state && this.state.indexOf(state) < 0)
+        {
+            if (this.state.length > 0)
+            {
+                this.setState(this.state + ',' + state);
+            }
+            else
+            {
+                this.setState(state);
+            }
+        }
+
+        return this;
+    },
+    removeState: function(state)
+    {
+        if (typeof state === 'string' && this.state)
+        {
+            var re = new RegExp(String.format('^{0},|{0},|,{0}|{0}$', state), 'g');
+
+            this.setState(this.state.replace(re, ''));
+        }
+
+        return this;
+    },
     mouseDown: function(e)
     {
-        this.setStyle(WV.style.Button.base.active);
-        this.subViews[0].setStyle(WV.style.Button.border.active);
-        this.subViews[1].setStyle(WV.style.Button.button.active);
-        this.subViews[2].setStyle(WV.style.Button.label.active);
-
+        this.setState('active');
         this.becomeFirstResponder();
         this.canResignFirstResponder = false;
 
@@ -212,17 +257,13 @@ WV.Button = WV.extend(WV.View, {
     {
         this.hasMouseDown = false;
 
-        this.setStyle(WV.style.Button.base.normal);
-        this.subViews[0].setStyle(WV.style.Button.border.normal);
-        this.subViews[1].setStyle(WV.style.Button.button.normal);
-        this.subViews[2].setStyle(WV.style.Button.label.normal);
-
         if (this.isFirstResponder)
         {
-            this.addStyle(WV.style.Button.base.focus);
-            this.subViews[0].addStyle(WV.style.Button.border.focus);
-            this.subViews[1].addStyle(WV.style.Button.button.focus);
-            this.subViews[2].addStyle(WV.style.Button.label.focus);
+            this.setState('normal, focus');
+        }
+        else
+        {
+            this.setState('normal');
         }
 
         this.canResignFirstResponder = true;
@@ -237,17 +278,13 @@ WV.Button = WV.extend(WV.View, {
 
     mouseExited: function(e)
     {
-        this.setStyle(WV.style.Button.base.normal);
-        this.subViews[0].setStyle(WV.style.Button.border.normal);
-        this.subViews[1].setStyle(WV.style.Button.button.normal);
-        this.subViews[2].setStyle(WV.style.Button.label.normal);
-
         if (this.isFirstResponder)
         {
-            this.addStyle(WV.style.Button.base.focus);
-            this.subViews[0].addStyle(WV.style.Button.border.focus);
-            this.subViews[1].addStyle(WV.style.Button.button.focus);
-            this.subViews[2].addStyle(WV.style.Button.label.focus);
+            this.setState('normal, focus');
+        }
+        else
+        {
+            this.setState('normal');
         }
         
         this.canResignFirstResponder = true;
@@ -259,16 +296,13 @@ WV.Button = WV.extend(WV.View, {
     {
         if (this.hasMouseDown)
         {
-            this.setStyle(WV.style.Button.base.active);
-            this.subViews[0].setStyle(WV.style.Button.border.active);
-            this.subViews[1].setStyle(WV.style.Button.button.active);
-            this.subViews[2].setStyle(WV.style.Button.label.active);
             if (this.isFirstResponder)
             {
-                this.addStyle(WV.style.Button.base.focus);
-                this.subViews[0].addStyle(WV.style.Button.border.focus);
-                this.subViews[1].addStyle(WV.style.Button.button.focus);
-                this.subViews[2].addStyle(WV.style.Button.label.focus);
+                this.setState('active, focus');
+            }
+            else
+            {
+                this.setState('active');
             }
         }
 
@@ -289,10 +323,7 @@ WV.Button = WV.extend(WV.View, {
         var result = WV.Button.superclass.becomeFirstResponder.call(this);
         if (result === true)
         {
-            this.addStyle(WV.style.Button.base.focus);
-            this.subViews[0].addStyle(WV.style.Button.border.focus);
-            this.subViews[1].addStyle(WV.style.Button.button.focus);
-            this.subViews[2].addStyle(WV.style.Button.label.focus);
+            this.addState('focus');
         }
 
         return result;
@@ -303,10 +334,7 @@ WV.Button = WV.extend(WV.View, {
         var result = WV.Button.superclass.resignFirstResponder.call(this);
         if (result === true && this.rendered)
         {
-            this.setStyle(WV.style.Button.base.normal);
-            this.subViews[0].setStyle(WV.style.Button.border.normal);
-            this.subViews[1].setStyle(WV.style.Button.button.normal);
-            this.subViews[2].setStyle(WV.style.Button.label.normal);
+            this.removeState('focus');
         }
 
         return result;
@@ -390,7 +418,7 @@ WV.TextArea = WV.extend(WV.TextComponent, {
     h: 100,
 	cls: 'wv-textarea',
     componentTag: 'textarea',
-    componentTpl: { html: '{text}' },
+    componentTpl: { html: '{text}{_subViewHtml}' },
     afterRender: function()
     {
         WV.TextArea.superclass.afterRender.call(this);
@@ -443,14 +471,13 @@ WV.CheckBox = WV.extend(WV.View, {
 
 		// Checkmark
 		this.addSubView({
+            vtype: 'image',
 			x: 3,
 			y: -3,
 			h: this.h,
 			w: this.w,
 			cls: 'bd-checkbox-check',
-			tag: 'img',
-			src: 'resources/images/form/checkmark.png',
-			domTpl: { src: '{src}' }
+			src: 'resources/images/form/checkmark.png'  
 		});
     }
 });
