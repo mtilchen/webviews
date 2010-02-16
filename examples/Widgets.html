@@ -8,15 +8,14 @@
     <script src="../webviews-debug.js"></script>
     <script>
         WV.init(function() {
-            var body = WV.Window;
             var e1 = new WV.FormView({
-                superView: body,
+                superView: WV.Window,
                 id: 'e1',
                 autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
                 x: 30,
                 y: 30,
-                h: body.h - 60,
-                w: body.w - 60,
+                h: 'h - 60',
+                w: 'w - 60',
                 style: {
                     backgroundColor: '#D8D8D8',
                     border: '1px solid #989898',
@@ -121,8 +120,8 @@
             new WV.Button({
                 superView: e1,
                 autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_LEFT_FLEX,
-                x: e1.w - 110,
-                y: e1.h - 40,
+                x: '{e1}.w - 110',
+                y: '{e1}.h - 40',
                 text: 'Send'
             });
             
@@ -131,7 +130,7 @@
                 canBecomeFirstResponder: false,
                 autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_RIGHT_FLEX,
                 x: 15,
-                y: e1.h - 40,
+                y: '{e1}.h - 40',
                 text: 'Cancel'
             });
         });
