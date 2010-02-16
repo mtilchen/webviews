@@ -17,7 +17,6 @@ WV.View = WV.extend(Ext.util.Observable, {
     z: 0,
     previousH: 0,
     previousW: 0,
-    bwOffset: 0, // Offset for borderWidth of superView
     autoResizeMask: WV.RESIZE_LEFT_FLEX | WV.RESIZE_RIGHT_FLEX |
                     WV.RESIZE_TOP_FLEX  | WV.RESIZE_BOTTOM_FLEX,
     visible: true,
@@ -67,9 +66,8 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             this.rendered = true;
             this.dom.id = this.id;
-            this.bwOffset = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
-            this.dom.style.left = (this.x - this.bwOffset) + 'px';
-            this.dom.style.top = (this.y - this.bwOffset) + 'px';
+            this.dom.style.left = this.x + 'px';
+            this.dom.style.top = this.y + 'px';
             this.dom.style.width =  this.w + 'px';
             this.dom.style.height =  this.h + 'px';
             this.dom.style.zIndex = this.z;
@@ -125,6 +123,9 @@ WV.View = WV.extend(Ext.util.Observable, {
                 if (view.rendered)
                 {
                     view.dom.style.zIndex = view.z;
+                    // This will adjust to the borderWidth of the new superView
+                    view.setStyle('marginLeft', view.style.marginLeft);
+                    view.setStyle('marginTop', view.style.marginTop);
                     this.dom.appendChild(view.dom);
                 }
                 else
@@ -208,7 +209,6 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         var previousX = this.x,
             previousY = this.y,
-            previousBw = this.bwOffset,
             sv = this.superView,
             needsLayout = false;
 
@@ -216,7 +216,6 @@ WV.View = WV.extend(Ext.util.Observable, {
         this.y = (typeof frame.y === 'number') ? frame.y : this.convertRelative('y', frame.y) || this.y;
         this.w = (typeof frame.w === 'number') ? frame.w : this.convertRelative('width', frame.w) || this.w;
         this.h = (typeof frame.h === 'number') ? frame.h : this.convertRelative('height', frame.h) || this.h;
-        this.bwOffset = sv ? parseInt(sv.style.borderWidth, 10) || 0 : 0;
 
         if (!Ext.isGecko && sv)
         {
@@ -232,8 +231,8 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         if (this.rendered)
         {
-            if (this.x !== previousX || this.bwOffset !== previousBw) { this.dom.style.left = (this.x - this.bwOffset) + 'px'; }
-            if (this.y !== previousY || this.bwOffset !== previousBw) { this.dom.style.top =  (this.y - this.bwOffset) + 'px'; }
+            if (this.x !== previousX) { this.dom.style.left = this.x + 'px'; }
+            if (this.y !== previousY) { this.dom.style.top =  this.y + 'px'; }
             if (this.w !== this.previousW) { this.dom.style.width = Math.max(this.w, 0) + 'px'; needsLayout = true; }
             if (this.h !== this.previousH) { this.dom.style.height = Math.max(this.h, 0) + 'px'; needsLayout = true; }
         }
@@ -289,18 +288,16 @@ WV.View = WV.extend(Ext.util.Observable, {
     {
         var previousX = this.x,
             previousY = this.y,
-            previousZ = this.z,
-            previousBw = this.bwOffset;
+            previousZ = this.z;
 
         this.x = (typeof x === 'number') ? x : this.convertRelative('x', x) || this.x;
         this.y = (typeof y === 'number') ? y : this.convertRelative('y', y) || this.y;
         this.z = (typeof z === 'number') ? z : this.z;
-        this.bwOffset = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
 
         if (this.rendered)
         {
-            if (this.x !== previousX || this.bwOffset !== previousBw) { this.dom.style.left = (this.x - this.bwOffset) + 'px'; }
-            if (this.y !== previousY || this.bwOffset !== previousBw) { this.dom.style.top =  (this.y - this.bwOffset) + 'px'; }
+            if (this.x !== previousX) { this.dom.style.left = this.x + 'px'; }
+            if (this.y !== previousY) { this.dom.style.top =  this.y + 'px'; }
             if (this.z !== previousZ) { this.dom.style.zIndex = this.z; }
         }
 
@@ -487,6 +484,7 @@ WV.View = WV.extend(Ext.util.Observable, {
                 {
                     // Never remove some important styles
                     if (!name.hasOwnProperty(x) && x !== 'position' && x !== 'boxSizing'
+                                                && x.indexOf('margin') !== 0
                                                 && x.indexOf('overflow') !== 0 && x !== 'display')
                     {
                         this.setStyle(x, '');
@@ -535,15 +533,20 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         buf[buf.length] = 'width: ' + this.w + 'px';
         buf[buf.length] = 'height: ' + this.h + 'px';
-        buf[buf.length] = 'left: ' + (this.x - bw) + 'px';
-        buf[buf.length] = 'top: ' + (this.y - bw) + 'px';
+        buf[buf.length] = 'left: ' + this.x + 'px';
+        buf[buf.length] = 'top: ' + this.y + 'px';
+        buf[buf.length] = 'margin-left: ' + (parseInt(this.style.marginLeft) || 0 - bw) + 'px';
+        buf[buf.length] = 'margin-top: ' + (parseInt(this.style.marginTop) || 0 - bw) + 'px';
         buf[buf.length] = 'z-index: ' + this.z;
 
         for (prop in this.style)
         {
-            trans = WV.styleLib[prop] || prop;
-            trans = trans.replace(re, deCamel);
-            buf[buf.length] = trans + ': ' + this.style[prop];
+            if (prop.indexOf('margin') < 0)
+            {
+                trans = WV.styleLib[prop] || prop;
+                trans = trans.replace(re, deCamel);
+                buf[buf.length] = trans + ': ' + this.style[prop];
+            }
         }
 
         buf[buf.length - 1] += ';';
@@ -565,10 +568,13 @@ WV.View = WV.extend(Ext.util.Observable, {
         return this;
     },
 
-    setBorderWidth: function(bw)
+    setBorderWidth: function(newVal)
     {
+        newVal = parseInt(newVal, 10) || 0;
+
         var i = 0,
-            len = this.subViews.length;
+            len = this.subViews.length,
+            bw = newVal ? newVal + 'px' : '';
 
         if (this.style.borderWidth !== bw)
         {
@@ -579,12 +585,41 @@ WV.View = WV.extend(Ext.util.Observable, {
                 this.dom.style.borderWidth = bw;
             }
 
+            // Adjust the subviews for the new borderWidth
             for (i = 0,len = this.subViews.length; i < len; i++)
             {
-                this.subViews[i].setOrigin();
+                this.subViews[i].setStyle('marginLeft', this.style.marginLeft);
+                this.subViews[i].setStyle('marginTop', this.style.marginTop);
             }
         }
+        return this;
+    },
 
+    setMarginLeft: function(m)
+    {
+        m = parseInt(m, 10) || 0;
+        var bw = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
+
+        this.style.marginLeft = m ? m + 'px' : '';
+
+        if (this.rendered)
+        {
+            this.dom.style.marginLeft = (m - bw) + 'px';
+        }
+        return this;
+    },
+
+    setMarginTop: function(m)
+    {
+        m = parseInt(m, 10) || 0;
+        var bw = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
+
+        this.style.marginTop = m ? m + 'px' : '';
+
+        if (this.rendered)
+        {
+            this.dom.style.marginTop = (m - bw) + 'px';
+        }
         return this;
     },
 

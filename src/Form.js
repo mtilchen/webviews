@@ -66,7 +66,7 @@ WV.style.Button = {
             backgroundRepeat: 'repeat-x',
             borderBottomColor: '#4D4D4D',
             borderLeftColor: '#3D3D3D',            
-            borderRadius: '0',
+            borderRadius: '0px',
             borderRightColor: '#5C5C5C',
             borderTopColor: '#515151'
         },
@@ -107,7 +107,9 @@ WV.style.Button = {
             fontSize: '11px',
             fontWeight: 'normal',
             lineHeight: '19px',
-            textAlign: 'center'
+            textAlign: 'center',
+            marginLeft: '0px',
+            marginTop: '0px'
         },
         normal: {},
         active: {
