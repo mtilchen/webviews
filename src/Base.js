@@ -10,8 +10,11 @@ WV = (function() {
          vtypes = {},
          cache = {},
          vtagIndex = {},
+         deCamelRe = /([A-Z])/g,
          logEnabled = window.console !== undefined &&
                       typeof window.console.log === 'function';
+
+    function deCamel(c) { return '-' + c.toLowerCase(); }
 
     function addToVtagIndex(view)
     {
@@ -156,6 +159,11 @@ WV = (function() {
             if (vtype) { WV.registerVType(vtype, newCls); }
 
             return newCls;
+        },
+
+        deCamel: function(str)
+        {
+            return str.replace(deCamelRe, deCamel);
         },
 
         apply: Ext.apply,

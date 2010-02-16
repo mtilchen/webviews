@@ -526,10 +526,7 @@ WV.View = WV.extend(Ext.util.Observable, {
     buildStyle: function()
     {
         var prop, trans, buf = [],
-            re = /([A-Z])/g,
             bw = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
-
-        function deCamel(c) { return '-' + c.toLowerCase(); }
 
         buf[buf.length] = 'width: ' + this.w + 'px';
         buf[buf.length] = 'height: ' + this.h + 'px';
@@ -544,7 +541,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             if (prop.indexOf('margin') < 0)
             {
                 trans = WV.styleLib[prop] || prop;
-                trans = trans.replace(re, deCamel);
+                trans = WV.deCamel(trans);
                 buf[buf.length] = trans + ': ' + this.style[prop];
             }
         }
