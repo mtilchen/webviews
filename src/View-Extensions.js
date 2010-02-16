@@ -4,7 +4,8 @@ WV.Label = WV.extend(WV.View, {
     w: 38,
 	cls: 'wv-label',
     text: '',
-    domTpl: { html: '{text}' },
+    autoResizeMask: WV.RESIZE_NONE,
+    domTpl: { html: '{text}{_subViewHtml}' },
 	style: {
         color: '#000',
         fontFamily: 'Verdana',
