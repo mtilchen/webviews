@@ -14,7 +14,7 @@ WV.FormView = WV.extend(WV.View, {
 WV.Input = WV.extend(WV.View, {
     vtype: 'input',
     tag: 'input',
-    domTpl: { type: '{type}', name: '{name}', value: '{text}' },
+    domTpl: { type: '{type}', name: '{name}', value: '{value}' },
     getForm: function()
     {
         if (this.rendered)
@@ -123,8 +123,6 @@ WV.Button = WV.extend(WV.View, {
     vtype: 'button',
     h: 25,
     w: 96,
-	cls: 'wv-button',
-    tag: 'div',
     text: '',
     canBecomeFirstResponder: true,
     clipSubViews: true,
@@ -137,7 +135,6 @@ WV.Button = WV.extend(WV.View, {
         h: 'h - 2',
         w: 'w - 2',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX,
-        cls: 'wv-button-border',
         tag: 'div'
     },{
         vtag: 'button',
@@ -147,13 +144,11 @@ WV.Button = WV.extend(WV.View, {
         h: 'h - 4',
         w: 'w - 4',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX,
-        cls: 'wv-button-button',
         type: 'button'
     },{
         vtag: 'label',
         vtype: 'label',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX,
-        cls: 'wv-button-label',
         draggable: false,
         x: 3,
         y: 3,
@@ -176,6 +171,7 @@ WV.Button = WV.extend(WV.View, {
 
     setState: function(newState)
     {
+        var end, start = new Date();
         if (typeof newState === 'string')
         {
             var i, s, newStyle, hits,
@@ -218,6 +214,8 @@ WV.Button = WV.extend(WV.View, {
             }
         }
 
+        end = new Date();
+        WV.log('setState(): ', end.getTime() - start.getTime(), 'ms');
         return this;
     },
     addState: function(state)
@@ -240,16 +238,20 @@ WV.Button = WV.extend(WV.View, {
     {
         if (typeof state === 'string' && this.state)
         {
-            var re = new RegExp(String.format('^{0},|{0},|,{0}|{0}$', state), 'g');
+            var re = new RegExp(String.format('^{0},|{0},|,{0}|{0}$', state), 'g'),
+                newState = this.state.replace(re, '');
 
-            this.setState(this.state.replace(re, ''));
+            if (this.state !== newState)
+            {
+                this.setState(newState);
+            }
         }
-
         return this;
     },
     mouseDown: function(e)
     {
-        this.setState('active');
+        this.addState('active');
+        this.removeState('normal');
         this.becomeFirstResponder();
         this.canResignFirstResponder = false;
 
@@ -259,14 +261,8 @@ WV.Button = WV.extend(WV.View, {
     {
         this.hasMouseDown = false;
 
-        if (this.isFirstResponder)
-        {
-            this.setState('normal, focus');
-        }
-        else
-        {
-            this.setState('normal');
-        }
+        this.addState('normal');
+        this.removeState('active');
 
         this.canResignFirstResponder = true;
 
@@ -280,15 +276,9 @@ WV.Button = WV.extend(WV.View, {
 
     mouseExited: function(e)
     {
-        if (this.isFirstResponder)
-        {
-            this.setState('normal, focus');
-        }
-        else
-        {
-            this.setState('normal');
-        }
-        
+        this.addState('normal');
+        this.removeState('active');
+
         this.canResignFirstResponder = true;
 
         return WV.Button.superclass.mouseExited.call(this, e);
@@ -298,14 +288,8 @@ WV.Button = WV.extend(WV.View, {
     {
         if (this.hasMouseDown)
         {
-            if (this.isFirstResponder)
-            {
-                this.setState('active, focus');
-            }
-            else
-            {
-                this.setState('active');
-            }
+            this.addState('active');
+            this.removeState('normal');
         }
 
         this.canResignFirstResponder = true;
@@ -431,56 +415,116 @@ WV.TextArea = WV.extend(WV.TextComponent, {
     }
 }); 
 
-WV.CheckBox = WV.extend(WV.View, {
+
+WV.style.CheckBox = {
+    base: {
+        defaults: {
+            borderBottomColor: '#7E7E7E',
+            borderLeftColor: '#939393',
+            borderRadius: '2px',
+            borderRightColor: '#939393',
+            borderStyle: 'solid',
+            borderTopColor: '#ABABAB',
+            borderWidth: '1px'
+        },
+        normal: {},
+        active: {},
+        hover: {},
+        focus: {
+            borderBottomColor: '#4D78A4',
+            borderLeftColor: '#4D78A4',
+            borderRightColor: '#4D78A4',
+            borderTopColor: '#4D78A4',
+            borderWidth: '2px'
+        }
+	},
+    border: {
+        defaults: {
+            backgroundColor: '#F9F9F9',
+            borderBottomColor: '#D1D1D1',
+            borderLeftColor: '#EDEDED',
+            borderRadius: '2px',
+            borderRightColor: '#EDEDED',
+            borderStyle: 'solid',
+            borderTopColor: '#FAFAFA',
+            borderWidth: '1px'
+        },
+        normal: {
+            marginLeft: '0px',
+            marginTop: '0px'
+        },
+        active: {
+            marginLeft: '1px',
+            marginTop: '1px'
+        },
+        focus: {
+            borderRadius: '0px'
+        }
+	},
+    checkImage: {
+        defaults: {},
+        normal: {},
+        active: {},
+        checked: {
+            backgroundImage: 'url(resources/images/form/checkmark.png)',
+            backgroundSize: '100% auto'
+        }
+	}
+};
+
+WV.CheckBox = WV.extend(WV.Button, {
+    vtype: 'checkbox',
     h: 12,
     w: 12,
-	cls: 'wv-checkbox',
-    tag: 'div',
+    clipSubViews: false,
 	text: 'Check',
-	style: {
-        borderBottomColor: '#7E7E7E',
-		borderLeftColor: '#939393',
-		borderRadius: '2px',
-		borderRightColor: '#939393',
-		borderStyle: 'solid',				
-        borderTopColor: '#ABABAB',
-		borderWidth: '1px'
-	},
-	constructor: function(config)
+    checked: false,
+    styleObject: WV.style.CheckBox,
+    subViews: [{
+        vtag: 'border',
+        x: 1,
+        y: 1,
+        h: 'h - 2',
+        w: 'w - 2',
+        autoResizeMask: WV.RESIZE_NONE
+    },{
+        vtag: 'checkImage',
+        x: 3,
+        y: -3,
+        h: 'h',
+        w: 'w',
+        autoResizeMask: WV.RESIZE_NONE
+    },{
+        vtag: 'label',
+        vtype: 'label',
+        draggable: false,
+        x: 16,
+        y: -2,
+        h: 'h',
+        w: 'w + 15',
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX
+    },{
+        vtype: 'input',
+        type: 'hidden',
+        name: 'test_check',
+        autoResizeMask: WV.RESIZE_NONE
+    }],
+    constructor: function(config)
     {
         WV.CheckBox.superclass.constructor.call(this, config);
 
-		// Border
-		this.addSubView({
-            x: 1,
-            y: 1,
-            h: this.h - 2,
-            w: this.w - 2,
-            autoResizeMask: WV.RESIZE_WIDTH_FLEX,
-			cls: 'wv-checkbox-border',
-            tag: 'div',
-			style: {
-				backgroundColor: '#F9F9F9',
-		        borderBottomColor: '#D1D1D1',
-				borderLeftColor: '#EDEDED',
-				borderRadius: '2px',
-				borderRightColor: '#EDEDED',
-				borderStyle: 'solid',				
-		        borderTopColor: '#FAFAFA',
-				borderWidth: '1px'								
-			}			
-        });
+        this.setChecked(this.checked);
+    },
+    setChecked: function(val)
+    {
+        this.checked = val === true;
+        this.checked ? this.addState('checked') : this.removeState('checked');
+    },
+    mouseUp: function(e)
+    {
+        WV.CheckBox.superclass.mouseUp.call(this, e);
 
-		// Checkmark
-		this.addSubView({
-            vtype: 'image',
-			x: 3,
-			y: -3,
-			h: this.h,
-			w: this.w,
-			cls: 'bd-checkbox-check',
-			src: 'resources/images/form/checkmark.png'  
-		});
+        this.setChecked(!this.checked);
     }
 });
 
