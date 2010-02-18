@@ -67,18 +67,16 @@ WV.Image = WV.extend(WV.View, {
     // private
     preLoad: function()
     {
-        if (Ext.isIE)
-        {
-            // On IE we must do this to get the actual width/height from the dom.
-            var tmpImg = new Image();
-            Ext.EventManager.addListener(tmpImg, 'load', function(e, img) {
-                this.actualHeight = tmpImg.height;
-                this.actualWidth = tmpImg.width;
-                tmpImg = undefined;
-                this.load();
-            }, this, { single: true });
-            tmpImg.src = this.src;
-        }
+        // We must use the Image constructor to relaiably get the actual width/height of the image.
+        // Subsequent loads should be in the browser cache
+        var tmpImg = new Image();
+        Ext.EventManager.addListener(tmpImg, 'load', function(e, img) {
+            this.actualHeight = tmpImg.height;
+            this.actualWidth = tmpImg.width;
+            tmpImg = undefined;
+            this.load();
+        }, this, { single: true });
+        tmpImg.src = this.src;
     },
     // private
     load: function()
@@ -86,11 +84,6 @@ WV.Image = WV.extend(WV.View, {
         if (this.rendered)
         {
             Ext.EventManager.addListener(this.dom, 'load', function(e, img) {
-                if (!Ext.isIE)
-                {   // We already got this from the temporary image in preLoad
-                    this.actualHeight = this.dom.height;
-                    this.actualWidth = this.dom.width;
-                }
                 this.setSize(this.w, this.h);
                 this.setVisible(true);
 
@@ -101,8 +94,7 @@ WV.Image = WV.extend(WV.View, {
     setSrc: function(src)
     {
         this.src = src;
-
-        Ext.isIE ? this.preLoad() : this.load();
+        this.preLoad();
 
         return this;
     }
