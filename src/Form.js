@@ -95,7 +95,7 @@ WV.Control = WV.extend(WV.View, {
         }
 
         end = new Date();
-        WV.log('setState(): ', this.id, ' ', end.getTime() - start.getTime(), 'ms');
+//        WV.log('setState(): ', this.id, ' ', end.getTime() - start.getTime(), 'ms');
         return this;
     },
     addState: function(state)
@@ -142,14 +142,13 @@ WV.Control = WV.extend(WV.View, {
     {
         if (this.rendered)
         {
-            // TODO: Override this in TextArea
-            return this.subViews.input.dom.value;
+            this.value = this.subViews.input.dom.value;
         }
-        else { return this.value; }
+        return this.value;
     },
     setValue: function(val)
     {
-        this.value = val;
+        this.value = (val !== undefined && val !== null) ? val : '';
         if (this.rendered)
         {
             this.subViews.input.dom.value = this.value;
@@ -157,7 +156,7 @@ WV.Control = WV.extend(WV.View, {
         else
         {
             // This will get picked up by the template during rendering
-            this.subViews.input.value = val;
+            this.subViews.input.value = this.value;
         }
         return this;
     },
@@ -168,7 +167,6 @@ WV.Control = WV.extend(WV.View, {
         {
             this.addState('focus');
         }
-
         return result;
     },
 
@@ -421,7 +419,7 @@ WV.style.CheckBox = {
         defaults: {
             display: 'none'
         },
-        checked: {
+        selected: {
             display: 'block'
         }
     }
@@ -433,9 +431,9 @@ WV.CheckBox = WV.extend(WV.Button, {
     w: 12,
     clipSubViews: false,
 	text: 'Check',
-    checked: true,
-    checkedValue: true,
-    uncheckedValue: false,
+    selected: false,
+    selectedValue: true,
+    unselectedValue: false,
     styleObject: WV.style.CheckBox,
     subViews: [{
         vtag: 'outerborder',
@@ -473,42 +471,58 @@ WV.CheckBox = WV.extend(WV.Button, {
     {
         WV.CheckBox.superclass.constructor.call(this, config);
 
-        this.setChecked(this.checked);
+        this.setSelected(this.selected);
     },
-    setChecked: function(val)
+    setSelected: function(val)
     {
-        this.checked = val === true;
-        this.checked ? this.addState('checked') : this.removeState('checked');
+        this.selected = val === true;
+        this.selected ? this.addState('selected') : this.removeState('selected');
         if (this.rendered)
         {
-            this.subViews.input.dom.value = this.checked ? this.checkedValue : this.uncheckedValue;
+            this.subViews.input.dom.value = this.selected ? this.selectedValue : this.unselectedValue;
         }
     },
     doAction: function()
     {
         // Set the value before the action fires in the superclass
-        this.setChecked(!this.checked);
+        this.setSelected(!this.selected);
         WV.CheckBox.superclass.doAction.call(this);
     }
 });
 
-WV.RadioButton = WV.extend(WV.View, {
+WV.style.RadioButton = {
+    base: {
+        defaults: {
+            backgroundImage: 'url(resources/images/form/radio.png)',
+		    backgroundPosition: '0px 0px',
+		    backgroundRepeat: 'no-repeat'
+        },
+        selected: {
+            backgroundPosition: '0px -13px'
+        },
+        focus: {
+            borderRadius: '0px'
+        }
+	}
+};
+
+WV.RadioButton = WV.extend(WV.CheckBox, {
     h: 13,
     w: 13,
 	autoResizeMask: WV.RESIZE_NONE,
 	cls: 'wv-radio-button',
-    tag: 'div',
 	text: 'Radio',
-	checked: '',
-	style: {
-        backgroundImage: 'url(resources/images/form/radio.png)',
-		backgroundPosition: '0 0',
-		backgroundRepeat: 'no-repeat'
-	},
-	constructor: function(config)
-    {
-        WV.RadioButton.superclass.constructor.call(this, config);
-    }
+	styleObject: WV.style.RadioButton,
+    subViews: [{
+        vtag: 'label',
+        vtype: 'label',
+        draggable: false,
+        x: 16,
+        y: -2,
+        h: 'h',
+        w: 'w + 15',
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX
+    }]
 });
 
 WV.style.TextComponent = {

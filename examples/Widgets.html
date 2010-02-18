@@ -100,6 +100,7 @@
             
             new WV.RadioButton({
                 superView: e1,
+                selected: true,
                 x: 15,
                 y: 120
             });
@@ -113,9 +114,10 @@
             new WV.CheckBox({
                 superView: e1,
                 name: 'test_check',
+                selected: false,
                 toolTip: 'This is a sweet checkbox',
                 autoResizeMask: WV.RESIZE_LEFT_FLEX,
-                x: e1.w - 112,
+                x: 'w - 112',
                 y: 120
             });
                         
