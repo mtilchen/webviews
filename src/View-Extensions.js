@@ -19,7 +19,6 @@ WV.Image = WV.extend(WV.View, {
     tag: 'img',
     autoResizeMask: WV.RESIZE_NONE,
     resizeSubViews: false,
-    visible: false,
     preserveAspect: 'width',
     actualWidth: 0,
     actualHeight: 0,
@@ -27,7 +26,6 @@ WV.Image = WV.extend(WV.View, {
     afterRender: function()
     {
         WV.Image.superclass.afterRender.call(this);
-
         this.setSrc(this.src);
     },
 
@@ -85,8 +83,6 @@ WV.Image = WV.extend(WV.View, {
         {
             Ext.EventManager.addListener(this.dom, 'load', function(e, img) {
                 this.setSize(this.w, this.h);
-                this.setVisible(true);
-
             }, this, { single: true });
             this.dom.src = this.src;
         }
