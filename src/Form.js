@@ -46,6 +46,7 @@ WV.Control = WV.extend(WV.View, {
                 inputType: this.inputType
             });
         }
+        this.setState(this.state);
         return this;
     },
     setState: function(newState)
@@ -94,7 +95,7 @@ WV.Control = WV.extend(WV.View, {
         }
 
         end = new Date();
-        WV.log('setState(): ', end.getTime() - start.getTime(), 'ms');
+        WV.log('setState(): ', this.id, ' ', end.getTime() - start.getTime(), 'ms');
         return this;
     },
     addState: function(state)
@@ -146,13 +147,17 @@ WV.Control = WV.extend(WV.View, {
         }
         else { return this.value; }
     },
-
     setValue: function(val)
     {
         this.value = val;
         if (this.rendered)
         {
             this.subViews.input.dom.value = this.value;
+        }
+        else
+        {
+            // This will get picked up by the template during rendering
+            this.subViews.input.value = val;
         }
         return this;
     },
@@ -176,6 +181,11 @@ WV.Control = WV.extend(WV.View, {
         }
 
         return result;
+    },
+    mouseDown: function(e)
+    {
+        this.becomeFirstResponder();
+        return WV.Control.superclass.mouseDown.call(this, e);
     }
 });
 
@@ -314,28 +324,19 @@ WV.Button = WV.extend(WV.Control, {
         {
             this.subViews.label.text = this.text;
         }
-
-        this.setState(this.state);
-        
         return this;
     },
     mouseDown: function(e)
     {
         this.addState('active');
         this.removeState('normal');
-        this.becomeFirstResponder();
-        this.canResignFirstResponder = false;
-
+        
         return WV.Button.superclass.mouseDown.call(this, e);
     },
     mouseUp: function(e)
     {
-        this.hasMouseDown = false;
-
         this.addState('normal');
         this.removeState('active');
-
-        this.canResignFirstResponder = true;
 
         if (e.target.isDescendantOf(this))
         {
@@ -350,48 +351,18 @@ WV.Button = WV.extend(WV.Control, {
         this.addState('normal');
         this.removeState('active');
 
-        this.canResignFirstResponder = true;
-
         return WV.Button.superclass.mouseExited.call(this, e);
     },
 
     mouseEntered: function(e)
     {
-        if (this.hasMouseDown)
+        if (e.mouseDownOwner && e.mouseDownOwner.isDescendantOf(this))
         {
             this.addState('active');
             this.removeState('normal');
         }
 
-        this.canResignFirstResponder = true;
-
         return WV.Button.superclass.mouseEntered.call(this, e);
-    },
-
-    mouseDragged: function(e)
-    {
-        this.hasMouseDown = true;
-
-        return WV.Button.superclass.mouseDragged.call(this, e);
-    }
-});
-
-WV.RadioButton = WV.extend(WV.View, {
-    h: 13,
-    w: 13,
-	autoResizeMask: WV.RESIZE_NONE,
-	cls: 'wv-radio-button',
-    tag: 'div',
-	text: 'Radio',
-	checked: '',
-	style: {
-        backgroundImage: 'url(resources/images/form/radio.png)',
-		backgroundPosition: '0 0',
-		backgroundRepeat: 'no-repeat'
-	},
-	constructor: function(config)
-    {
-        WV.RadioButton.superclass.constructor.call(this, config);
     }
 });
 
@@ -521,82 +492,95 @@ WV.CheckBox = WV.extend(WV.Button, {
     }
 });
 
-WV.TextComponentStyle = {
-    field: {
-		backgroundColor: '#F9F9F9',
-		borderBottomColor: '#999',
-		borderLeftColor: '#999',
-		borderRadius: '2px',
-		borderRightColor: '#999',
-		borderStyle: 'solid',
-        borderTopColor: '#999',
-		borderWidth: '1px',
-        color: '#000',
-		fontFamily: 'Verdana',
-        fontSize: '11px',
-		fontWeight: 'normal',
-		paddingBottom: '0px',
-		paddingLeft: '3px',
-		paddingRight: '3px',
-		paddingTop: '2px',
-		resize: 'none'
+WV.RadioButton = WV.extend(WV.View, {
+    h: 13,
+    w: 13,
+	autoResizeMask: WV.RESIZE_NONE,
+	cls: 'wv-radio-button',
+    tag: 'div',
+	text: 'Radio',
+	checked: '',
+	style: {
+        backgroundImage: 'url(resources/images/form/radio.png)',
+		backgroundPosition: '0 0',
+		backgroundRepeat: 'no-repeat'
+	},
+	constructor: function(config)
+    {
+        WV.RadioButton.superclass.constructor.call(this, config);
+    }
+});
+
+WV.style.TextComponent = {
+    base: {
+        defaults: {
+            background: 'url(resources/images/form/inset.png)',
+            borderRadius: '2px'
+        }
+//        focus: {
+//            borderStyle: 'solid',
+//            borderColor: '#4D78A4',
+//            borderWidth: '2px',
+//            borderRadius: '0px'
+//        }
     },
-    container: {
-        background: 'url(resources/images/form/inset.png)',
-        borderRadius: '2px'
+    input: {
+        defaults: {
+            backgroundColor: '#F9F9F9',
+            borderColor: '#999',
+            borderRadius: '2px',
+            borderStyle: 'solid',
+            borderWidth: '1px',
+            color: '#000',
+            fontFamily: 'Verdana',
+            fontSize: '11px',
+            fontWeight: 'normal',
+            paddingBottom: '0px',
+            paddingLeft: '3px',
+            paddingRight: '3px',
+            paddingTop: '2px',
+            resize: 'none'
+        }
     }
 };
 
-WV.TextComponent = WV.extend(WV.View, {
-    cls: 'text-view',
+WV.TextField = WV.extend(WV.Control, {
+    h: 22,
     w: 150,
-    style: WV.TextComponentStyle.container,
+	cls: 'wv-text-field',
+    inputType: 'text',
+    styleObject: WV.style.TextComponent,
     constructor: function(config)
     {
-        WV.TextComponent.superclass.constructor.call(this, config);
-
-        this.field = new WV.View({
-            x: 2,
-            y: 2,
-            h: this.h,
-            w: this.w,
-            autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX,
-            tag: this.componentTag,
-            text: this.text,
-            type: this.type,
-            name: this.name,
-            domTpl: this.componentTpl,
-            style: WV.TextComponentStyle.field
-        });
-        this.addSubView(this.field);
-    },
-    setText: function(t)
-    {
-        this.text = t;
-        if (this.rendered)
-        {
-            this.field.dom.tagName.toLowerCase() === 'input' ? this.field.dom.value = t
-                                                             : this.field.dom.innerHTML = t;
-        }
+        WV.TextField.superclass.constructor.call(this, config);
+        this.setValue(this.text);
+        this.subViews.input.setFrame({ x: 2, y: 2, w: this.w, h: this.h});
+        this.subViews.input.autoResizeMask = WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX;
         return this;
     }
 });
 
-WV.TextField = WV.extend(WV.TextComponent, {
-    h: 22,
-	cls: 'wv-text-field',
-    componentTag: 'input',
-    componentTpl: { type: '{type}', name: '{name}', value: '{text}' }
-});
-
 WV.PasswordField = WV.extend(WV.TextField, {
 	cls: 'wv-password-field',
-    type: 'password'
+    inputType: 'password'
 });
 
-WV.TextArea = WV.extend(WV.TextComponent, {
+WV.TextArea = WV.extend(WV.TextField, {
     h: 100,
 	cls: 'wv-textarea',
-    componentTag: 'textarea',
-    componentTpl: { html: '{text}' }
+    subViews: [{
+        vtag: 'input',
+        tag: 'textarea',
+        domTpl: { html: '{value}' }
+    }],
+    setValue: function(val)
+    {
+        WV.TextArea.superclass.setValue.call(this, val);
+        // Make the innerHTML consistent with the dom value
+        if (this.rendered)
+        {
+            this.subViews.input.dom.innerHTML = this.value;
+        }
+        return this;
+    }
 });

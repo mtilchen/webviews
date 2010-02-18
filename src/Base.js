@@ -11,8 +11,7 @@ WV = (function() {
          cache = {},
          vtagIndex = {},
          deCamelRe = /([A-Z])/g,
-         logEnabled = window.console !== undefined &&
-                      typeof window.console.log === 'function';
+         logEnabled = window.console && window.console.log;
 
     function deCamel(c) { return '-' + c.toLowerCase(); }
 
@@ -173,14 +172,15 @@ WV = (function() {
         emptyFn: function() {},
 
         log: logEnabled ? function() {
-                               var newArgs = ['<',(new Date()).toLogString(), '> '],
+                               var time = (new Date()).toLogString(),
+                                   logStrings = [],
                                    i, l = arguments.length;
                                for (i = 0; i < l; i++)
                                {
-                                   newArgs[newArgs.length] = arguments[i];
+                                   logStrings[logStrings.length] = arguments[i];
                                }
 
-                               console.log.apply(console, newArgs);
+                               console.log(String.format('<{0}> {1}', time, logStrings.join('')));
                           }
                         : function() {}
     };

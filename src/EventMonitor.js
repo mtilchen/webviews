@@ -225,6 +225,7 @@ WV.EventMonitor = (function() {
         sme.timestamp = be.timeStamp;
         sme.target = targetV;
         sme.targetElement = be.target;
+        sme.mouseDownOwner = mouseDownOwner;
         sme.clickCount = clickCount;
         sme.leftButton = clickCount > 0 && (ev.button === 0);
         sme.middleButton = clickCount > 0 && (ev.button === 1);
@@ -234,13 +235,11 @@ WV.EventMonitor = (function() {
         {
             sme.deltaX = be.clientX - downX;
             sme.deltaY = be.clientY - downY;
-            sme.downTarget = mouseDownOwner;
         }
         else
         {
             delete sme.deltaX;
             delete sme.deltaY;
-            delete sme.downTarget;
         }
 
         if (wheelDelta)
