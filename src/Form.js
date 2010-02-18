@@ -14,7 +14,9 @@ WV.FormView = WV.extend(WV.View, {
 WV.Input = WV.extend(WV.View, {
     vtype: 'input',
     tag: 'input',
-    domTpl: { type: '{type}', name: '{name}', value: '{value}' },
+    name: undefined,
+    inputType: 'hidden',
+    domTpl: { type: '{inputType}', name: '{name}', value: '{value}' },
     getForm: function()
     {
         if (this.rendered)
@@ -25,150 +27,27 @@ WV.Input = WV.extend(WV.View, {
     }    
 });
 
-WV.style.Button = {
-    base: {
-        defaults: {
-            borderBottomColor: '#E7E7E7',
-            borderLeftColor: '#C8C8C8',
-            borderRadius: '2px',
-            borderRightColor: '#E7E7E7',
-            borderStyle: 'solid',
-            borderTopColor: '#C8C8C8',
-            borderWidth: '1px',
-            cursor: 'default'
-        },
-        normal: {},
-        active: {},
-        hover: {},
-        focus: {
-            borderBottomColor: '#4D78A4',
-            borderLeftColor: '#4D78A4',
-            borderRightColor: '#4D78A4',
-            borderTopColor: '#4D78A4',
-            borderWidth: '2px'
-        }
-	},
-    border: {
-        defaults: {
-            borderRadius: '2px',
-            borderStyle: 'solid',
-            borderWidth: '1px'
-        },
-        normal: {
-            borderBottomColor: '#7E7E7E',
-            borderLeftColor: '#939393',
-            borderRightColor: '#939393',
-            borderTopColor: '#ABABAB'
-        },
-        active: {
-            backgroundColor: '#D2D4D7',
-            backgroundImage: 'url(resources/images/form/shadow-x.png)',
-            backgroundRepeat: 'repeat-x',
-            borderBottomColor: '#4D4D4D',
-            borderLeftColor: '#3D3D3D',            
-            borderRadius: '0px',
-            borderRightColor: '#5C5C5C',
-            borderTopColor: '#515151'
-        },
-        focus: {
-            borderRadius: '0px'
-        }
-	},
-    button: {
-        defaults: {
-            borderRadius: '2px',
-            borderStyle: 'solid',
-            borderWidth: '1px'
-        },
-        normal: {
-            backgroundColor: '#F9F9F9',
-            borderBottomColor: '#D1D1D1',
-            borderLeftColor: '#EDEDED',
-            borderRightColor: '#EDEDED',
-            borderTopColor: '#FAFAFA'
-        },
-        active: {
-            backgroundColor: 'transparent',
-            backgroundImage: 'url(resources/images/form/shadow-y.png)',
-            backgroundRepeat: 'repeat-y',
-            borderBottomColor: '#A7A9AB',
-            borderLeftColor: '#666',
-            borderRadius: '0px',
-            borderRightColor: 'transparent',
-            borderTopColor: '#777'
-        },
-        focus: {
-            borderRadius: '0px'
-        }
-	},
-    label: {
-        defaults: {
-            fontFamily: 'Verdana',
-            fontSize: '11px',
-            fontWeight: 'normal',
-            lineHeight: '19px',
-            textAlign: 'center',
-            marginLeft: '0px',
-            marginTop: '0px'
-        },
-        normal: {},
-        active: {
-            marginLeft: '1px',
-            marginTop: '1px'
-        }
-	}
-};
-
-WV.Button = WV.extend(WV.View, {
-    vtype: 'button',
-    h: 25,
-    w: 96,
-    text: '',
+WV.Control = WV.extend(WV.View, {
+    name: undefined,
+    inputType: 'hidden',
     canBecomeFirstResponder: true,
-    clipSubViews: true,
-    styleObject: WV.style.Button,
     state: 'normal',
-    subViews: [{
-        vtag: 'border',
-        x: 1,
-        y: 1,
-        h: 'h - 2',
-        w: 'w - 2',
-        autoResizeMask: WV.RESIZE_WIDTH_FLEX,
-        tag: 'div'
-    },{
-        vtag: 'button',
-        vtype: 'input',
-        x: 2,
-        y: 2,
-        h: 'h - 4',
-        w: 'w - 4',
-        autoResizeMask: WV.RESIZE_WIDTH_FLEX,
-        type: 'button'
-    },{
-        vtag: 'label',
-        vtype: 'label',
-        autoResizeMask: WV.RESIZE_WIDTH_FLEX,
-        draggable: false,
-        x: 3,
-        y: 3,
-        h: 'h - 6',
-        w: 'w - 6'
-    }],
-	constructor: function(config)
+    target: null,
+    action: null,
+    constructor: function(config)
     {
-        WV.Button.superclass.constructor.call(this, config);
-
-        if (this.subViews.label)
+        WV.Control.superclass.constructor.call(this, config);
+        if (!this.subViews.input)
         {
-            this.subViews.label.text = this.text;
+            this.addSubView({
+                vtype: 'input',
+                vtag: 'input',
+                name: this.name,
+                inputType: this.inputType
+            });
         }
-
-        this.setState(this.state);
-        
         return this;
     },
-
     setState: function(newState)
     {
         var end, start = new Date();
@@ -248,6 +127,198 @@ WV.Button = WV.extend(WV.View, {
         }
         return this;
     },
+    doAction: function()
+    {
+        WV.log('Action: ', this.id, '(name/value): ', this.name, ':', this.getValue());
+        if (this.target && typeof this.action === 'string')
+        {
+            this.target[this.action](this);
+            return true;
+        }
+        return false;
+    },
+    getValue: function()
+    {
+        if (this.rendered)
+        {
+            // TODO: Override this in TextArea
+            return this.subViews.input.dom.value;
+        }
+        else { return this.value; }
+    },
+
+    setValue: function(val)
+    {
+        this.value = val;
+        if (this.rendered)
+        {
+            this.subViews.input.dom.value = this.value;
+        }
+        return this;
+    },
+    becomeFirstResponder: function()
+    {
+        var result = WV.Control.superclass.becomeFirstResponder.call(this);
+        if (result === true)
+        {
+            this.addState('focus');
+        }
+
+        return result;
+    },
+
+    resignFirstResponder: function()
+    {
+        var result = WV.Control.superclass.resignFirstResponder.call(this);
+        if (result === true && this.rendered)
+        {
+            this.removeState('focus');
+        }
+
+        return result;
+    }
+});
+
+WV.style.Button = {
+    base: {
+        defaults: {
+            borderBottomColor: '#E7E7E7',
+            borderLeftColor: '#C8C8C8',
+            borderRadius: '2px',
+            borderRightColor: '#E7E7E7',
+            borderStyle: 'solid',
+            borderTopColor: '#C8C8C8',
+            borderWidth: '1px',
+            cursor: 'default'
+        },
+        normal: {},
+        active: {},
+        hover: {},
+        focus: {
+            borderBottomColor: '#4D78A4',
+            borderLeftColor: '#4D78A4',
+            borderRightColor: '#4D78A4',
+            borderTopColor: '#4D78A4',
+            borderWidth: '2px'
+        }
+	},
+    outerborder: {
+        defaults: {
+            borderRadius: '2px',
+            borderStyle: 'solid',
+            borderWidth: '1px'
+        },
+        normal: {
+            borderBottomColor: '#7E7E7E',
+            borderLeftColor: '#939393',
+            borderRightColor: '#939393',
+            borderTopColor: '#ABABAB'
+        },
+        active: {
+            backgroundColor: '#D2D4D7',
+            backgroundImage: 'url(resources/images/form/shadow-x.png)',
+            backgroundRepeat: 'repeat-x',
+            borderBottomColor: '#4D4D4D',
+            borderLeftColor: '#3D3D3D',            
+            borderRadius: '0px',
+            borderRightColor: '#5C5C5C',
+            borderTopColor: '#515151'
+        },
+        focus: {
+            borderRadius: '0px'
+        }
+	},
+    input: {
+        defaults: {
+            borderRadius: '2px',
+            borderStyle: 'solid',
+            borderWidth: '1px'
+        },
+        normal: {
+            backgroundColor: '#F9F9F9',
+            borderBottomColor: '#D1D1D1',
+            borderLeftColor: '#EDEDED',
+            borderRightColor: '#EDEDED',
+            borderTopColor: '#FAFAFA'
+        },
+        active: {
+            backgroundColor: 'transparent',
+            backgroundImage: 'url(resources/images/form/shadow-y.png)',
+            backgroundRepeat: 'repeat-y',
+            borderBottomColor: '#A7A9AB',
+            borderLeftColor: '#666',
+            borderRadius: '0px',
+            borderRightColor: 'transparent',
+            borderTopColor: '#777'
+        },
+        focus: {
+            borderRadius: '0px'
+        }
+	},
+    label: {
+        defaults: {
+            fontFamily: 'Verdana',
+            fontSize: '11px',
+            fontWeight: 'normal',
+            lineHeight: '19px',
+            textAlign: 'center',
+            marginLeft: '0px',
+            marginTop: '0px'
+        },
+        normal: {},
+        active: {
+            marginLeft: '1px',
+            marginTop: '1px'
+        }
+	}
+};
+
+WV.Button = WV.extend(WV.Control, {
+    vtype: 'button',
+    h: 25,
+    w: 96,
+    text: '',
+    clipSubViews: true,
+    styleObject: WV.style.Button,
+    subViews: [{
+        vtag: 'outerborder',
+        x: 1,
+        y: 1,
+        h: 'h - 2',
+        w: 'w - 2',
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX
+    },{
+        vtype: 'input',
+        inputType: 'button',
+        vtag: 'input',
+        x: 2,
+        y: 2,
+        h: 'h - 4',
+        w: 'w - 4',
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX
+    },{
+        vtag: 'label',
+        vtype: 'label',
+        draggable: false,
+        x: 3,
+        y: 3,
+        h: 'h - 6',
+        w: 'w - 6',
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX
+    }],
+	constructor: function(config)
+    {
+        WV.Button.superclass.constructor.call(this, config);
+
+        if (this.subViews.label)
+        {
+            this.subViews.label.text = this.text;
+        }
+
+        this.setState(this.state);
+        
+        return this;
+    },
     mouseDown: function(e)
     {
         this.addState('active');
@@ -268,7 +339,7 @@ WV.Button = WV.extend(WV.View, {
 
         if (e.target.isDescendantOf(this))
         {
-            WV.log('Action trigger: ', this.id);
+            this.doAction();
         }
 
         return WV.Button.superclass.mouseUp.call(this, e);
@@ -302,28 +373,151 @@ WV.Button = WV.extend(WV.View, {
         this.hasMouseDown = true;
 
         return WV.Button.superclass.mouseDragged.call(this, e);
-    },
+    }
+});
 
-    becomeFirstResponder: function()
+WV.RadioButton = WV.extend(WV.View, {
+    h: 13,
+    w: 13,
+	autoResizeMask: WV.RESIZE_NONE,
+	cls: 'wv-radio-button',
+    tag: 'div',
+	text: 'Radio',
+	checked: '',
+	style: {
+        backgroundImage: 'url(resources/images/form/radio.png)',
+		backgroundPosition: '0 0',
+		backgroundRepeat: 'no-repeat'
+	},
+	constructor: function(config)
     {
-        var result = WV.Button.superclass.becomeFirstResponder.call(this);
-        if (result === true)
-        {
-            this.addState('focus');
+        WV.RadioButton.superclass.constructor.call(this, config);
+    }
+});
+
+WV.style.CheckBox = {
+    base: {
+        defaults: {
+            borderBottomColor: '#7E7E7E',
+            borderLeftColor: '#939393',
+            borderRadius: '2px',
+            borderRightColor: '#939393',
+            borderStyle: 'solid',
+            borderTopColor: '#ABABAB',
+            borderWidth: '1px'
+        },
+        normal: {},
+        active: {},
+        hover: {},
+        focus: {
+            borderRadius: '0px'
         }
+	},
+    outerborder: {
+        defaults: {
+            borderRadius: '2px'
+        },
+        focus: {
+            borderColor: '#4D78A4',
+            borderWidth: '1px',
+            borderStyle: 'solid'
+        }
+	},
+    innerborder: {
+        defaults: {
+            backgroundColor: '#F9F9F9',
+            borderBottomColor: '#D1D1D1',
+            borderLeftColor: '#EDEDED',
+            borderRadius: '2px',
+            borderRightColor: '#EDEDED',
+            borderStyle: 'solid',
+            borderTopColor: '#FAFAFA',
+            borderWidth: '1px'
+        },
+        normal: {
+            marginLeft: '0px',
+            marginTop: '0px'
+        },
+        active: {
+            marginLeft: '1px',
+            marginTop: '1px'
+        },
+        focus: {
+            borderRadius: '0px'
+        }
+	},
+    checkImage: {
+        defaults: {
+            display: 'none'
+        },
+        checked: {
+            display: 'block'
+        }
+    }
+};
 
-        return result;
-    },
-
-    resignFirstResponder: function()
+WV.CheckBox = WV.extend(WV.Button, {
+    vtype: 'checkbox',
+    h: 12,
+    w: 12,
+    clipSubViews: false,
+	text: 'Check',
+    checked: true,
+    checkedValue: true,
+    uncheckedValue: false,
+    styleObject: WV.style.CheckBox,
+    subViews: [{
+        vtag: 'outerborder',
+        x: -1,
+        y: -1,
+        h: 'h + 2',
+        w: 'w + 2',
+        autoResizeMask: WV.RESIZE_NONE
+    },{
+        vtag: 'innerborder',
+        x: 1,
+        y: 1,
+        h: 'h - 2',
+        w: 'w - 2',
+        autoResizeMask: WV.RESIZE_NONE
+    },{
+        vtag: 'checkImage',
+        vtype: 'image',
+        x: 2,
+        y: -5,
+        w: 'w + 3',
+        src: 'resources/images/form/checkmark.png',
+        autoResizeMask: WV.RESIZE_NONE
+    },{
+        vtag: 'label',
+        vtype: 'label',
+        draggable: false,
+        x: 16,
+        y: -1,
+        h: 'h',
+        w: 'w + 15',
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX
+    }],
+    constructor: function(config)
     {
-        var result = WV.Button.superclass.resignFirstResponder.call(this);
-        if (result === true && this.rendered)
-        {
-            this.removeState('focus');
-        }
+        WV.CheckBox.superclass.constructor.call(this, config);
 
-        return result;
+        this.setChecked(this.checked);
+    },
+    setChecked: function(val)
+    {
+        this.checked = val === true;
+        this.checked ? this.addState('checked') : this.removeState('checked');
+        if (this.rendered)
+        {
+            this.subViews.input.dom.value = this.checked ? this.checkedValue : this.uncheckedValue;
+        }
+    },
+    doAction: function()
+    {
+        // Set the value before the action fires in the superclass
+        this.setChecked(!this.checked);
+        WV.CheckBox.superclass.doAction.call(this);
     }
 });
 
@@ -332,10 +526,10 @@ WV.TextComponentStyle = {
 		backgroundColor: '#F9F9F9',
 		borderBottomColor: '#999',
 		borderLeftColor: '#999',
-		borderRadius: '2px',		
+		borderRadius: '2px',
 		borderRightColor: '#999',
-		borderStyle: 'solid',				
-        borderTopColor: '#999',	
+		borderStyle: 'solid',
+        borderTopColor: '#999',
 		borderWidth: '1px',
         color: '#000',
 		fontFamily: 'Verdana',
@@ -404,145 +598,5 @@ WV.TextArea = WV.extend(WV.TextComponent, {
     h: 100,
 	cls: 'wv-textarea',
     componentTag: 'textarea',
-    componentTpl: { html: '{text}{_subViewHtml}' },
-    afterRender: function()
-    {
-        WV.TextArea.superclass.afterRender.call(this);
-
-        // TODO: Set the form reference of the dom element to the containing form
-
-        return this;
-    }
-}); 
-
-
-WV.style.CheckBox = {
-    base: {
-        defaults: {
-            borderBottomColor: '#7E7E7E',
-            borderLeftColor: '#939393',
-            borderRadius: '2px',
-            borderRightColor: '#939393',
-            borderStyle: 'solid',
-            borderTopColor: '#ABABAB',
-            borderWidth: '1px'
-        },
-        normal: {},
-        active: {},
-        hover: {},
-        focus: {
-            borderBottomColor: '#4D78A4',
-            borderLeftColor: '#4D78A4',
-            borderRightColor: '#4D78A4',
-            borderTopColor: '#4D78A4',
-            borderWidth: '2px'
-        }
-	},
-    border: {
-        defaults: {
-            backgroundColor: '#F9F9F9',
-            borderBottomColor: '#D1D1D1',
-            borderLeftColor: '#EDEDED',
-            borderRadius: '2px',
-            borderRightColor: '#EDEDED',
-            borderStyle: 'solid',
-            borderTopColor: '#FAFAFA',
-            borderWidth: '1px'
-        },
-        normal: {
-            marginLeft: '0px',
-            marginTop: '0px'
-        },
-        active: {
-            marginLeft: '1px',
-            marginTop: '1px'
-        },
-        focus: {
-            borderRadius: '0px'
-        }
-	},
-    checkImage: {
-        defaults: {},
-        normal: {},
-        active: {},
-        checked: {
-            backgroundImage: 'url(resources/images/form/checkmark.png)',
-            backgroundSize: '100% auto'
-        }
-	}
-};
-
-WV.CheckBox = WV.extend(WV.Button, {
-    vtype: 'checkbox',
-    h: 12,
-    w: 12,
-    clipSubViews: false,
-	text: 'Check',
-    checked: false,
-    styleObject: WV.style.CheckBox,
-    subViews: [{
-        vtag: 'border',
-        x: 1,
-        y: 1,
-        h: 'h - 2',
-        w: 'w - 2',
-        autoResizeMask: WV.RESIZE_NONE
-    },{
-        vtag: 'checkImage',
-        x: 3,
-        y: -3,
-        h: 'h',
-        w: 'w',
-        autoResizeMask: WV.RESIZE_NONE
-    },{
-        vtag: 'label',
-        vtype: 'label',
-        draggable: false,
-        x: 16,
-        y: -2,
-        h: 'h',
-        w: 'w + 15',
-        autoResizeMask: WV.RESIZE_WIDTH_FLEX
-    },{
-        vtype: 'input',
-        type: 'hidden',
-        name: 'test_check',
-        autoResizeMask: WV.RESIZE_NONE
-    }],
-    constructor: function(config)
-    {
-        WV.CheckBox.superclass.constructor.call(this, config);
-
-        this.setChecked(this.checked);
-    },
-    setChecked: function(val)
-    {
-        this.checked = val === true;
-        this.checked ? this.addState('checked') : this.removeState('checked');
-    },
-    mouseUp: function(e)
-    {
-        WV.CheckBox.superclass.mouseUp.call(this, e);
-
-        this.setChecked(!this.checked);
-    }
-});
-
-WV.RadioButton = WV.extend(WV.View, {
-    h: 13,
-    w: 13,
-	autoResizeMask: WV.RESIZE_NONE,
-	cls: 'wv-radio-button',
-    tag: 'div',
-	text: 'Radio',
-	checked: '',
-	style: {
-        backgroundImage: 'url(resources/images/form/radio.png)',
-		backgroundPosition: '0 0',
-		backgroundRepeat: 'no-repeat'
-	},
-	constructor: function(config)
-    {
-        WV.RadioButton.superclass.constructor.call(this, config);		
-    }
+    componentTpl: { html: '{text}' }
 });

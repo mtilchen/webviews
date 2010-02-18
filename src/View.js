@@ -25,6 +25,8 @@ WV.View = WV.extend(Ext.util.Observable, {
     clipSubViews: false,
     disabled: false,
     draggable: false,
+    tabIndex: undefined,
+    toolTip: undefined,
 
     style: {
         position: 'absolute',
@@ -33,7 +35,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     tag: 'div',
 
-    domTpl: { id: '{id}', tag: '{tag}', cls: '{cls}', html: '{html}{_subViewHtml}', title: '{title}', style: '{_styleString}' },
+    domTpl: { id: '{id}', tag: '{tag}', cls: '{cls}', html: '{html}{_subViewHtml}', title: '{toolTip}', style: '{_styleString}' },
 
     subViews: [],
 
