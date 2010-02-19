@@ -83,7 +83,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         WV.addToCache(this);
 
-        for (var i = 0; i < subViewsToAdd.length; i++)
+        for (var i = 0, l = subViewsToAdd.length; i < l; i++)
         {
             this.addSubView(subViewsToAdd[i]);
         }
@@ -174,8 +174,8 @@ WV.View = WV.extend(Ext.util.Observable, {
     {
         if (this.superView && (typeof this.subViewIndex === 'number'))
         {
-            var i, superSubs = this.superView.subViews;
-            for (i = this.subViewIndex + 1; i < superSubs.length; i++)
+            var i, l, superSubs = this.superView.subViews;
+            for (i = this.subViewIndex + 1, l = superSubs.length; i < l; i++)
             {
                 superSubs[i].subViewIndex -= 1;
             }
@@ -572,7 +572,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         newVal = parseInt(newVal, 10) || 0;
 
         var i = 0,
-            len = this.subViews.length,
+            l = this.subViews.length,
             bw = newVal ? newVal + 'px' : '';
 
         if (this.style.borderWidth !== bw)
@@ -585,7 +585,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             }
 
             // Adjust the subviews for the new borderWidth
-            for (i = 0,len = this.subViews.length; i < len; i++)
+            for (i = 0, l = this.subViews.length; i < l; i++)
             {
                 this.subViews[i].setStyle('marginLeft', this.style.marginLeft);
                 this.subViews[i].setStyle('marginTop', this.style.marginTop);
@@ -644,7 +644,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             html,
             subs = this.subViews;
 
-        for (var i = 0, len = subs.length; i < len; i++)
+        for (var i = 0, l = subs.length; i < l; i++)
         {
             buf[buf.length] = subs[i].render(false);
         }
@@ -704,7 +704,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     initDom: function()
     {
-        for(var i = 0; i < this.subViews.length; i++)
+        for(var i = 0, l = this.subViews.length; i < l; i++)
         {
             this.subViews[i].initDom();
         }
@@ -718,7 +718,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     destroy: function(top)
     {
-        for (var i = 0,len = this.subViews.length; i < len; i++)
+        for (var i = 0, l = this.subViews.length; i < l; i++)
         {
             this.subViews[i].destroy(false);
         }
@@ -739,7 +739,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         if (!this.resizeSubViews) { return; }
 
         var subs = this.subViews;
-        for (var i = 0, len = subs.length; i < len; i++)
+        for (var i = 0, l = subs.length; i < l; i++)
         {
             subs[i].doAutoResize(); // Will call layoutSubviews recursively as sizes change
         }
@@ -835,7 +835,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         if (subs && subs.length)
         {
-            for (var i = 0; i < subs.length; i++)
+            for (var i = 0, l = subs.length; i < l; i++)
             {
                 hit = subs[i].hitTest(convP);
                 if (hit) { break; }
@@ -896,13 +896,13 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     find: function(vtag)
     {
-        var i, views = WV.findByVtag(vtag),
+        var i, l, views = WV.findByVtag(vtag),
             hits = [];
 
         if (!views) { return null; }
         else
         {
-            for (i = 0; i < views.length; i++)
+            for (i = 0, l = views.length; i < l; i++)
             {
                 if (views[i].isDescendantOf(this))
                 {

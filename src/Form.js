@@ -59,7 +59,7 @@ WV.Control = WV.extend(WV.View, {
         var end, start = new Date();
         if (typeof newState === 'string')
         {
-            var i, s, newStyle, hits,
+            var i, s, l, newStyle, hits,
                 styleObj = this.styleObject,
                 styles = newState.split(/\s*,\s*/);
 
@@ -69,7 +69,7 @@ WV.Control = WV.extend(WV.View, {
             newStyle = WV.apply({}, styleObj['base'].defaults);
 
             // Do this view first using 'base'
-            for (s = 0; s < styles.length; s++)
+            for (s = 0, l = styles.length; s < l; s++)
             {
                 WV.apply(newStyle, styleObj['base'][styles[s]]);
             }
@@ -86,11 +86,11 @@ WV.Control = WV.extend(WV.View, {
                     {
                         newStyle = WV.apply({}, styleObj[vtag].defaults);
 
-                        for (s = 0; s < styles.length; s++)
+                        for (s = 0, l = styles.length; s < l; s++)
                         {
                             WV.apply(newStyle, styleObj[vtag][styles[s]]);
                         }
-                        for (i = 0; i < hits.length; i++)
+                        for (i = 0, l = hits.length; i < l; i++)
                         {
                             hits[i].setStyle(newStyle);
                         }

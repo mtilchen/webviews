@@ -29,7 +29,7 @@ WV = (function() {
     {
         if ((typeof view._vtagIdx === 'number') && vtagIndex[view.vtag])
         {
-            for (var i = view._vtagIdx + 1; i < vtagIndex[view.vtag].length; i++)
+            for (var i = view._vtagIdx + 1, l = vtagIndex[view.vtag].length; i < l; i++)
             {
                 vtagIndex[view.vtag][i]._vtagIdx -= 1;
             }
@@ -145,7 +145,7 @@ WV = (function() {
             // Add the mixins for the new class if defined
             if (overrides.mixins)
             {
-                for (var i = 0; i < overrides.mixins.length; i++)
+                for (var i = 0, l = overrides.mixins.length; i < l; i++)
                 {
                     // Mixins can either be classes (constructor function) or objects
                     typeof overrides.mixins[i] === 'function' ? Ext.apply(overrides, overrides.mixins[i].prototype)
