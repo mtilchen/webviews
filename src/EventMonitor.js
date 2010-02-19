@@ -134,7 +134,7 @@ WV.EventMonitor = (function() {
                     {
                         var domTarget = be.target;
 
-                        if (domTarget.nodeType === 1)
+                        if (domTarget && domTarget.nodeType === 1)
                         {
                             if (domTarget.tagName.toLowerCase !== 'img' &&
                                 domTarget.tagName.toLowerCase !== 'a')
