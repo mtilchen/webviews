@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="resources/css/webviews.css" />
 
     <script src="../webviews-debug.js"></script>
+    <script src="http://maps.google.com/maps?file=api&v=2.x&key=ABQIAAAA2CKu_qQN-JHtlfQ5L7BLlRT2yXp_ZAY8_ufC3CFXhHIE1NvwkxQl3I3p2yrGARYK4f4bkjp9NHpm5w"></script>
     <script>
     
         WV.init(function() {
@@ -111,7 +112,55 @@
                 clipSubViews: true,
                 style: {
                     background: 'url(resources/examples/images/bg.jpg)'
-                }
+                },
+                subViews: [{
+                    id: 'gmap',
+                    x: 10,
+                    y: 175,
+                    w: '90%',
+                    h: 200,
+                    autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX,
+                    style: {
+                        border: '2px solid black',
+                        transform: 'rotate(15deg)',
+                        transformOrigin: 'center',
+                        borderRadius: '10px',
+                        boxShadow: '5px 5px rgba(0, 0, 0, 0.5)'
+                    },
+                    afterRender: function()
+                    {
+                        this.constructor.prototype.afterRender.call(this);
+                        this.map = new GMap2(this.dom);
+                        this.map.addControl(new GSmallMapControl());
+                        this.map.addControl(new GMapTypeControl());
+                        this.map.enableDragging();
+                        this.map.enableScrollWheelZoom();
+                        this.map.enableDoubleClickZoom();
+
+                        this.map.setCenter(new GLatLng(42.331427,-83.045754), 14);
+
+                        return this;
+                    },
+                    setDisabled: function(val)
+                    {
+                        this.constructor.prototype.setDisabled.call(this, val);
+                        if (this.rendered)
+                        {
+                            if (!this.disabled)
+                            {
+                                this.map.enableDragging();
+                                this.map.enableScrollWheelZoom();
+                                this.map.enableDoubleClickZoom();
+                            }
+                            else
+                            {
+                                this.map.disableDragging();
+                                this.map.disableScrollWheelZoom();
+                                this.map.disableDoubleClickZoom();
+                            }
+                        }
+                    }
+                }]
             });
 
             var e5 = new WV.TemplateView({
