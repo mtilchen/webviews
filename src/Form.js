@@ -14,7 +14,8 @@ WV.FormView = WV.extend(WV.View, {
 WV.Input = WV.extend(WV.View, {
     vtype: 'input',
     tag: 'input',
-    name: undefined,
+    name: null,
+    value: null,
     inputType: 'hidden',
     domTpl: { type: '{inputType}', name: '{name}', value: '{value}' },
     getForm: function()
@@ -24,14 +25,16 @@ WV.Input = WV.extend(WV.View, {
             return WV.get(this.dom.form.id);
         }
         return undefined;
-    }    
+    }
 });
 
 WV.Control = WV.extend(WV.View, {
-    name: undefined,
     inputType: 'hidden',
     canBecomeFirstResponder: true,
     state: 'normal',
+    name: '',
+    value: '',
+    valuePropName: 'value',
     target: null,
     action: null,
     constructor: function(config)
@@ -43,10 +46,12 @@ WV.Control = WV.extend(WV.View, {
                 vtype: 'input',
                 vtag: 'input',
                 name: this.name,
+                readOnly: this.readOnly,
                 inputType: this.inputType
             });
         }
         this.setState(this.state);
+        this.setValue(this[this.valuePropName]);
         return this;
     },
     setState: function(newState)
@@ -142,21 +147,32 @@ WV.Control = WV.extend(WV.View, {
     {
         if (this.rendered)
         {
-            this.value = this.subViews.input.dom.value;
+            this[this.valuePropName] = this.subViews.input.dom.value;
         }
-        return this.value;
+        return this[this.valuePropName];
     },
     setValue: function(val)
     {
-        this.value = (val !== undefined && val !== null) ? val : '';
+        if (this.readOnly === true) { return this; }
+        
+        this[this.valuePropName] = (val !== undefined && val !== null) ? val : '';
         if (this.rendered)
         {
-            this.subViews.input.dom.value = this.value;
+            this.subViews.input.dom.value = this[this.valuePropName];
         }
         else
         {
             // This will get picked up by the template during rendering
-            this.subViews.input.value = this.value;
+            this.subViews.input.value = this[this.valuePropName];
+        }
+        return this;
+    },
+    setReadOnly: function(val)
+    {
+        this.readOnly = val === true;
+        if (this.rendered)
+        {
+            this.subViews.input.dom.readOnly = this.readOnly;
         }
         return this;
     },
@@ -469,18 +485,21 @@ WV.CheckBox = WV.extend(WV.Button, {
     }],
     constructor: function(config)
     {
+        // We need to have a value before the superclass constructor runs because it needs it to call setValue()
+        this.value = config.selected || this.selected ? this.selectedValue : this.unselectedValue;
         WV.CheckBox.superclass.constructor.call(this, config);
-
-        this.setSelected(this.selected);
+        return this;
+    },
+    setValue: function(val)
+    {
+        return this.readOnly ? this : this.setSelected(val === this.selectedValue); 
     },
     setSelected: function(val)
     {
         this.selected = val === true;
         this.selected ? this.addState('selected') : this.removeState('selected');
-        if (this.rendered)
-        {
-            this.subViews.input.dom.value = this.selected ? this.selectedValue : this.unselectedValue;
-        }
+
+        return WV.CheckBox.superclass.setValue.call(this, this.selected ? this.selectedValue : this.unselectedValue);
     },
     doAction: function()
     {
@@ -507,6 +526,7 @@ WV.style.RadioButton = {
 };
 
 WV.RadioButton = WV.extend(WV.CheckBox, {
+    vtype: 'radio',
     h: 13,
     w: 13,
 	autoResizeMask: WV.RESIZE_NONE,
@@ -559,17 +579,25 @@ WV.style.TextComponent = {
 };
 
 WV.TextField = WV.extend(WV.Control, {
+    vtype: 'textfield',
     h: 22,
     w: 150,
 	cls: 'wv-text-field',
     inputType: 'text',
+    valuePropName: 'text',
     styleObject: WV.style.TextComponent,
     constructor: function(config)
     {
         WV.TextField.superclass.constructor.call(this, config);
-        this.setValue(this.text);
         this.subViews.input.setFrame({ x: 2, y: 2, w: this.w, h: this.h});
         this.subViews.input.autoResizeMask = WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX;
+        return this;
+    },
+    afterRender: function()
+    {
+        // Putting the readOnly attribute in the template during rendering always causes it to be true.
+        WV.TextField.superclass.afterRender.call(this);
+        this.setReadOnly(this.readOnly);
         return this;
     }
 });
@@ -580,12 +608,13 @@ WV.PasswordField = WV.extend(WV.TextField, {
 });
 
 WV.TextArea = WV.extend(WV.TextField, {
+    vtype: 'textarea',
     h: 100,
 	cls: 'wv-textarea',
     subViews: [{
         vtag: 'input',
         tag: 'textarea',
-        domTpl: { html: '{value}' }
+        domTpl: { html: '{value}', name: '{name}' }
     }],
     setValue: function(val)
     {
@@ -593,7 +622,7 @@ WV.TextArea = WV.extend(WV.TextField, {
         // Make the innerHTML consistent with the dom value
         if (this.rendered)
         {
-            this.subViews.input.dom.innerHTML = this.value;
+            this.subViews.input.dom.innerHTML = this[this.valuePropName];
         }
         return this;
     }
