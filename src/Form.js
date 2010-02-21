@@ -252,7 +252,7 @@ WV.style.Button = {
             borderRadius: '0px'
         }
 	},
-    input: {
+    innerborder: {
         defaults: {
             borderRadius: '2px',
             borderStyle: 'solid',
@@ -312,9 +312,7 @@ WV.Button = WV.extend(WV.Control, {
         w: 'w - 2',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
     },{
-        vtype: 'input',
-        inputType: 'button',
-        vtag: 'input',
+        vtag: 'innerborder',
         x: 2,
         y: 2,
         h: 'h - 4',
@@ -344,8 +342,7 @@ WV.Button = WV.extend(WV.Control, {
     {
         this.addState('active');
         this.removeState('normal');
-        
-        return WV.Button.superclass.mouseDown.call(this, e);
+        WV.Button.superclass.mouseDown.call(this, e);
     },
     mouseUp: function(e)
     {
@@ -356,16 +353,14 @@ WV.Button = WV.extend(WV.Control, {
         {
             this.doAction();
         }
-
-        return WV.Button.superclass.mouseUp.call(this, e);
+        WV.Button.superclass.mouseUp.call(this, e);
     },
 
     mouseExited: function(e)
     {
         this.addState('normal');
         this.removeState('active');
-
-        return WV.Button.superclass.mouseExited.call(this, e);
+        WV.Button.superclass.mouseExited.call(this, e);
     },
 
     mouseEntered: function(e)
@@ -375,8 +370,44 @@ WV.Button = WV.extend(WV.Control, {
             this.addState('active');
             this.removeState('normal');
         }
+        WV.Button.superclass.mouseEntered.call(this, e);
+    }
+});
 
-        return WV.Button.superclass.mouseEntered.call(this, e);
+WV.ToggleButton = WV.extend(WV.Button, {
+    vtype: 'togglebutton',
+    h: 12,
+    w: 35,
+    clipSubViews: false,
+    selected: false,
+    selectedValue: true,
+    unselectedValue: false,
+    constructor: function(config)
+    {
+        // We need to have a value before the superclass constructor runs because it needs it to call setValue()
+        this.value = config.selected || this.selected ? this.selectedValue : this.unselectedValue;
+        WV.ToggleButton.superclass.constructor.call(this, config);
+        return this;
+    },
+    setValue: function(val)
+    {
+        return this.readOnly ? this : this.setSelected(val === this.selectedValue);
+    },
+    setSelected: function(val)
+    {
+        this.selected = val === true;
+        this.selected ? this.addState('selected') : this.removeState('selected');
+
+        return WV.ToggleButton.superclass.setValue.call(this, this.selected ? this.selectedValue
+                                                                            : this.unselectedValue);
+    },
+    mouseUp: function(e)
+    {
+        if (e.target.isDescendantOf(this))
+        {
+            this.setSelected(!this.selected);
+        }
+        WV.Button.superclass.mouseUp.call(this, e);
     }
 });
 
@@ -441,15 +472,12 @@ WV.style.CheckBox = {
     }
 };
 
-WV.CheckBox = WV.extend(WV.Button, {
+WV.CheckBox = WV.extend(WV.ToggleButton, {
     vtype: 'checkbox',
     h: 12,
     w: 12,
     clipSubViews: false,
 	text: 'Check',
-    selected: false,
-    selectedValue: true,
-    unselectedValue: false,
     styleObject: WV.style.CheckBox,
     subViews: [{
         vtag: 'outerborder',
@@ -482,31 +510,7 @@ WV.CheckBox = WV.extend(WV.Button, {
         h: 'h',
         w: 'w + 15',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
-    }],
-    constructor: function(config)
-    {
-        // We need to have a value before the superclass constructor runs because it needs it to call setValue()
-        this.value = config.selected || this.selected ? this.selectedValue : this.unselectedValue;
-        WV.CheckBox.superclass.constructor.call(this, config);
-        return this;
-    },
-    setValue: function(val)
-    {
-        return this.readOnly ? this : this.setSelected(val === this.selectedValue); 
-    },
-    setSelected: function(val)
-    {
-        this.selected = val === true;
-        this.selected ? this.addState('selected') : this.removeState('selected');
-
-        return WV.CheckBox.superclass.setValue.call(this, this.selected ? this.selectedValue : this.unselectedValue);
-    },
-    doAction: function()
-    {
-        // Set the value before the action fires in the superclass
-        this.setSelected(!this.selected);
-        WV.CheckBox.superclass.doAction.call(this);
-    }
+    }]
 });
 
 WV.style.RadioButton = {
@@ -525,7 +529,7 @@ WV.style.RadioButton = {
 	}
 };
 
-WV.RadioButton = WV.extend(WV.CheckBox, {
+WV.RadioButton = WV.extend(WV.ToggleButton, {
     vtype: 'radio',
     h: 13,
     w: 13,
