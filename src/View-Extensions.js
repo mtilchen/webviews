@@ -172,3 +172,38 @@ WV.ScrollView = WV.extend(WV.View, {
         this.setStyle('overflowX', WV.ScrollView.prototype.scrollConfigMap[this.showHorizontalScroll]);
     }
 });
+
+
+WV.ExtView = WV.extend(WV.View, {
+    vtype: 'extview',
+    constructor: function(config)
+    {
+        WV.ExtView.superclass.constructor.call(this, config);
+
+        this.extComponent = Ext.create(config.extConfig);
+        return this;
+    },
+    afterRender: function()
+    {
+        WV.ExtView.superclass.afterRender.call(this);
+        this.extComponent.render(this.dom);
+        this.extComponent.el.dom.style.position = 'absolute';
+        this.extComponent.el.dom.style.top = '0px';
+        this.extComponent.el.dom.style.left = '0px';
+        this.extComponent.el.dom.style.height = '100%';
+        this.extComponent.el.dom.style.width = '100%';
+        this.layoutSubViews();
+        return this;
+    },
+    layoutSubViews: function()
+    {
+        WV.ExtView.superclass.layoutSubViews.call(this);
+        if (this.rendered && this.extComponent.isXType('panel'))
+        {
+            var fh = this.extComponent.getFrameHeight();
+            this.extComponent.body.setHeight(this.h - fh);
+            this.extComponent.doLayout();
+        }
+        return this;
+    }
+});
