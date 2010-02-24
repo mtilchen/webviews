@@ -31,6 +31,7 @@ WV.Input = WV.extend(WV.View, {
 WV.Control = WV.extend(WV.View, {
     inputType: 'hidden',
     canBecomeFirstResponder: true,
+    stateful: true,
     state: 'normal',
     name: '',
     value: '',
@@ -50,87 +51,7 @@ WV.Control = WV.extend(WV.View, {
                 inputType: this.inputType
             });
         }
-        this.setState(this.state);
         this.setValue(this[this.valuePropName]);
-        return this;
-    },
-    setState: function(newState)
-    {
-        var end, start = new Date();
-        if (typeof newState === 'string')
-        {
-            var i, s, l, newStyle, hits,
-                styleObj = this.styleObject,
-                styles = newState.split(/\s*,\s*/);
-
-            this.state = newState;
-
-            // Starting with the defaults, apply each style found in the new state string, overriding at each step
-            newStyle = WV.apply({}, styleObj['base'].defaults);
-
-            // Do this view first using 'base'
-            for (s = 0, l = styles.length; s < l; s++)
-            {
-                WV.apply(newStyle, styleObj['base'][styles[s]]);
-            }
-
-            this.setStyle(newStyle);
-
-            for (var vtag in styleObj)
-            {
-                if (vtag !== 'base')
-                {
-                    hits = this.find(vtag);
-
-                    if (hits.length > 0)
-                    {
-                        newStyle = WV.apply({}, styleObj[vtag].defaults);
-
-                        for (s = 0, l = styles.length; s < l; s++)
-                        {
-                            WV.apply(newStyle, styleObj[vtag][styles[s]]);
-                        }
-                        for (i = 0, l = hits.length; i < l; i++)
-                        {
-                            hits[i].setStyle(newStyle);
-                        }
-                    }
-                }
-            }
-        }
-
-        end = new Date();
-//        WV.log('setState(): ', this.id, ' ', end.getTime() - start.getTime(), 'ms');
-        return this;
-    },
-    addState: function(state)
-    {
-        if (typeof state === 'string' && this.state && this.state.indexOf(state) < 0)
-        {
-            if (this.state.length > 0)
-            {
-                this.setState(this.state + ',' + state);
-            }
-            else
-            {
-                this.setState(state);
-            }
-        }
-
-        return this;
-    },
-    removeState: function(state)
-    {
-        if (typeof state === 'string' && this.state)
-        {
-            var re = new RegExp(String.format('^{0},|{0},|,{0}|{0}$', state), 'g'),
-                newState = this.state.replace(re, '');
-
-            if (this.state !== newState)
-            {
-                this.setState(newState);
-            }
-        }
         return this;
     },
     doAction: function()
@@ -204,80 +125,83 @@ WV.Control = WV.extend(WV.View, {
 });
 
 WV.style.Button = {
-    base: {
-        defaults: {
-            borderBottomColor: '#E7E7E7',
-            borderLeftColor: '#C8C8C8',
-            borderRadius: '2px',
-            borderRightColor: '#E7E7E7',
-            borderStyle: 'solid',
-            borderTopColor: '#C8C8C8',
-            borderWidth: '1px',
-            cursor: 'default'
-        },
-        normal: {},
-        active: {},
-        hover: {},
-        focus: {
+    defaults: {
+        borderBottomColor: '#E7E7E7',
+        borderLeftColor: '#C8C8C8',
+        borderRadius: '2px',
+        borderRightColor: '#E7E7E7',
+        borderStyle: 'solid',
+        borderTopColor: '#C8C8C8',
+        borderWidth: '1px',
+        cursor: 'default' },
+    states: [{
+        name: 'focus',
+        styles: {
             borderBottomColor: '#4D78A4',
             borderLeftColor: '#4D78A4',
             borderRightColor: '#4D78A4',
             borderTopColor: '#4D78A4',
-            borderWidth: '2px'
-        }
-	},
+            borderWidth: '2px'  }
+    }],
     outerborder: {
         defaults: {
             borderRadius: '2px',
             borderStyle: 'solid',
-            borderWidth: '1px'
-        },
-        normal: {
-            borderBottomColor: '#7E7E7E',
-            borderLeftColor: '#939393',
-            borderRightColor: '#939393',
-            borderTopColor: '#ABABAB'
-        },
-        active: {
-            backgroundColor: '#D2D4D7',
-            backgroundImage: 'url(resources/images/form/shadow-x.png)',
-            backgroundRepeat: 'repeat-x',
-            borderBottomColor: '#4D4D4D',
-            borderLeftColor: '#3D3D3D',            
-            borderRadius: '0px',
-            borderRightColor: '#5C5C5C',
-            borderTopColor: '#515151'
-        },
-        focus: {
-            borderRadius: '0px'
-        }
-	},
+            borderWidth: '1px' },
+        states: [{
+            name: 'normal',
+            styles: {
+                borderBottomColor: '#7E7E7E',
+                borderLeftColor: '#939393',
+                borderRightColor: '#939393',
+                borderTopColor: '#ABABAB' }
+        },{
+            name: 'active',
+            styles: {
+                backgroundColor: '#D2D4D7',
+                backgroundImage: 'url(resources/images/form/shadow-x.png)',
+                backgroundRepeat: 'repeat-x',
+                borderBottomColor: '#4D4D4D',
+                borderLeftColor: '#3D3D3D',
+                borderRadius: '0px',
+                borderRightColor: '#5C5C5C',
+                borderTopColor: '#515151' }
+        },{
+            name: 'focus',
+            styles: {
+                borderRadius: '0px' }
+	    }]
+    },
     innerborder: {
         defaults: {
             borderRadius: '2px',
             borderStyle: 'solid',
             borderWidth: '1px'
         },
-        normal: {
-            backgroundColor: '#F9F9F9',
-            borderBottomColor: '#D1D1D1',
-            borderLeftColor: '#EDEDED',
-            borderRightColor: '#EDEDED',
-            borderTopColor: '#FAFAFA'
-        },
-        active: {
-            backgroundColor: 'transparent',
-            backgroundImage: 'url(resources/images/form/shadow-y.png)',
-            backgroundRepeat: 'repeat-y',
-            borderBottomColor: '#A7A9AB',
-            borderLeftColor: '#666',
-            borderRadius: '0px',
-            borderRightColor: 'transparent',
-            borderTopColor: '#777'
-        },
-        focus: {
-            borderRadius: '0px'
-        }
+        states: [{
+            name: 'normal',
+            styles: {
+                backgroundColor: '#F9F9F9',
+                borderBottomColor: '#D1D1D1',
+                borderLeftColor: '#EDEDED',
+                borderRightColor: '#EDEDED',
+                borderTopColor: '#FAFAFA' }
+        },{
+            name: 'active',
+            styles: {
+                backgroundColor: 'transparent',
+                backgroundImage: 'url(resources/images/form/shadow-y.png)',
+                backgroundRepeat: 'repeat-y',
+                borderBottomColor: '#A7A9AB',
+                borderLeftColor: '#666',
+                borderRadius: '0px',
+                borderRightColor: 'transparent',
+                borderTopColor: '#777' }
+        },{
+            name: 'focus',
+            styles: {
+                borderRadius: '0px' }
+        }]
 	},
     label: {
         defaults: {
@@ -289,11 +213,15 @@ WV.style.Button = {
             marginLeft: '0px',
             marginTop: '0px'
         },
-        normal: {},
-        active: {
-            marginLeft: '1px',
-            marginTop: '1px'
-        }
+        states: [{
+            name: 'normal',
+            styles: {}
+        },{
+            name: 'active',
+            styles: {
+                marginLeft: '1px',
+                marginTop: '1px' }
+        }]
 	}
 };
 
@@ -303,13 +231,14 @@ WV.Button = WV.extend(WV.Control, {
     w: 96,
     text: '',
     clipSubViews: true,
-    styleObject: WV.style.Button,
+    styleMap: WV.style.Button,
     subViews: [{
         vtag: 'outerborder',
         x: 1,
         y: 1,
         h: 'h - 2',
         w: 'w - 2',
+        stateful: true,
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
     },{
         vtag: 'innerborder',
@@ -317,6 +246,7 @@ WV.Button = WV.extend(WV.Control, {
         y: 2,
         h: 'h - 4',
         w: 'w - 4',
+        stateful: true,
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
     },{
         vtag: 'label',
@@ -326,6 +256,7 @@ WV.Button = WV.extend(WV.Control, {
         y: 3,
         h: 'h - 6',
         w: 'w - 6',
+        stateful: true,
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
     }],
 	constructor: function(config)
@@ -340,14 +271,19 @@ WV.Button = WV.extend(WV.Control, {
     },
     mouseDown: function(e)
     {
-        this.addState('active');
-        this.removeState('normal');
+        this.changeState({
+            add: 'active',
+            remove: 'normal'
+        });
         WV.Button.superclass.mouseDown.call(this, e);
     },
+
     mouseUp: function(e)
     {
-        this.addState('normal');
-        this.removeState('active');
+        this.changeState({
+            add: 'normal',
+            remove: 'active'
+        });
 
         if (e.target.isDescendantOf(this))
         {
@@ -358,8 +294,13 @@ WV.Button = WV.extend(WV.Control, {
 
     mouseExited: function(e)
     {
-        this.addState('normal');
-        this.removeState('active');
+        if (e.mouseDownOwner && e.mouseDownOwner.isDescendantOf(this))
+        {
+            this.changeState({
+                add: 'normal',
+                remove: 'active'
+            });
+        }
         WV.Button.superclass.mouseExited.call(this, e);
     },
 
@@ -367,8 +308,10 @@ WV.Button = WV.extend(WV.Control, {
     {
         if (e.mouseDownOwner && e.mouseDownOwner.isDescendantOf(this))
         {
-            this.addState('active');
-            this.removeState('normal');
+            this.changeState({
+                add: 'active',
+                remove: 'normal'
+            });
         }
         WV.Button.superclass.mouseEntered.call(this, e);
     }
@@ -407,37 +350,36 @@ WV.ToggleButton = WV.extend(WV.Button, {
         {
             this.setSelected(!this.selected);
         }
-        WV.Button.superclass.mouseUp.call(this, e);
+        WV.ToggleButton.superclass.mouseUp.call(this, e);
     }
 });
 
 WV.style.CheckBox = {
-    base: {
-        defaults: {
-            borderBottomColor: '#7E7E7E',
-            borderLeftColor: '#939393',
-            borderRadius: '2px',
-            borderRightColor: '#939393',
-            borderStyle: 'solid',
-            borderTopColor: '#ABABAB',
-            borderWidth: '1px'
-        },
-        normal: {},
-        active: {},
-        hover: {},
-        focus: {
-            borderRadius: '0px'
-        }
-	},
+    defaults: {
+        borderBottomColor: '#7E7E7E',
+        borderLeftColor: '#939393',
+        borderRadius: '2px',
+        borderRightColor: '#939393',
+        borderStyle: 'solid',
+        borderTopColor: '#ABABAB',
+        borderWidth: '1px'
+    },
+    states: [{
+        name: 'focus',
+        styles: {
+            borderRadius: '0px' }
+    }],
     outerborder: {
         defaults: {
             borderRadius: '2px'
         },
-        focus: {
-            borderColor: '#4D78A4',
-            borderWidth: '1px',
-            borderStyle: 'solid'
-        }
+        states: [{
+            name: 'focus',
+            styles: {
+                borderColor: '#4D78A4',
+                borderWidth: '1px',
+                borderStyle: 'solid' }
+        }]
 	},
     innerborder: {
         defaults: {
@@ -450,25 +392,31 @@ WV.style.CheckBox = {
             borderTopColor: '#FAFAFA',
             borderWidth: '1px'
         },
-        normal: {
-            marginLeft: '0px',
-            marginTop: '0px'
-        },
-        active: {
-            marginLeft: '1px',
-            marginTop: '1px'
-        },
-        focus: {
-            borderRadius: '0px'
-        }
+        states: [{
+            name: 'normal',
+            styles: {
+                marginLeft: '0px',
+                marginTop: '0px' }
+        },{
+            name: 'active',
+            styles: {
+                marginLeft: '1px',
+                marginTop: '1px' }
+        },{
+            name: 'focus',
+            styles: {
+                borderRadius: '0px' }
+        }]
 	},
     checkImage: {
         defaults: {
             display: 'none'
         },
-        selected: {
-            display: 'block'
-        }
+        states: [{
+            name: 'selected',
+            styles: {
+                display: 'block' }
+        }]
     }
 };
 
@@ -478,13 +426,14 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
     w: 12,
     clipSubViews: false,
 	text: 'Check',
-    styleObject: WV.style.CheckBox,
+    styleMap: WV.style.CheckBox,
     subViews: [{
         vtag: 'outerborder',
         x: -1,
         y: -1,
         h: 'h + 2',
         w: 'w + 2',
+        stateful: true,
         autoResizeMask: WV.RESIZE_NONE
     },{
         vtag: 'innerborder',
@@ -492,6 +441,7 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
         y: 1,
         h: 'h - 2',
         w: 'w - 2',
+        stateful: true,
         autoResizeMask: WV.RESIZE_NONE
     },{
         vtag: 'checkImage',
@@ -499,6 +449,7 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
         x: 2,
         y: -5,
         w: 'w + 3',
+        stateful: true,
         src: 'resources/images/form/checkmark.png',
         autoResizeMask: WV.RESIZE_NONE
     },{
@@ -514,19 +465,20 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
 });
 
 WV.style.RadioButton = {
-    base: {
-        defaults: {
-            backgroundImage: 'url(resources/images/form/radio.png)',
-		    backgroundPosition: '0px 0px',
-		    backgroundRepeat: 'no-repeat'
-        },
-        selected: {
-            backgroundPosition: '0px -13px'
-        },
-        focus: {
-            borderRadius: '0px'
-        }
-	}
+    defaults: {
+        backgroundImage: 'url(resources/images/form/radio.png)',
+        backgroundPosition: '0px 0px',
+        backgroundRepeat: 'no-repeat'
+    },
+    states: [{
+        name: 'selected',
+        styles: {
+            backgroundPosition: '0px -13px' }
+    },{
+        name: 'focus',
+        styles: {
+            borderRadius: '0px' }
+    }]
 };
 
 WV.RadioButton = WV.extend(WV.ToggleButton, {
@@ -536,7 +488,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
 	autoResizeMask: WV.RESIZE_NONE,
 	cls: 'wv-radio-button',
 	text: 'Radio',
-	styleObject: WV.style.RadioButton,
+	styleMap: WV.style.RadioButton,
     subViews: [{
         vtag: 'label',
         vtype: 'label',
@@ -550,18 +502,16 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
 });
 
 WV.style.TextComponent = {
-    base: {
-        defaults: {
-            background: 'url(resources/images/form/inset.png)',
-            borderRadius: '2px'
-        }
+    defaults: {
+        background: 'url(resources/images/form/inset.png)',
+        borderRadius: '2px'
+    },
 //        focus: {
 //            borderStyle: 'solid',
 //            borderColor: '#4D78A4',
 //            borderWidth: '2px',
 //            borderRadius: '0px'
 //        }
-    },
     input: {
         defaults: {
             backgroundColor: '#F9F9F9',
@@ -589,12 +539,19 @@ WV.TextField = WV.extend(WV.Control, {
 	cls: 'wv-text-field',
     inputType: 'text',
     valuePropName: 'text',
-    styleObject: WV.style.TextComponent,
+    styleMap: WV.style.TextComponent,
     constructor: function(config)
     {
         WV.TextField.superclass.constructor.call(this, config);
-        this.subViews.input.setFrame({ x: 2, y: 2, w: this.w, h: this.h});
-        this.subViews.input.autoResizeMask = WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX;
+        var input = this.subViews.input;
+        input.setFrame({ x: 2, y: 2, w: this.w, h: this.h});
+        // Only initialize the state if we have to. It would otherwise already have been done in addSubView
+        if (input.stateful === false)
+        {
+            input.stateful = true;
+            input.setState(this.state);
+        }
+        input.autoResizeMask = WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX;
         return this;
     },
     afterRender: function()
@@ -603,10 +560,19 @@ WV.TextField = WV.extend(WV.Control, {
         WV.TextField.superclass.afterRender.call(this);
         this.setReadOnly(this.readOnly);
         return this;
+    },
+    select: function()
+    {
+        if (this.rendered)
+        {
+            this.subViews.input.dom.select();
+        }
+        return this;
     }
 });
 
 WV.PasswordField = WV.extend(WV.TextField, {
+    vtype: 'password',
 	cls: 'wv-password-field',
     inputType: 'password'
 });
@@ -618,6 +584,7 @@ WV.TextArea = WV.extend(WV.TextField, {
     subViews: [{
         vtag: 'input',
         tag: 'textarea',
+        stateful: true,
         domTpl: { html: '{value}', name: '{name}' }
     }],
     setValue: function(val)

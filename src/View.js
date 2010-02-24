@@ -25,6 +25,7 @@ WV.View = WV.extend(Ext.util.Observable, {
     clipSubViews: false,
     disabled: false,
     draggable: false,
+    stateful: false,
     tabIndex: undefined,
     toolTip: undefined,
 
@@ -46,17 +47,25 @@ WV.View = WV.extend(Ext.util.Observable, {
         this.id = config.id || WV.id();
         this.z = WV.z();
 
-        // Accumulate default styles into a reusable base style object on a per-class basis
-        if (!this.constructor._style)
+        // Merge styles in from the superclass unless we want to override
+        if (this.constructor._styleMerged !== true)
         {
-            this.constructor._style = WV.accumulate(this.constructor, 'style');
+            var proto = this.constructor.prototype;
+
+            proto.style = proto.style || {};
+
+            proto.overrideStyle === true ? Ext.apply(proto.style, WV.View.prototype.style)
+                                         : Ext.applyIf(proto.style, this.constructor.superclass.style);
+            
+            this.constructor._styleMerged = true; 
         }
 
-        // Set styles
-        var styles;
-        Ext.applyIf(styles = config.style || {}, this.constructor._style);
-
-        config.style = {}; // Start the styles empty and we will add them later
+        // Use the merged base style unless we want to override it completely
+        config.style = Ext.apply(config.style || {}, WV.View.prototype.style);
+        if (config.overrideStyle !== true)
+        {
+            Ext.applyIf(config.style, this.constructor.prototype.style);
+        }
 
         Ext.apply(this, config);
 
@@ -76,18 +85,21 @@ WV.View = WV.extend(Ext.util.Observable, {
             this.setDraggable(this.draggable === true);
         }
 
-        this.setStyle(styles, true);
+        // Set the styles and other visual properties
+        this.setStyle(this.style, true);
         this.setVisible(this.visible);
         this.setClipSubViews(this.clipSubViews);
         this.setDisabled(this.disabled);
 
         WV.addToCache(this);
 
+        // Add all of our subViews
         for (var i = 0, l = subViewsToAdd.length; i < l; i++)
         {
             this.addSubView(subViewsToAdd[i]);
         }
 
+        // Add ourself to the superView
         if (this.superView)
         {
             // We have not really been added to a superview yet so prevent confusion by removing the reference
@@ -119,6 +131,20 @@ WV.View = WV.extend(Ext.util.Observable, {
             view.nextResponder = this;
 
             view.z = WV.z();
+
+            // If the view is stateful then set its state to match that of the new superView if it too is stateful,
+            // unless the view has explicitly set its own state
+            if (view.stateful === true)
+            {
+                if (this.stateful && !view.hasOwnProperty('state'))
+                {
+                    view.setState(this.state, true, true); // shallow = true, force = true
+                }
+                else
+                {
+                    view.setState(view.state, true, true); // shallow = true, force = true
+                }
+            }
 
             if (this.rendered)
             {
@@ -736,14 +762,13 @@ WV.View = WV.extend(Ext.util.Observable, {
     
     layoutSubViews: function()
     {
-        if (!this.resizeSubViews) { return; }
+        if (!this.resizeSubViews) { return this; }
 
         var subs = this.subViews;
         for (var i = 0, l = subs.length; i < l; i++)
         {
             subs[i].doAutoResize(); // Will call layoutSubviews recursively as sizes change
         }
-
         return this;
     },
 
@@ -912,6 +937,120 @@ WV.View = WV.extend(Ext.util.Observable, {
             return hits.length > 0 ? hits : null;
         }
     },
+
+    setState: function(newState, shallow, force)
+    {
+        // TODO: Account for possible difference in ordering of 'equal' states 
+        if (typeof newState === 'string' && (force || (newState !== this.state)))
+        {
+            var end, start = new Date();
+
+            var i, s, l, computedStyle,
+                sv = this.superView,
+                styleMap = this.styleMap || ((sv && sv.styleMap) ? sv.styleMap[this.vtag] : null);
+
+            if (!styleMap)
+            {
+                var msg = 'Could not find a styleMap for this stateful view: ' + this.toString();
+                WV.log(msg);
+                throw new Error(msg);
+            }
+
+            this.state = newState;
+
+            // Starting with the defaults, apply each styles for each state found in the new state string
+            computedStyle = WV.apply({}, styleMap.defaults || styleMap);
+
+            if (styleMap.states)
+            {
+                // Go through every state defined (a bit wasteful :/ ) in declared order to preserve precendence
+                // and apply the style over the existing computed style
+                for (s = 0, l = styleMap.states.length; s < l; s++)
+                {
+                    if (this.state.indexOf(styleMap.states[s].name) >= 0)
+                    {
+                        WV.apply(computedStyle, styleMap.states[s].styles);
+                    }
+                }
+            }
+
+            this.setStyle(computedStyle);
+
+            if (shallow !== true)
+            {
+                for (i = 0,l = this.subViews.length; i < l; i++)
+                {
+                    if (this.subViews[i].stateful === true)
+                    {
+                        this.subViews[i].setState(this.state, shallow, force);
+                    }
+                }
+            }
+            end = new Date();
+            WV.log('setState(', this.state, '): ', this.id, ',', this.vtype, ' ', end.getTime() - start.getTime(), 'ms');
+        }
+        return this;
+    },
+    changeState: function(states, top)
+    {
+        var i, l;
+
+        if (states && states.remove)
+        {
+            if (Ext.isArray(states.remove))
+            {
+                for (i = 0, l = states.remove.length; i < l; i++)
+                {
+                    this.changeState({ remove: states.remove[i] }, false);
+                }
+            }
+            else { this.removeState(states.remove, true); }
+        }
+
+        if (states && states.add)
+        {
+            if (Ext.isArray(states.add))
+            {
+                for (i = 0, l = states.add.length; i < l; i++)
+                {
+                    this.changeState({ add: states.add[i] }, false);
+                }
+            }
+            else { this.addState(states.add, true); }
+        }
+
+        if (top !== false) { this.setState(this.state, false, true); }
+        return this;
+    },
+    addState: function(state, cancelUpdate)
+    {
+        if (typeof state === 'string' && (this.state || '').indexOf(state) < 0)
+        {
+            var newState;
+            if (this.state.length > 0)
+            {
+                newState = this.state + ',' + state;
+            }
+            else
+            {
+                newState = state;
+            }
+            cancelUpdate === true ? this.state = newState : this.setState(newState);
+        }
+        return this;
+    },
+    removeState: function(state, cancelUpdate)
+    {
+        if (typeof state === 'string')
+        {
+            var re = new RegExp(String.format('^{0},|{0},|,{0}|{0}$', state), 'g'),
+                newState = this.state.replace(re, '');
+
+            cancelUpdate === true ? this.state = newState : this.setState(newState);
+        }
+        return this;
+    },
+
     toString: function()
     {
         return ['id: ', this.id, '\n',
