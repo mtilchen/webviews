@@ -20,6 +20,8 @@ WV.Image = WV.extend(WV.View, {
     autoResizeMask: WV.RESIZE_NONE,
     resizeSubViews: false,
     preserveAspect: 'width',
+    loaded: false,
+    useNaturalSize: false,
     naturalWidth: 0,
     naturalHeight: 0,
 
@@ -31,13 +33,9 @@ WV.Image = WV.extend(WV.View, {
 
     setSize: function(w, h)
     {
-        if (!this.rendered)
+        if (!this.loaded)
         {
             return WV.Image.superclass.setSize.call(this, w, h);
-        }
-        if (!w && !h)
-        {
-            WV.Image.superclass.setSize.call(this, this.dom.width, this.dom.height);
         }
         else if (this.preserveAspect === 'width')
         {
@@ -59,8 +57,11 @@ WV.Image = WV.extend(WV.View, {
         {
             WV.Image.superclass.setSize.call(this, w, h);
         }
-
         return this;
+    },
+    setNaturalSize: function()
+    {
+        return this.setSize(this.naturalWidth, this.naturalHeight);   
     },
     // private
     preLoad: function()
@@ -82,7 +83,8 @@ WV.Image = WV.extend(WV.View, {
         if (this.rendered)
         {
             Ext.EventManager.addListener(this.dom, 'load', function(e, img) {
-                this.setSize(this.w, this.h);
+                this.loaded = true;
+                this.useNaturalSize ? this.setNaturalSize() : this.setSize(this.w, this.h);
             }, this, { single: true });
             this.dom.src = this.src;
         }
@@ -90,6 +92,7 @@ WV.Image = WV.extend(WV.View, {
     setSrc: function(src)
     {
         this.src = src;
+        this.loaded = false;
         this.preLoad();
 
         return this;
