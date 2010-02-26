@@ -512,6 +512,11 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             transP = WV.styleLib[name] || name;
             this.style[name] = value;
+            // Just in case display is set without calling setVisible
+            if (name === 'display')
+            {
+                this.visible = value !== 'none';
+            }
             if (this.rendered)
             {
                  this.dom.style[transP] = value;
@@ -819,7 +824,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             subs = this.subViews,
             sv = this.superView;
 
-        if (!this.visible)
+        if (!this.visible || this.disabled)
         {
             return null;
         }
@@ -835,7 +840,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         if (subs && subs.length)
         {
-            for (var i = 0, l = subs.length; i < l; i++)
+            for (var i = (subs.length - 1); i >= 0; i--)
             {
                 hit = subs[i].hitTest(convP);
                 if (hit) { break; }
@@ -894,10 +899,9 @@ WV.View = WV.extend(Ext.util.Observable, {
         return false;
     },
 
-    find: function(vtag)
+    viewWithVtag: function(vtag)
     {
-        var i, l, views = WV.findByVtag(vtag),
-            hits = [];
+        var i, l, views = WV.findByVtag(vtag);
 
         if (!views) { return null; }
         else
@@ -906,10 +910,10 @@ WV.View = WV.extend(Ext.util.Observable, {
             {
                 if (views[i].isDescendantOf(this))
                 {
-                    hits[hits.length] = views[i];
+                    return views[i];
                 }
             }
-            return hits.length > 0 ? hits : null;
+            return null;
         }
     },
     toString: function()
