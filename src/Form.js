@@ -59,7 +59,7 @@ WV.Control = WV.extend(WV.View, {
         var end, start = new Date();
         if (typeof newState === 'string')
         {
-            var i, s, l, newStyle, hits,
+            var i, s, l, newStyle, hit,
                 styleObj = this.styleObject,
                 styles = newState.split(/\s*,\s*/);
 
@@ -80,9 +80,9 @@ WV.Control = WV.extend(WV.View, {
             {
                 if (vtag !== 'base')
                 {
-                    hits = this.viewWithVtag(vtag);
+                    hit = this.viewWithVtag(vtag);
 
-                    if (hits.length > 0)
+                    if (hit)
                     {
                         newStyle = WV.apply({}, styleObj[vtag].defaults);
 
@@ -90,10 +90,7 @@ WV.Control = WV.extend(WV.View, {
                         {
                             WV.apply(newStyle, styleObj[vtag][styles[s]]);
                         }
-                        for (i = 0, l = hits.length; i < l; i++)
-                        {
-                            hits[i].setStyle(newStyle);
-                        }
+                        hit.setStyle(newStyle);
                     }
                 }
             }

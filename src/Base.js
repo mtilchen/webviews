@@ -11,6 +11,7 @@ WV = (function() {
          cache = {},
          vtagIndex = {},
          deCamelRe = /([A-Z])/g,
+         userAgent = navigator.userAgent.toLowerCase(),
          logEnabled = window.console && window.console.log;
 
     function deCamel(c) { return '-' + c.toLowerCase(); }
@@ -41,7 +42,11 @@ WV = (function() {
 
         version: '0.0.1',
 
-        style: {},
+        debugMode: false,
+
+        style: {}, // Namespace for styles
+
+        isIPhone: /iphone/.test(userAgent),
         
         id: function()
         {
@@ -182,7 +187,14 @@ WV = (function() {
 
                                console.log(String.format('<{0}> {1}', time, logStrings.join('')));
                           }
-                        : function() {}
+                        : function() {},
+        debug: function()
+        {
+            if (WV.debugMode === true)
+            {
+                WV.log.apply(WV, arguments);
+            }
+        }
     };
 
     Ext.onReady(function() {
