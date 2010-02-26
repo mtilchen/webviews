@@ -80,7 +80,7 @@ WV.Control = WV.extend(WV.View, {
             {
                 if (vtag !== 'base')
                 {
-                    hits = this.find(vtag);
+                    hits = this.viewWithVtag(vtag);
 
                     if (hits.length > 0)
                     {
