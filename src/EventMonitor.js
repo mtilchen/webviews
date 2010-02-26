@@ -184,20 +184,6 @@ WV.EventMonitor = (function() {
         clickCount = 0;
     });
 
-    // Returns true if the view is a descendant of a disabled view
-    function checkDisabled(view)
-    {
-        while (view)
-        {
-            if (view.disabled === true)
-            {
-                return true;
-            }
-            view = view.superView;
-        }
-        return false;
-    }
-
     function cancel()
     {
         if (be.preventDefault)
@@ -289,6 +275,11 @@ WV.EventMonitor = (function() {
                 if (isKeyEvent)
                 {
                     targetV = WV.Window.firstResponder || WV.Window;
+                    // TODO: Handle keyView keyboard navigation keys
+                    if (ev.getCharCode() === 9)
+                    {
+                        cancel();
+                    }
                 }
                 else
                 {
@@ -296,7 +287,7 @@ WV.EventMonitor = (function() {
                                                   y: be.clientY });
                 }
 
-                if (targetV && (checkDisabled(targetV) !== true))
+                if (targetV)
                 {
                     proceed = monitors[name].before ? monitors[name].before() : true;
 

@@ -51,21 +51,27 @@ WV.Responder = {
     noResponderFor: function(eName, e)
     {
         // Play sound for keyDown?
-//        var conv = e.targetView.convertPointFromView(e.windowPoint);
-//        console.log(this.id, ' (', eName, ') (', e.windowPoint.x, ', ', e.windowPoint.y, ')', e.targetView.id, ' ', '(', conv.x, ', ', conv.y, ') ', e.targetElement.id, ' (', e.elementPoint.x, ', ', e.elementPoint.y, ')');
-//        if (e.clickCount)
-//            console.log('Clicks: ', e.clickCount);
-//        if (e.leftButton)
-//            console.log('Left Button');
-//        if (e.rightButton)
-//        {
-//            console.log('Right Button');
-//            e.cancel();
-//        }
-//        if (eName.indexOf('key') === 0)
-//        {
-//            WV.log('Key: ', e.character);
-//        }
+        if (WV.debugMode)
+        {
+            if (eName.indexOf('key') === 0)
+            {
+                WV.log('Key: ', e.character);
+            }
+            else
+            {
+                var p = e.target.convertPointFromView(e.windowPoint);
+                WV.log(this.id, ' (', eName, ') (', e.windowPoint.x, ', ', e.windowPoint.y, ')', e.target.id, ' ', '(', p.x, ', ', p.y, ') ', e.targetElement.id, ' (', e.elementPoint.x, ', ', e.elementPoint.y, ')');
+                if (e.clickCount)
+                    WV.log('Clicks: ', e.clickCount);
+                if (e.leftButton)
+                    WV.log('Left Button');
+                if (e.rightButton)
+                {
+                    WV.log('Right Button');
+                    e.cancel();
+                }
+            }
+        }
     },
     mouseDown: function(e)
     {

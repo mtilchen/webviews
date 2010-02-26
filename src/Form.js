@@ -312,7 +312,7 @@ WV.Button = WV.extend(WV.Control, {
                 add: 'active',
                 remove: 'normal'
             });
-        }
+           }
         WV.Button.superclass.mouseEntered.call(this, e);
     }
 });
