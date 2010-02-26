@@ -761,6 +761,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             this.removeFromSuperView();
         }
+        this.purgeListeners();
         this.dom = undefined;
         this.rendered = false;
     },
@@ -1054,7 +1055,10 @@ WV.View = WV.extend(Ext.util.Observable, {
         }
         return this;
     },
-
+    getBubbleTarget: function()
+    {
+        return this.superView;
+    },
     toString: function()
     {
         return ['id: ', this.id, '\n',

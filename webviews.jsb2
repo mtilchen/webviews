@@ -13,6 +13,9 @@
             text: "ECMA-Additions.js",
             path: "src/"
         },{
+            text: "Ext-core-Additions.js",
+            path: "src/"
+        },{
             text: "Base.js",
             path: "src/"
         },{
