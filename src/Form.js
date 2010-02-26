@@ -355,30 +355,36 @@ WV.ToggleButton = WV.extend(WV.Button, {
 });
 
 WV.style.CheckBox = {
-    defaults: {
-        borderBottomColor: '#7E7E7E',
-        borderLeftColor: '#939393',
-        borderRadius: '2px',
-        borderRightColor: '#939393',
-        borderStyle: 'solid',
-        borderTopColor: '#ABABAB',
-        borderWidth: '1px'
-    },
-    states: [{
-        name: 'focus',
-        styles: {
-            borderRadius: '0px' }
-    }],
-    outerborder: {
-        defaults: {
-            borderRadius: '2px'
-        },
+    focusborder: {
         states: [{
             name: 'focus',
             styles: {
-                borderColor: '#4D78A4',
-                borderWidth: '1px',
-                borderStyle: 'solid' }
+            borderColor: '#4D78A4',
+            borderWidth: '1px',
+            borderRadius: '2px',
+            borderStyle: 'solid' }
+        }]
+    },
+    outerborder: {
+        defaults: {
+            borderBottomColor: '#7E7E7E',
+            borderLeftColor: '#939393',
+            borderRadius: '2px',
+            borderRightColor: '#939393',
+            borderStyle: 'solid',
+            borderTopColor: '#ABABAB',
+            borderWidth: '1px'
+        },
+        states: [{
+            name: 'normal',
+            styles: {
+                marginLeft: '0px',
+                marginTop: '0px' }
+        },{
+            name: 'active',
+            styles: {
+                marginLeft: '1px',
+                marginTop: '1px' }
         }]
 	},
     innerborder: {
@@ -422,33 +428,39 @@ WV.style.CheckBox = {
 
 WV.CheckBox = WV.extend(WV.ToggleButton, {
     vtype: 'checkbox',
-    h: 12,
-    w: 12,
+    h: 14,
+    w: 14,
     clipSubViews: false,
 	text: 'Check',
     styleMap: WV.style.CheckBox,
     subViews: [{
+        vtag: 'focusborder',
+        h: 14,
+        w: 14,
+        stateful: true,
+        autoResizeMask: WV.RESIZE_NONE
+    },{
         vtag: 'outerborder',
-        x: -1,
-        y: -1,
-        h: 'h + 2',
-        w: 'w + 2',
+        x: 1,
+        y: 1,
+        h: 12,
+        w: 12,
         stateful: true,
         autoResizeMask: WV.RESIZE_NONE
     },{
         vtag: 'innerborder',
-        x: 1,
-        y: 1,
-        h: 'h - 2',
-        w: 'w - 2',
+        x: 2,
+        y: 2,
+        h: 10,
+        w: 10,
         stateful: true,
         autoResizeMask: WV.RESIZE_NONE
     },{
         vtag: 'checkImage',
         vtype: 'image',
-        x: 2,
+        x: 3,
         y: -5,
-        w: 'w + 3',
+        w: 15,
         stateful: true,
         src: 'resources/images/form/checkmark.png',
         autoResizeMask: WV.RESIZE_NONE
@@ -456,10 +468,10 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
         vtag: 'label',
         vtype: 'label',
         draggable: false,
-        x: 16,
+        x: 17,
         y: -1,
         h: 'h',
-        w: 'w + 15',
+        w: 'w - 12',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
     }]
 });
@@ -485,6 +497,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
     vtype: 'radio',
     h: 13,
     w: 13,
+    clipSubViews: true,
 	autoResizeMask: WV.RESIZE_NONE,
 	cls: 'wv-radio-button',
 	text: 'Radio',
