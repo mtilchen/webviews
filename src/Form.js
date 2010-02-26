@@ -507,8 +507,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
         vtype: 'label',
         draggable: false,
         x: 16,
-        y: 0,
-        h: 'h',
+        h: 13,
         w: 'w + 15',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
     }]
