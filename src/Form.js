@@ -434,12 +434,6 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
 	text: 'Check',
     styleMap: WV.style.CheckBox,
     subViews: [{
-        vtag: 'focusborder',
-        h: 14,
-        w: 14,
-        stateful: true,
-        autoResizeMask: WV.RESIZE_NONE
-    },{
         vtag: 'outerborder',
         x: 1,
         y: 1,
@@ -456,6 +450,21 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
         stateful: true,
         autoResizeMask: WV.RESIZE_NONE
     },{
+        vtag: 'label',
+        vtype: 'label',
+        draggable: false,
+        x: 17,
+        y: 0,
+        h: 'h',
+        w: 'w - 12',
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX
+    },{
+        vtag: 'focusborder',
+        h: 14,
+        w: 14,
+        stateful: true,
+        autoResizeMask: WV.RESIZE_NONE
+    },{
         vtag: 'checkImage',
         vtype: 'image',
         x: 3,
@@ -464,15 +473,6 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
         stateful: true,
         src: 'resources/images/form/checkmark.png',
         autoResizeMask: WV.RESIZE_NONE
-    },{
-        vtag: 'label',
-        vtype: 'label',
-        draggable: false,
-        x: 17,
-        y: -1,
-        h: 'h',
-        w: 'w - 12',
-        autoResizeMask: WV.RESIZE_WIDTH_FLEX
     }]
 });
 
@@ -507,7 +507,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
         vtype: 'label',
         draggable: false,
         x: 16,
-        y: -2,
+        y: 0,
         h: 'h',
         w: 'w + 15',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
