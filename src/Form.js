@@ -25,7 +25,7 @@ WV.Input = WV.extend(WV.View, {
             return WV.get(this.dom.form.id);
         }
         return undefined;
-    }
+    }   
 });
 
 WV.Control = WV.extend(WV.View, {
@@ -56,7 +56,7 @@ WV.Control = WV.extend(WV.View, {
     },
     doAction: function()
     {
-        WV.log('Action: ', this.id, '(name/value): ', this.name, ':', this.getValue());
+        WV.debug('Action: ', this.id, '(name/value): ', this.name, ':', this.getValue());
         if (this.target && typeof this.action === 'string')
         {
             this.target[this.action](this);
@@ -124,7 +124,7 @@ WV.Control = WV.extend(WV.View, {
     }
 });
 
-WV.style.Button = {
+WV.style.Button = WV.extend(WV.StyleMap, {
     defaults: {
         borderBottomColor: '#E7E7E7',
         borderLeftColor: '#C8C8C8',
@@ -223,7 +223,7 @@ WV.style.Button = {
                 marginTop: '1px' }
         }]
 	}
-};
+});
 
 WV.Button = WV.extend(WV.Control, {
     vtype: 'button',
@@ -231,7 +231,7 @@ WV.Button = WV.extend(WV.Control, {
     w: 96,
     text: '',
     clipSubViews: true,
-    styleMap: WV.style.Button,
+    styleMap: new WV.style.Button(),
     subViews: [{
         vtag: 'outerborder',
         x: 1,
@@ -354,15 +354,15 @@ WV.ToggleButton = WV.extend(WV.Button, {
     }
 });
 
-WV.style.CheckBox = {
+WV.style.CheckBox = WV.extend(WV.StyleMap, {
     focusborder: {
         states: [{
             name: 'focus',
             styles: {
-            borderColor: '#4D78A4',
-            borderWidth: '1px',
-            borderRadius: '2px',
-            borderStyle: 'solid' }
+                borderColor: '#4D78A4',
+                borderWidth: '2px',
+                borderRadius: '2px',
+                borderStyle: 'solid' }
         }]
     },
     outerborder: {
@@ -385,6 +385,10 @@ WV.style.CheckBox = {
             styles: {
                 marginLeft: '1px',
                 marginTop: '1px' }
+        },{
+            name: 'focus',
+            styles: {
+                borderRadius: '0px' }
         }]
 	},
     innerborder: {
@@ -424,7 +428,7 @@ WV.style.CheckBox = {
                 display: 'block' }
         }]
     }
-};
+});
 
 WV.CheckBox = WV.extend(WV.ToggleButton, {
     vtype: 'checkbox',
@@ -432,8 +436,14 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
     w: 14,
     clipSubViews: false,
 	text: 'Check',
-    styleMap: WV.style.CheckBox,
+    styleMap: new WV.style.CheckBox(),
     subViews: [{
+        vtag: 'focusborder',
+        h: 14,
+        w: 14,
+        stateful: true,
+        autoResizeMask: WV.RESIZE_NONE
+    },{
         vtag: 'outerborder',
         x: 1,
         y: 1,
@@ -459,12 +469,6 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
         w: 'w - 12',
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
     },{
-        vtag: 'focusborder',
-        h: 14,
-        w: 14,
-        stateful: true,
-        autoResizeMask: WV.RESIZE_NONE
-    },{
         vtag: 'checkImage',
         vtype: 'image',
         x: 3,
@@ -476,7 +480,7 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
     }]
 });
 
-WV.style.RadioButton = {
+WV.style.RadioButton = WV.extend(WV.StyleMap, {
     defaults: {
         backgroundImage: 'url(resources/images/form/radio.png)',
         backgroundPosition: '0px 0px',
@@ -491,7 +495,7 @@ WV.style.RadioButton = {
         styles: {
             borderRadius: '0px' }
     }]
-};
+});
 
 WV.RadioButton = WV.extend(WV.ToggleButton, {
     vtype: 'radio',
@@ -501,7 +505,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
 	autoResizeMask: WV.RESIZE_NONE,
 	cls: 'wv-radio-button',
 	text: 'Radio',
-	styleMap: WV.style.RadioButton,
+	styleMap: new WV.style.RadioButton(),
     subViews: [{
         vtag: 'label',
         vtype: 'label',
@@ -513,7 +517,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
     }]
 });
 
-WV.style.TextComponent = {
+WV.style.TextComponent = WV.extend(WV.StyleMap, {
     defaults: {
         background: 'url(resources/images/form/inset.png)',
         borderRadius: '2px'
@@ -542,7 +546,7 @@ WV.style.TextComponent = {
             resize: 'none'
         }
     }
-};
+});
 
 WV.TextField = WV.extend(WV.Control, {
     vtype: 'textfield',
@@ -551,7 +555,7 @@ WV.TextField = WV.extend(WV.Control, {
 	cls: 'wv-text-field',
     inputType: 'text',
     valuePropName: 'text',
-    styleMap: WV.style.TextComponent,
+    styleMap: new WV.style.TextComponent(),
     constructor: function(config)
     {
         WV.TextField.superclass.constructor.call(this, config);

@@ -12,7 +12,7 @@ WV = (function() {
          vtagIndex = {},
          deCamelRe = /([A-Z])/g,
          userAgent = navigator.userAgent.toLowerCase(),
-         logEnabled = window.console && window.console.log;
+         logAvailable = window.console && window.console.log;
 
     function deCamel(c) { return '-' + c.toLowerCase(); }
 
@@ -136,12 +136,6 @@ WV = (function() {
             cls.vtype = vtype;
         },
 
-        // Shallow copy only
-        clone: function(obj, overrides)
-        {
-            return Ext.apply({}, overrides, obj);    
-        },
-
         extend: function(baseCls, overrides)
         {
             var vtype = overrides.vtype,
@@ -176,7 +170,7 @@ WV = (function() {
 
         emptyFn: function() {},
 
-        log: logEnabled ? function() {
+        log: logAvailable ? function() {
                                var time = (new Date()).toLogString(),
                                    logStrings = [],
                                    i, l = arguments.length;
@@ -223,7 +217,7 @@ WV = (function() {
 
                 this.constructor.prototype.layoutSubViews.call(this);
                 end = new Date();
-                WV.log('Layout time: ', end.getTime() - start.getTime(), 'ms');
+                WV.debug('Layout time: ', end.getTime() - start.getTime(), 'ms');
             },
             makeFirstResponder: function(newResponder)
             {
@@ -262,7 +256,7 @@ WV = (function() {
         WV.Window.deferSubViewRender = false;
 
         end = new Date();
-        WV.log('Render time: ', end.getTime() - start.getTime(), 'ms');
+        WV.debug('Render time: ', end.getTime() - start.getTime(), 'ms');
     });
 
     return pub;

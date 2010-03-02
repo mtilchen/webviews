@@ -61,13 +61,21 @@ WV.View = WV.extend(Ext.util.Observable, {
         }
 
         // Use the merged base style unless we want to override it completely
-        config.style = Ext.apply(config.style || {}, WV.View.prototype.style);
+        var style = Ext.apply({}, config.style);
+        Ext.apply(style, WV.View.prototype.style);
+        
         if (config.overrideStyle !== true)
         {
-            Ext.applyIf(config.style, this.constructor.prototype.style);
+            Ext.applyIf(style, this.constructor.prototype.style);
         }
 
         Ext.apply(this, config);
+
+        // Overwrite what was in the config because it does contain what we applied to 'style'.
+        // We also need to ensure the we will not be writing styles to the prototype in the case that
+        // no style property was passed in the config. We will fill the empty value in later
+        // in the call to setStyle.
+        this.style = {};
 
         // Put all the subViews we wish to add together (class level and config level) and add them all at once
         var subViewsToAdd =  this.constructor.prototype.subViews.concat(config.subViews || []);
@@ -86,7 +94,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         }
 
         // Set the styles and other visual properties
-        this.setStyle(this.style, true);
+        this.setStyle(style, true);
         this.setVisible(this.visible);
         this.setClipSubViews(this.clipSubViews);
         this.setDisabled(this.disabled);
@@ -717,7 +725,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             this.initDom();
 
             end = new Date();
-            WV.log('Init Dom time: ', end.getTime() - start.getTime(), 'ms');
+            WV.debug('Init Dom time: ', end.getTime() - start.getTime(), 'ms');
             
             return this;
         }
@@ -950,11 +958,12 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             var end, start = new Date();
 
-            var i, s, l, computedStyle,
-                sv = this.superView,
-                styleMap = this.styleMap || ((sv && sv.styleMap) ? sv.styleMap[this.vtag] : null);
+            var i, s, l,
+                sv = this.superView;
 
-            if (!styleMap)
+            this.styleMap = this.styleMap || ((sv && sv.styleMap) ? sv.styleMap[this.vtag] : null);
+
+            if (!this.styleMap)
             {
                 var msg = 'Could not find a styleMap for this stateful view: ' + this.toString();
                 WV.log(msg);
@@ -963,23 +972,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
             this.state = newState;
 
-            // Starting with the defaults, apply each styles for each state found in the new state string
-            computedStyle = WV.apply({}, styleMap.defaults || styleMap);
-
-            if (styleMap.states)
-            {
-                // Go through every state defined (a bit wasteful :/ ) in declared order to preserve precendence
-                // and apply the style over the existing computed style
-                for (s = 0, l = styleMap.states.length; s < l; s++)
-                {
-                    if (this.state.indexOf(styleMap.states[s].name) >= 0)
-                    {
-                        WV.apply(computedStyle, styleMap.states[s].styles);
-                    }
-                }
-            }
-
-            this.setStyle(computedStyle);
+            this.setStyle(this.styleMap.computeStyleForStates(this.state));
 
             if (shallow !== true)
             {
@@ -992,7 +985,7 @@ WV.View = WV.extend(Ext.util.Observable, {
                 }
             }
             end = new Date();
-            WV.log('setState(', this.state, '): ', this.id, ',', this.vtype, ' ', end.getTime() - start.getTime(), 'ms');
+            WV.debug('setState(', this.state, '): ', this.id, ',', this.vtype, ' ', end.getTime() - start.getTime(), 'ms');
         }
         return this;
     },

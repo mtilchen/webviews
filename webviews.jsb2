@@ -25,6 +25,9 @@
             text: "Responder.js",
             path: "src/"
         },{
+            text: "StyleMap.js",
+            path: "src/"
+        },{
             text: "View.js",
             path: "src/"
         },{
