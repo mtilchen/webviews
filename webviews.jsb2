@@ -1,6 +1,6 @@
 {
     projectName: "WebViews",
-    deployDir: "webviews-0.0.1",
+    deployDir: "webviews-@VERSION@",
     licenseText: "Copyright 2010, Matthew P. Tilchen\n\nThis file is part of WebViews.\n\nWebViews is free software: you can redistribute it and/or modify\nit under the terms of the GNU Lesser General Public License as\npublished by the Free Software Foundation, either version 3 of the License, or\n(at your option) any later version.\n\nWebViews is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU Lesser General Public License for more details.\n\n<http://www.gnu.org/licenses/>\n\n",
     pkgs: [{
         name: "WebViews Foundation",
@@ -20,7 +20,7 @@
             path: "src/"
         },{
             text: "EventMonitor.js",
-            path: "src/"  
+            path: "src/"
         },{
             text: "Responder.js",
             path: "src/"
@@ -65,8 +65,8 @@
         dest: "licenses/",
         filters: ".*\\.txt"
     },{
-        src: "license.txt",
-        dest: "license.txt",
+        src: "LICENSE",
+        dest: "LICENSE",
         filters: ".*"
     },{
         src: "README",

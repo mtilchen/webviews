@@ -40,7 +40,7 @@ WV = (function() {
 
     var pub = {
 
-        version: '0.0.1',
+        version: '@VERSION@',
 
         debugMode: false,
 
