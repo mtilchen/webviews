@@ -5,8 +5,8 @@
 
     <link rel="stylesheet" type="text/css" href="../resources/css/webviews.css" />
 
-    <script src="../webviews-debug.js"></script>
-    <script>
+    <script src="../webviews-debug.js" defer></script>
+    <script defer>
         WV.init(function() {
             var e1 = new WV.FormView({
                 superView: WV.Window,
@@ -39,6 +39,7 @@
                 superView: e1,
                 id: 'to',
                 autoResizeMask: WV.RESIZE_WIDTH_FLEX,
+                readOnly: true,
                 x: 15,
                 y: 28,
                 w: e1.w - 30
@@ -83,7 +84,8 @@
                 x: 15,
                 y: 162,
                 w: e1.w - 30,
-                h: e1.h - 215
+                h: e1.h - 215,
+                nextKeyView: 'test_check'
             });
             
             new WV.Label({
@@ -116,6 +118,7 @@
             });
 
             new WV.CheckBox({
+                id: 'test_check',
                 superView: e1,
                 name: 'test_check',
                 selected: false,
@@ -127,6 +130,7 @@
             });
                         
             new WV.Button({
+                id: 'send',
                 superView: e1,
                 autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_LEFT_FLEX,
                 x: '{e1}.w - 110',
@@ -136,7 +140,10 @@
             
             new WV.Button({
                 superView: e1,
-                canBecomeFirstResponder: false,
+                canBecomeFirstResponder:function()
+                {
+                    return false;
+                },
                 autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_RIGHT_FLEX,
                 x: 15,
                 y: '{e1}.h - 40',
