@@ -190,17 +190,19 @@
                 src: 'resources/examples/images/norah_xmas2.jpg'
             });
 
-            var label = new WV.Label({
+            var label = new WV.Link({
                 superView: e2,
                 id: 'label',
                 autoResizeMask: WV.RESIZE_NONE,
                 x: 15,
-                y: 350,
+                y: 370,
                 w: 200,
+                url: 'http://maps.google.com',
+                newWindow: true,
                 style: {
                     fontFamily: 'Lucida Handwriting'
                 },
-                text: 'A Test Label'
+                text: 'Go to Google Maps'
             });
 
             var text = new WV.TextField({

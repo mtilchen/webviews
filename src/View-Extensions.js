@@ -14,6 +14,30 @@ WV.Label = WV.extend(WV.View, {
 	}
 });
 
+WV.Link = WV.extend(WV.Label, {
+    vtype: 'link',
+    cls: 'wv-link',
+    tag: 'a',
+    domTpl: { href: '{url}', target: '{target}' },
+    newWindow: false,
+    preventNavigation: false,
+    constructor: function(config)
+    {
+        WV.Link.superclass.constructor.call(this, config);
+
+        this.target = this.newWindow ? '_blank' : (config.target || '');
+        return this;
+    },
+    click: function(e)
+    {
+        if (this.preventNavigation)
+        {
+            e.cancel();
+        }
+        WV.Link.superclass.click.call(this, e);
+    }
+});
+
 WV.Image = WV.extend(WV.View, {
     vtype: 'image',
     tag: 'img',
@@ -175,7 +199,6 @@ WV.ScrollView = WV.extend(WV.View, {
         this.setStyle('overflowX', WV.ScrollView.prototype.scrollConfigMap[this.showHorizontalScroll]);
     }
 });
-
 
 WV.ExtView = WV.extend(WV.View, {
     vtype: 'extview',
