@@ -5,8 +5,8 @@
 
     <link rel="stylesheet" type="text/css" href="../resources/css/webviews.css" />
 
-    <script src="../webviews-debug.js" defer></script>
-    <script defer>
+    <script src="../webviews-debug.js"></script>
+    <script>
         WV.init(function() {
             var e1 = new WV.FormView({
                 superView: WV.Window,
@@ -38,6 +38,7 @@
             new WV.TextField({
                 superView: e1,
                 id: 'to',
+                text: 'I am read only',
                 autoResizeMask: WV.RESIZE_WIDTH_FLEX,
                 readOnly: true,
                 x: 15,
