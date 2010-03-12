@@ -9,8 +9,6 @@ WV.FormView = WV.extend(WV.View, {
     domTpl: { method: '{method}', action: '{action}', enctype: '{contentType}', 'accept-charset': '{acceptCharset}' }
 });
 
-// TODO: tabIndex
-
 WV.Input = WV.extend(WV.View, {
     vtype: 'input',
     tag: 'input',
@@ -30,12 +28,12 @@ WV.Input = WV.extend(WV.View, {
 
 WV.Control = WV.extend(WV.View, {
     inputType: 'hidden',
-    canBecomeFirstResponder: true,
     stateful: true,
     state: 'normal',
     name: '',
     value: '',
     valuePropName: 'value',
+    readOnly: false,
     target: null,
     action: null,
     constructor: function(config)
@@ -47,11 +45,19 @@ WV.Control = WV.extend(WV.View, {
                 vtype: 'input',
                 vtag: 'input',
                 name: this.name,
-                readOnly: this.readOnly,
                 inputType: this.inputType
             });
         }
         this.setValue(this[this.valuePropName]);
+        return this;
+    },
+    canBecomeFirstResponder: function()
+    {
+        return this.enabled === true && this.readOnly !== true;
+    },
+    setReadOnly: function(ro)
+    {
+        this.readOnly = ro === true;
         return this;
     },
     doAction: function()
@@ -83,17 +89,7 @@ WV.Control = WV.extend(WV.View, {
         }
         else
         {
-            // This will get picked up by the template during rendering
             this.subViews.input.value = this[this.valuePropName];
-        }
-        return this;
-    },
-    setReadOnly: function(val)
-    {
-        this.readOnly = val === true;
-        if (this.rendered)
-        {
-            this.subViews.input.dom.readOnly = this.readOnly;
         }
         return this;
     },
@@ -103,24 +99,25 @@ WV.Control = WV.extend(WV.View, {
         if (result === true)
         {
             this.addState('focus');
+            if (this.rendered && !this.subViews.input.isHiddenOrHasHiddenAncestor())
+            {
+                this.subViews.input.dom.focus();
+            }
         }
         return result;
     },
-
     resignFirstResponder: function()
     {
         var result = WV.Control.superclass.resignFirstResponder.call(this);
-        if (result === true && this.rendered)
+        if (result === true)
         {
             this.removeState('focus');
+            if (this.rendered && !this.subViews.input.isHiddenOrHasHiddenAncestor())
+            {
+                this.subViews.input.dom.blur();
+            }
         }
-
         return result;
-    },
-    mouseDown: function(e)
-    {
-        this.becomeFirstResponder();
-        return WV.Control.superclass.mouseDown.call(this, e);
     }
 });
 
@@ -314,6 +311,30 @@ WV.Button = WV.extend(WV.Control, {
             });
            }
         WV.Button.superclass.mouseEntered.call(this, e);
+    },
+    keyDown: function(e)
+    {
+        if (e.charCode === 32) // Spacebar triggers the action of Buttons
+        {
+            e.cancel();
+            // Add some visual feedback, showing the action was triggered
+            this.changeState({
+                add: 'active',
+                remove: 'normal'
+            });
+            var me = this;
+            setTimeout(function() {
+                me.changeState({
+                    add: 'normal',
+                    remove: 'active'
+                });
+                me.doAction();
+            }, 15);
+        }
+        else
+        {
+            WV.Button.superclass.keyDown.call(this, e);
+        }
     }
 });
 
@@ -344,13 +365,10 @@ WV.ToggleButton = WV.extend(WV.Button, {
         return WV.ToggleButton.superclass.setValue.call(this, this.selected ? this.selectedValue
                                                                             : this.unselectedValue);
     },
-    mouseUp: function(e)
+    doAction: function(e)
     {
-        if (e.target.isDescendantOf(this))
-        {
-            this.setSelected(!this.selected);
-        }
-        WV.ToggleButton.superclass.mouseUp.call(this, e);
+        this.setSelected(!this.selected);
+        WV.ToggleButton.superclass.doAction.call(this, e);
     }
 });
 
@@ -568,6 +586,10 @@ WV.TextField = WV.extend(WV.Control, {
             input.setState(this.state);
         }
         input.autoResizeMask = WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX;
+        if (this.readOnly)
+        {
+            input.value = this[this.valuePropName]; // 'text'
+        }
         return this;
     },
     afterRender: function()
@@ -577,13 +599,39 @@ WV.TextField = WV.extend(WV.Control, {
         this.setReadOnly(this.readOnly);
         return this;
     },
-    select: function()
+    setReadOnly: function(ro)
     {
+        WV.TextField.superclass.setReadOnly.call(this, ro);
         if (this.rendered)
         {
-            this.subViews.input.dom.select();
+            this.subViews.input.dom.readOnly = this.readOnly;
+            this.subViews.input.dom.setAttribute('autocomplete', this.readOnly ? 'off' : null);
         }
         return this;
+    },
+    select: function()
+    {
+        this.becomeFirstResponder();
+        return this;
+    },
+    mouseDown: function(e)
+    {
+        this.becomeFirstResponder(true);
+        return WV.TextField.superclass.mouseDown.call(this, e);
+    },
+    becomeFirstResponder: function(preventSelect)
+    {
+        // Yes, use the WV.Control superclass as we want to skip the logic in WV.Control
+        var result = WV.Control.superclass.becomeFirstResponder.call(this);
+        if (result === true)
+        {
+            this.addState('focus');
+            if (this.rendered && !preventSelect && !this.subViews.input.isHiddenOrHasHiddenAncestor())
+            {
+                this.subViews.input.dom.select();
+            }
+        }
+        return result;
     }
 });
 

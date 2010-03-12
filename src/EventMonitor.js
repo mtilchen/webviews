@@ -9,6 +9,7 @@ WV.EventMonitor = (function() {
         clickCount = 0,
         wasDragged,
         wasCancelled = false,
+        ignoreEvents = false,
         ev, // Current Ext event
         be, // Current browserEvent
         targetV, // Current target View
@@ -37,12 +38,15 @@ WV.EventMonitor = (function() {
                     if (prevOver !== mouseOverOwner)
                     {
                         createMouseEvent();
-                        if (prevOver)
+                        if (prevOver && !mouseOverOwner.isDescendantOf(prevOver))
                         {
                             prevOver.mouseExited(sharedMouseEvent);
                         }
 
-                        mouseOverOwner.mouseEntered(sharedMouseEvent);
+                        else if (prevOver && !prevOver.isDescendantOf(mouseOverOwner))
+                        {
+                            mouseOverOwner.mouseEntered(sharedMouseEvent);
+                        }
                     }
 
                     if (mouseDownOwner === targetV)
@@ -121,6 +125,10 @@ WV.EventMonitor = (function() {
                     wheelDelta = 0;
                 }
             },
+            click: {
+                before: WV.emptyFn,
+                after: WV.emptyFn
+            },
             contextMenu: {
                 before: function()
                 {
@@ -171,7 +179,25 @@ WV.EventMonitor = (function() {
                 }
             },
             keyDown: {
-                before: WV.emptyFn,
+                before: function()
+                {
+                    // If the ctrl AND alt keys are down and this is a Tab or Tab-shift then change the key view.
+                    // This will allow tabbing out of views that would otherwise consume the Tab key (TextArea)
+                    if (ev.getCharCode() === 9 && ev.ctrlKey && ev.altKey)
+                    {
+                        cancel();
+                        if (ev.shiftKey)
+                        {
+                            WV.log('previous');
+                        }
+                        else
+                        {
+                            WV.log('next');
+                        }
+                        return false;
+                    }
+                    return true;
+                },
                 after: WV.emptyFn
             },
             keyUp: {
@@ -189,6 +215,10 @@ WV.EventMonitor = (function() {
         if (be.preventDefault)
         {
             be.preventDefault();
+        }
+        if (be.stopPropagation)
+        {
+            be.stopPropagation();
         }
         else
         {
@@ -212,7 +242,7 @@ WV.EventMonitor = (function() {
         sme.target = targetV;
         sme.targetElement = be.target;
         sme.mouseDownOwner = mouseDownOwner;
-        sme.clickCount = clickCount;
+        sme.clickCount = be.type === 'click' ? be.detail : clickCount;
         sme.leftButton = clickCount > 0 && (ev.button === 0);
         sme.middleButton = clickCount > 0 && (ev.button === 1);
         sme.rightButton = clickCount > 0 && (ev.button === 2);
@@ -247,7 +277,14 @@ WV.EventMonitor = (function() {
         ske.shiftKey = ev.shiftKey;
         ske.altKey = ev.altKey;
         ske.ctrlKey = be.ctrlKey;
-        ske.metaKey = be.metaKey;
+        if (Ext.isMac)
+        {
+            ske.commandKey = be.metaKey;
+        }
+        else
+        {
+            ske.metaKey = be.metaKey;
+        }
         ske.target = targetV;
         ske.targetElement = be.target;
 
@@ -260,12 +297,20 @@ WV.EventMonitor = (function() {
         {
             Ext.EventManager.addListener(document, name.toLowerCase(), function(e) {
 
+                
                 // Set these four shared objects before processing the event
                 ev = e;
                 be = e.browserEvent;
                 wasCancelled = false;
-                targetV = undefined;
+                targetV = null;
 
+                // Stop everything if we are ignoring events
+                if (ignoreEvents)
+                {
+                    cancel();
+                    return wasCancelled;
+                }
+                
                 var el = ev.target,
                         proceed,
                         isKeyEvent = name.indexOf('key') === 0;
@@ -274,12 +319,7 @@ WV.EventMonitor = (function() {
 
                 if (isKeyEvent)
                 {
-                    targetV = WV.Window.firstResponder || WV.Window;
-                    // TODO: Handle keyView keyboard navigation keys
-                    if (ev.getCharCode() === 9)
-                    {
-                        cancel();
-                    }
+                    targetV = WV.Window.firstResponder;
                 }
                 else
                 {
@@ -317,6 +357,14 @@ WV.EventMonitor = (function() {
 
                 return wasCancelled;
             });
+        },
+        startIgnoringEvents: function()
+        {
+            ignoreEvents = true;
+        },
+        stopIgnoringEvents: function()
+        {
+            ignoreEvents = false;
         }
     }
 })();

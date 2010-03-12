@@ -2,13 +2,19 @@
 WV.Responder = {
     nextResponder: null,
     isFirstResponder: false,
-    canBecomeFirstResponder: false,
-    canResignFirstResponder: true,
+    canBecomeFirstResponder: function()
+    {
+        return false;
+    },
+    canResignFirstResponder: function()
+    {
+        return true;
+    },
     becomeFirstResponder: function()
     {
         if (this.isFirstResponder === true) { return true; }
 
-        else if (this.canBecomeFirstResponder === true)
+        else if (this.canBecomeFirstResponder() === true)
         {
             if (WV.Window.firstResponder)
             {
@@ -34,7 +40,7 @@ WV.Responder = {
     },
     resignFirstResponder: function()
     {
-        if (this.canResignFirstResponder === true)
+        if (this.canResignFirstResponder() === true)
         {
             if (this === WV.Window.firstResponder)
             {
@@ -100,6 +106,10 @@ WV.Responder = {
     mouseWheel: function(e)
     {
         this.nextResponder ? this.nextResponder.mouseWheel(e) : this.noResponderFor('mouseWheel', e);
+    },
+    click: function(e)
+    {
+        this.nextResponder ? this.nextResponder.click(e) : this.noResponderFor('click', e);
     },
     contextMenu: function(e)
     {

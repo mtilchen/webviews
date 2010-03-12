@@ -19,14 +19,13 @@ WV.View = WV.extend(Ext.util.Observable, {
     previousW: 0,
     autoResizeMask: WV.RESIZE_LEFT_FLEX | WV.RESIZE_RIGHT_FLEX |
                     WV.RESIZE_TOP_FLEX  | WV.RESIZE_BOTTOM_FLEX,
-    visible: true,
+    hidden: false,
     rendered: false,
     resizeSubViews: true,
     clipSubViews: false,
-    disabled: false,
+    enabled: true,
     draggable: false,
     stateful: false,
-    tabIndex: undefined,
     toolTip: undefined,
 
     style: {
@@ -36,9 +35,13 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     tag: 'div',
 
-    domTpl: { id: '{id}', tag: '{tag}', cls: '{cls}', html: '{html}{_subViewHtml}', title: '{toolTip}', style: '{_styleString}' },
+    domTpl: { id: '{id}', tag: '{tag}', cls: '{cls}', html: '{html}{_subViewHtml}',
+              title: '{toolTip}', style: '{_styleString}' },
 
     subViews: [],
+
+    nextKeyView: null,
+    previousKeyView: null,
 
     constructor: function(config)
     {
@@ -95,9 +98,9 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         // Set the styles and other visual properties
         this.setStyle(style, true);
-        this.setVisible(this.visible);
+        this.setHidden(this.hidden);
         this.setClipSubViews(this.clipSubViews);
-        this.setDisabled(this.disabled);
+        this.setEnabled(this.enabled);
 
         WV.addToCache(this);
 
@@ -201,6 +204,17 @@ WV.View = WV.extend(Ext.util.Observable, {
                 }
             }
         }
+        // Maintain the keyView loop
+        var last = WV.Window.lastViewAdded;
+        if (!last.nextKeyView || last.nextKeyView === WV.Window)
+        {
+            last.setNextKeyView(view);
+        }
+        if (!view.nextKeyView)
+        {
+            view.setNextKeyView(WV.Window);
+        }
+        WV.Window.lastViewAdded = view;
         return this;
     },
 
@@ -469,10 +483,10 @@ WV.View = WV.extend(Ext.util.Observable, {
         return this.h - (2 * (parseInt(this.style.borderWidth, 10) || 0)); /*- this.getPadding("tb") */
     },
 
-    setVisible: function(visible)
+    setHidden: function(hidden)
     {
-        this.visible = visible !== false;
-        this.setStyle('display', this.visible ? '' : 'none');
+        this.hidden = hidden === true;
+        this.setStyle('display', this.hidden ? 'none' : '');
         return this;
     },
 
@@ -483,17 +497,17 @@ WV.View = WV.extend(Ext.util.Observable, {
         return this;
     },
 
-    setDisabled: function(disabled)
+    setEnabled: function(enabled)
     {
-        this.disabled = disabled === true;
+        this.enabled = enabled === true;
         // TODO: Look for Window.firstResponder in descendants and resign it? 
-        if (this.disabled)
+        if (!this.enabled)
         {
             this.canResignFirstResponder = true;
             this.resignFirstResponder();
         }
         // TODO: Remember opacity if there is a current value before disabling
-        this.setStyle('opacity',  this.disabled ? 0.33 : '');
+        this.setStyle('opacity',  this.enabled ? '' : 0.33);
         return this;
     },
 
@@ -549,7 +563,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             // Just in case display is set without calling setVisible
             if (name === 'display')
             {
-                this.visible = value !== 'none';
+                this.hidden = (value === 'none');
             }
             if (this.rendered)
             {
@@ -737,7 +751,10 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             this.setDraggable(true);
         }
-
+        if (typeof this.nextKeyView === 'string')
+        {
+            this.setNextKeyView(WV.get(this.nextKeyView));
+        }
         return this;
     },
 
@@ -858,7 +875,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             subs = this.subViews,
             sv = this.superView;
 
-        if (!this.visible || this.disabled)
+        if (this.hidden || this.disabled)
         {
             return null;
         }
@@ -915,24 +932,77 @@ WV.View = WV.extend(Ext.util.Observable, {
         return { x: Math.ceil(convX), y: Math.ceil(convY) };
     },
 
-    isDescendantOf: function(view)
+    isDescendantOf: function(v)
     {
-        if (view === this) { return true; }
-
-        var sv = this.superView;
+        var sv = this,
+            fn = typeof v === 'function' ? v : function() { return sv === v; };
 
         while (sv)
         {
-            if (sv === view)
+            if (fn(sv) === true)
             {
                 return true;
             }
             sv = sv.superView;
         }
-
         return false;
     },
 
+    isHiddenOrHasHiddenAncestor: function()
+    {
+        return this.isDescendantOf(function(sv) {
+            return sv.hidden === true;
+        })        
+    },
+
+    canBecomeKeyView: function()
+    {
+        return this.canBecomeFirstResponder() && !this.isDescendantOf(function(sv) {
+            return !sv.enabled || sv.hidden; // 
+        })
+    },
+    getNextKeyView: function()
+    {
+        return this.nextKeyView;
+    },
+    setNextKeyView: function(v)
+    {
+        if (v)
+        {
+            this.nextKeyView = v;
+            v.previousKeyView = this;
+        }
+        return v;
+    },
+    getNextValidKeyView: function()
+    {
+        var v = this.getNextKeyView();
+        while (true)
+        {
+            if (v === this || v.canBecomeKeyView())
+            {
+                return v;
+            }
+            v = v.getNextKeyView();
+        }
+    },
+    getPreviousKeyView: function()
+    {
+        return this.previousKeyView;
+    },
+    getPreviousValidKeyView: function()
+    {
+        var v = this.getPreviousKeyView();
+        while (true)
+        {
+            if (v === this || v.canBecomeKeyView())
+            {
+                return v;
+            }
+            v = v.getPreviousKeyView();
+        }
+    },
+    
     viewWithVtag: function(vtag)
     {
         var i, l, views = WV.findByVtag(vtag);

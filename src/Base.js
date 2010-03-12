@@ -196,12 +196,14 @@ WV = (function() {
         // Hide the vertical scrollbar in IE
         if (Ext.isIE) { Ext.select('html').setStyle('overflow', 'hidden'); }
 
+        // TODO: Make WV.Window a subclass of WV.View and give each its own EventMonitor
         WV.Window = new WV.View({
             superView: null,
             dom: document.body,
             clipSubViews: true,
             deferSubViewRender: true,
-            firstResponder: undefined,
+            firstResponder: null,
+            initialFirstResponder: null,
             x: 0,
             y: 0,
             w: Ext.lib.Dom.getViewportWidth(),
@@ -221,9 +223,49 @@ WV = (function() {
             },
             makeFirstResponder: function(newResponder)
             {
+                if (this.firstResponder === newResponder) { return true; }
+
                 return newResponder ? newResponder.becomeFirstResponder() : false;
+            },
+            selectKeyViewFollowingView: function(view)
+            {
+                var v = view.getNextValidKeyView();
+                this.makeFirstResponder(v || this.initialFirstResponder);
+            },
+            selectKeyViewPrecedingView: function(view)
+            {
+                var v = view.getPreviousValidKeyView();
+                this.makeFirstResponder(v || this.initialFirstResponder);
+            },
+            selectPreviousKeyView: function(sender)
+            {
+                var v = this.firstResponder.getPreviousValidKeyView();
+                this.makeFirstResponder(v || this.initialFirstResponder);
+            },
+            selectNextKeyView: function(sender)
+            {
+                var v = this.firstResponder.getNextValidKeyView();
+                this.makeFirstResponder(v || this.initialFirstResponder);
+            },
+            keyDown: function(e)
+            {
+                if (e.charCode === 9) // Tab
+                {
+                    e.cancel();  // Prevent browser default tab behavior
+                    e.shiftKey ? this.selectPreviousKeyView(this) : this.selectNextKeyView(this);
+                }
+                else
+                {
+                    WV.View.prototype.keyDown.call(this, e);
+                }
             }
         });
+
+        // TODO: Create a way to set this in wib loading and declaratively
+        WV.Window.initialFirstResponder = WV.Window;
+        WV.Window.firstResponder = WV.Window.initialFirstResponder;
+        // TODO: This needs to go somehere else
+        WV.Window.lastViewAdded = WV.Window;
 
         Ext.EventManager.addListener(window, 'resize', function() {
 
@@ -237,6 +279,7 @@ WV = (function() {
         WV.EventMonitor.monitorEvent('mouseMove');
         WV.EventMonitor.monitorEvent('mouseOut');
         WV.EventMonitor.monitorEvent('mouseWheel');
+        WV.EventMonitor.monitorEvent('click');
         WV.EventMonitor.monitorEvent('contextMenu');
         WV.EventMonitor.monitorEvent('dragStart');
         WV.EventMonitor.monitorEvent('drag');
