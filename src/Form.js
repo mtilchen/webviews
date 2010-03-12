@@ -99,23 +99,16 @@ WV.Control = WV.extend(WV.View, {
         if (result === true)
         {
             this.addState('focus');
-            if (this.rendered && !this.subViews.input.isHiddenOrHasHiddenAncestor())
-            {
-                this.subViews.input.dom.focus();
-            }
         }
         return result;
     },
     resignFirstResponder: function()
     {
         var result = WV.Control.superclass.resignFirstResponder.call(this);
+
         if (result === true)
         {
             this.removeState('focus');
-            if (this.rendered && !this.subViews.input.isHiddenOrHasHiddenAncestor())
-            {
-                this.subViews.input.dom.blur();
-            }
         }
         return result;
     }
@@ -621,14 +614,28 @@ WV.TextField = WV.extend(WV.Control, {
     },
     becomeFirstResponder: function(preventSelect)
     {
-        // Yes, use the WV.Control superclass as we want to skip the logic in WV.Control
-        var result = WV.Control.superclass.becomeFirstResponder.call(this);
+        var result = WV.TextField.superclass.becomeFirstResponder.call(this),
+            input = this.subViews.input;
+
         if (result === true)
         {
-            this.addState('focus');
-            if (this.rendered && !preventSelect && !this.subViews.input.isHiddenOrHasHiddenAncestor())
+            if (this.rendered && !input.isHiddenOrHasHiddenAncestor())
             {
-                this.subViews.input.dom.select();
+                preventSelect ? input.dom.focus() : input.dom.select();
+            }
+        }
+        return result;
+    },
+    resignFirstResponder: function()
+    {
+        var result = WV.TextField.superclass.resignFirstResponder.call(this),
+            input = this.subViews.input;
+
+        if (result === true)
+        {
+            if (this.rendered && !input.isHiddenOrHasHiddenAncestor())
+            {
+                input.dom.blur();
             }
         }
         return result;
