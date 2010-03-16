@@ -23,7 +23,7 @@ WV.Input = WV.extend(WV.View, {
             return WV.get(this.dom.form.id);
         }
         return undefined;
-    }   
+    }
 });
 
 WV.Control = WV.extend(WV.View, {
@@ -81,7 +81,7 @@ WV.Control = WV.extend(WV.View, {
     setValue: function(val)
     {
         if (this.readOnly === true) { return this; }
-        
+
         this[this.valuePropName] = (val !== undefined && val !== null) ? val : '';
         if (this.rendered)
         {
@@ -160,7 +160,7 @@ WV.style.Button = WV.extend(WV.StyleMap, {
             name: 'focus',
             styles: {
                 borderRadius: '0px' }
-	    }]
+        }]
     },
     innerborder: {
         defaults: {
@@ -192,7 +192,7 @@ WV.style.Button = WV.extend(WV.StyleMap, {
             styles: {
                 borderRadius: '0px' }
         }]
-	},
+    },
     label: {
         defaults: {
             fontFamily: 'Verdana',
@@ -212,7 +212,7 @@ WV.style.Button = WV.extend(WV.StyleMap, {
                 marginLeft: '1px',
                 marginTop: '1px' }
         }]
-	}
+    }
 });
 
 WV.Button = WV.extend(WV.Control, {
@@ -249,7 +249,7 @@ WV.Button = WV.extend(WV.Control, {
         stateful: true,
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
     }],
-	constructor: function(config)
+    constructor: function(config)
     {
         WV.Button.superclass.constructor.call(this, config);
 
@@ -302,7 +302,7 @@ WV.Button = WV.extend(WV.Control, {
                 add: 'active',
                 remove: 'normal'
             });
-           }
+        }
         WV.Button.superclass.mouseEntered.call(this, e);
     },
     keyDown: function(e)
@@ -356,7 +356,7 @@ WV.ToggleButton = WV.extend(WV.Button, {
         this.selected ? this.addState('selected') : this.removeState('selected');
 
         return WV.ToggleButton.superclass.setValue.call(this, this.selected ? this.selectedValue
-                                                                            : this.unselectedValue);
+                : this.unselectedValue);
     },
     doAction: function(e)
     {
@@ -401,7 +401,7 @@ WV.style.CheckBox = WV.extend(WV.StyleMap, {
             styles: {
                 borderRadius: '0px' }
         }]
-	},
+    },
     innerborder: {
         defaults: {
             backgroundColor: '#F9F9F9',
@@ -428,7 +428,7 @@ WV.style.CheckBox = WV.extend(WV.StyleMap, {
             styles: {
                 borderRadius: '0px' }
         }]
-	},
+    },
     checkImage: {
         defaults: {
             display: 'none'
@@ -446,7 +446,7 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
     h: 14,
     w: 14,
     clipSubViews: false,
-	text: 'Check',
+    text: 'Check',
     styleMap: new WV.style.CheckBox(),
     subViews: [{
         vtag: 'focusborder',
@@ -513,10 +513,10 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
     h: 13,
     w: 13,
     clipSubViews: true,
-	autoResizeMask: WV.RESIZE_NONE,
-	cls: 'wv-radio-button',
-	text: 'Radio',
-	styleMap: new WV.style.RadioButton(),
+    autoResizeMask: WV.RESIZE_NONE,
+    cls: 'wv-radio-button',
+    text: 'Radio',
+    styleMap: new WV.style.RadioButton(),
     subViews: [{
         vtag: 'label',
         vtype: 'label',
@@ -533,12 +533,12 @@ WV.style.TextComponent = WV.extend(WV.StyleMap, {
         background: 'url(resources/images/form/inset.png)',
         borderRadius: '2px'
     },
-//        focus: {
-//            borderStyle: 'solid',
-//            borderColor: '#4D78A4',
-//            borderWidth: '2px',
-//            borderRadius: '0px'
-//        }
+    //        focus: {
+    //            borderStyle: 'solid',
+    //            borderColor: '#4D78A4',
+    //            borderWidth: '2px',
+    //            borderRadius: '0px'
+    //        }
     input: {
         defaults: {
             backgroundColor: '#F9F9F9',
@@ -563,7 +563,7 @@ WV.TextField = WV.extend(WV.Control, {
     vtype: 'textfield',
     h: 22,
     w: 150,
-	cls: 'wv-text-field',
+    cls: 'wv-text-field',
     inputType: 'text',
     valuePropName: 'text',
     styleMap: new WV.style.TextComponent(),
@@ -644,14 +644,14 @@ WV.TextField = WV.extend(WV.Control, {
 
 WV.PasswordField = WV.extend(WV.TextField, {
     vtype: 'password',
-	cls: 'wv-password-field',
+    cls: 'wv-password-field',
     inputType: 'password'
 });
 
 WV.TextArea = WV.extend(WV.TextField, {
     vtype: 'textarea',
     h: 100,
-	cls: 'wv-textarea',
+    cls: 'wv-textarea',
     subViews: [{
         vtag: 'input',
         tag: 'textarea',
