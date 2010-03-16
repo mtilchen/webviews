@@ -499,15 +499,23 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     setEnabled: function(enabled)
     {
+        var op = this.style.opacity;
+        if (this.enabled && !enabled)
+        {
+            this.style._prevOpacity = op;
+        }
+        else if (!this.enabled && enabled)
+        {
+            this.style.opacity = op = this.style._prevOpacity;
+        }
         this.enabled = enabled === true;
         // TODO: Look for Window.firstResponder in descendants and resign it? 
         if (!this.enabled)
         {
-            this.canResignFirstResponder = true;
             this.resignFirstResponder();
         }
-        // TODO: Remember opacity if there is a current value before disabling
-        this.setStyle('opacity',  this.enabled ? '' : 0.33);
+
+        this.setOpacity(this.enabled ? op : Math.min(op, 0.33));
         return this;
     },
 
@@ -593,7 +601,16 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         for (prop in this.style)
         {
-            if (prop.indexOf('margin') < 0)
+            if (Ext.isIE && prop === 'opacity') // Ugly but needed
+            {
+                var op = this.style.opacity,
+                    st = '-ms-filter: \'progid:DXImageTransform.Microsoft.BasicImage(opacity={0})\'';
+                if (op < 1)
+                {
+                    buf[buf.length] = String.format(st, op);
+                }
+            }
+            else if (prop.indexOf('margin') < 0)
             {
                 trans = WV.styleLib[prop] || prop;
                 trans = WV.deCamel(trans);
@@ -642,6 +659,32 @@ WV.View = WV.extend(Ext.util.Observable, {
             {
                 this.subViews[i].setStyle('marginLeft', this.style.marginLeft);
                 this.subViews[i].setStyle('marginTop', this.style.marginTop);
+            }
+        }
+        return this;
+    },
+
+    setOpacity: function(op)
+    {
+        if (!(typeof op === 'number') || op === NaN)
+        { 
+            return this;
+        }
+
+        this.style.opacity = op;
+
+        if (this.rendered)
+        {
+            var s = this.dom.style;
+
+            if (Ext.isIE)
+            {
+                // TODO support more than one filter and filter prop
+                s.filter = String.format('progid:DXImageTransform.Microsoft.BasicImage(opacity={0})', op);
+            }
+            else
+            {
+                s.opacity = op;
             }
         }
         return this;
