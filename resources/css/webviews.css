@@ -33,7 +33,7 @@ sup{vertical-align:baseline;}
 sub{vertical-align:baseline;}
 legend{color:#000;}
 input,button,textarea,select,optgroup,option{font-family:inherit;font-size:inherit;font-style:inherit;font-weight:inherit;}
-input,button,textarea,select{*font-size:100%;}
+input,button,textarea,select{font-size:100%;}
 *:focus {outline: 0;}
 *::selection{background:transparent;cursor: default;}
 *::-moz-selection {background:transparent;cursor: default;}
