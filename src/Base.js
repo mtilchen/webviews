@@ -38,6 +38,31 @@ WV = (function() {
         }
     }
 
+    function initIE()
+    {
+        var doc = document,
+            ss;
+
+        // Hide the vertical scrollbar in IE
+        Ext.select('html').setStyle('overflow', 'hidden');
+
+        // Set up VML support
+        if (!doc.namespaces['vml'])
+        {
+            doc.namespaces.add('vml', 'urn:schemas-microsoft-com:vml',
+                               '#default#VML');
+
+        }
+
+        if (document.styleSheets['wv_vml'])
+        {
+            ss = doc.createStyleSheet();
+            ss.owningElement.id = 'wv_vml';
+            ss.cssText = 'vml\\:*{behavior:url(#default#VML)}';
+            ss.cssText += 'vml\\:roundrect {behavior:url(#default#VML)}';
+        }
+    }
+
     var pub = {
 
         version: '@VERSION@',
@@ -68,9 +93,9 @@ WV = (function() {
 
         styleLib: {
             backgroundSize: Ext.isGecko ? 'MozBackgroundSize' : 'WebkitBackgroundSize',
-            borderRadius: Ext.isGecko ? 'MozBorderRadius' : 'WebkitBorderRadius',
+            borderRadius: Ext.isGecko ? 'MozBorderRadius' : Ext.isIE ? 'borderRadius' :'WebkitBorderRadius',
             boxShadow: Ext.isGecko ? 'MozBoxShadow' : 'WebkitBoxShadow',
-            boxSizing: Ext.isGecko ? 'MozBoxSizing' : Ext.isIE8 ? 'boxSizing' :'WebkitBoxSizing',
+            boxSizing: Ext.isGecko ? 'MozBoxSizing' : Ext.isIE ? 'boxSizing' :'WebkitBoxSizing',
             transform: Ext.isGecko ? 'MozTransform' : 'WebkitTransform',
             transformOrigin: Ext.isGecko ? 'MozTransformOrigin' : 'WebkitTransformOrigin'
         },
@@ -164,9 +189,22 @@ WV = (function() {
             return str.replace(deCamelRe, deCamel);
         },
 
+        decToHexString: function()
+        {
+            var i, l, tmp, hex = '';
+            for (i = 0, l = arguments.length; i < l; i++)
+            {
+                tmp = parseInt(arguments[i], 10).toString(16);
+                if (tmp.length === 1) { tmp = '0' + tmp; }
+                hex += tmp;
+            }
+            return hex;  
+        },
+
         apply: Ext.apply,
         applyIf: Ext.applyIf,
         isArray: Ext.isArray,
+        override: Ext.override,
 
         emptyFn: function() {},
 
@@ -193,8 +231,7 @@ WV = (function() {
 
     Ext.onReady(function() {
 
-        // Hide the vertical scrollbar in IE
-        if (Ext.isIE) { Ext.select('html').setStyle('overflow', 'hidden'); }
+        if (Ext.isIE) { initIE(); }
 
         // TODO: Make WV.Window a subclass of WV.View and give each its own EventMonitor
         WV.Window = new WV.View({
