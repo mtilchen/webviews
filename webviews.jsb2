@@ -25,6 +25,9 @@
             text: "Responder.js",
             path: "src/"
         },{
+            text: "Style.js",
+            path: "src/"
+        },{
             text: "StyleMap.js",
             path: "src/"
         },{
@@ -41,6 +44,9 @@
             path: "src/"
         },{
             text: "Sound.js",
+            path: "src/"
+        },{
+            text: "BrowserOverrides.js",
             path: "src/"
         }]
     }],

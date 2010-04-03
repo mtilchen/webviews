@@ -43,8 +43,12 @@
                         transform: 'rotate(25deg)',
                         transformOrigin: 'center',
                         borderRadius: '20px',
-                        boxShadow: '10px 10px rgba(0, 0, 0, 0.5)',
-                        opacity: 0.5
+                        opacity: 0.5,
+                        boxShadow: new WV.style.BoxShadow({
+                            xOffset: '10px',
+                            yOffset: '10px',
+                                color: 'rgba(0,0,0,0.5)'
+                        })
                     },
                     subViews: [
                         {
@@ -55,7 +59,11 @@
                             w: 200,
                             draggable: true,
                             style: {
-                                backgroundColor: 'pink',
+                                backgroundImage: new WV.style.LinearGradient({
+                                    angle: '-45deg',
+                                    startFrom: 'left',
+                                    stops: ['red', 'orange', 'yellow', 'white']
+                                }),
                                 borderRadius: '20px 0px 0px 0px',
                                 border: '5px solid white'
                             },
@@ -124,7 +132,11 @@
                         transform: 'rotate(15deg)',
                         transformOrigin: 'center',
                         borderRadius: '10px',
-                        boxShadow: '5px 5px rgba(0, 0, 0, 0.5)'
+                        boxShadow: new WV.style.BoxShadow({
+                            xOffset: '5px',
+                            yOffset: '5px',
+                            color: 'rgba(0,0,0,0.5)'
+                        })
                     },
                     afterRender: function()
                     {
