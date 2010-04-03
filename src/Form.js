@@ -23,6 +23,14 @@ WV.Input = WV.extend(WV.View, {
             return WV.get(this.dom.form.id);
         }
         return undefined;
+    },
+    mouseDown: function(e)
+    {
+        if (this.rendered && (this.dom.disabled || this.dom.readOnly))
+        {
+            e.cancel();
+        }
+        return WV.Input.superclass.mouseDown.call(this, e);
     }
 });
 
@@ -51,6 +59,24 @@ WV.Control = WV.extend(WV.View, {
         this.setValue(this[this.valuePropName]);
         return this;
     },
+    afterRender: function()
+    {
+        WV.Control.superclass.afterRender.call(this);
+        // Putting the readOnly attribute in the template during rendering always causes it to be true.
+        var input = this.subViews.input;
+
+        this.setReadOnly(this.readOnly);
+        if (input)
+        {
+            input.dom.disabled = !this.enabled;
+            if (Ext.isIE && this.readOnly || !this.enabled)
+            {
+                input.dom.contentEditable = false;
+                input.dom.unselectable = 'on';
+            }
+        }
+        return this;
+    },
     canBecomeFirstResponder: function()
     {
         return this.enabled === true && this.readOnly !== true;
@@ -58,6 +84,39 @@ WV.Control = WV.extend(WV.View, {
     setReadOnly: function(ro)
     {
         this.readOnly = ro === true;
+
+        if (this.readOnly) { this.resignFirstResponder(); }
+
+        var input = this.subViews.input;
+
+        if (input && input.rendered && this.enabled)
+        {
+            input.dom.readOnly = this.readOnly;
+            if (Ext.isIE)
+            {
+                input.dom.contentEditable = !this.readOnly;
+                input.dom.unselectable = this.readOnly ? 'on' : '';
+            }
+        }
+        return this;
+    },
+    setEnabled: function(enabled)
+    {
+        WV.Control.superclass.setEnabled.call(this, enabled);
+        var input = this.subViews.input;
+
+        if (input && input.rendered)
+        {
+            input.dom.disabled = !this.enabled;
+            if (Ext.isIE)
+            {
+                input.dom.contentEditable = this.enabled;
+                input.dom.unselectable = this.enabled ? '' : 'on';
+            }
+        }
+        
+        this.enabled ? this.setReadOnly(this.hasOwnProperty('readOnly') ? this.readOnly : false) :
+                       this.setReadOnly(true);
         return this;
     },
     doAction: function()
@@ -123,7 +182,7 @@ WV.style.Button = WV.extend(WV.StyleMap, {
         borderStyle: 'solid',
         borderTopColor: '#C8C8C8',
         borderWidth: '1px',
-        cursor: 'default' },
+        cursor: 'pointer' },
     states: [{
         name: 'focus',
         styles: {
@@ -520,7 +579,6 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
     subViews: [{
         vtag: 'label',
         vtype: 'label',
-        draggable: false,
         x: 16,
         h: 13,
         w: 'w + 15',
@@ -530,22 +588,29 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
 
 WV.style.TextComponent = WV.extend(WV.StyleMap, {
     defaults: {
-        background: 'url(resources/images/form/inset.png)',
+        backgroundImage: 'url(resources/images/form/inset.png)',
         borderRadius: '2px'
     },
-    //        focus: {
-    //            borderStyle: 'solid',
-    //            borderColor: '#4D78A4',
-    //            borderWidth: '2px',
-    //            borderRadius: '0px'
-    //        }
-    input: {
+    border: {
         defaults: {
             backgroundColor: '#F9F9F9',
             borderColor: '#999',
             borderRadius: '2px',
             borderStyle: 'solid',
-            borderWidth: '1px',
+            borderWidth: '1px'
+        },
+        states: [{
+            name: 'focus',
+            styles: {
+                borderColor: '#4D78A4',
+                borderWidth: '2px',
+                borderStyle: 'solid' }
+        }]
+    },
+    input: {
+        defaults: {
+            backgroundColor: 'transparent',
+            border: '1px solid transparent',
             color: '#000',
             fontFamily: 'Verdana',
             fontSize: '11px',
@@ -567,6 +632,15 @@ WV.TextField = WV.extend(WV.Control, {
     inputType: 'text',
     valuePropName: 'text',
     styleMap: new WV.style.TextComponent(),
+    subViews: [{
+        vtag: 'border',
+        x: 2,
+        y: 2,
+        w: 'w',
+        h: 'h',
+        stateful: true,
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX
+    }],
     constructor: function(config)
     {
         WV.TextField.superclass.constructor.call(this, config);
@@ -585,20 +659,18 @@ WV.TextField = WV.extend(WV.Control, {
         }
         return this;
     },
-    afterRender: function()
-    {
-        // Putting the readOnly attribute in the template during rendering always causes it to be true.
-        WV.TextField.superclass.afterRender.call(this);
-        this.setReadOnly(this.readOnly);
-        return this;
-    },
     setReadOnly: function(ro)
     {
         WV.TextField.superclass.setReadOnly.call(this, ro);
-        if (this.rendered)
+        var input = this.subViews.input;
+
+        if (input && this.enabled)
         {
-            this.subViews.input.dom.readOnly = this.readOnly;
-            this.subViews.input.dom.setAttribute('autocomplete', this.readOnly ? 'off' : null);
+            input.setStyle('cursor', this.readOnly ? 'default' : 'text');
+            if (input.rendered)
+            {
+                input.dom.setAttribute('autocomplete', this.readOnly ? 'off' : null);
+            }
         }
         return this;
     },
@@ -609,7 +681,15 @@ WV.TextField = WV.extend(WV.Control, {
     },
     mouseDown: function(e)
     {
-        this.becomeFirstResponder(true);
+        if (!this.enabled || this.readOnly)
+        {
+            e.cancel();
+        }
+        else
+        {
+            this.becomeFirstResponder(true);
+        }
+
         return WV.TextField.superclass.mouseDown.call(this, e);
     },
     becomeFirstResponder: function(preventSelect)
@@ -652,7 +732,9 @@ WV.TextArea = WV.extend(WV.TextField, {
     vtype: 'textarea',
     h: 100,
     cls: 'wv-textarea',
-    subViews: [{
+    subViews: [
+        WV.TextField.prototype.subViews[0],
+    {
         vtag: 'input',
         tag: 'textarea',
         stateful: true,
@@ -661,7 +743,7 @@ WV.TextArea = WV.extend(WV.TextField, {
     setValue: function(val)
     {
         WV.TextArea.superclass.setValue.call(this, val);
-        // Make the innerHTML consistent with the dom value
+        // Make the innerHTML consistent with the new value
         if (this.rendered)
         {
             this.subViews.input.dom.innerHTML = this[this.valuePropName];
