@@ -43,7 +43,7 @@ WV.EventMonitor = (function() {
                             prevOver.mouseExited(sharedMouseEvent);
                         }
 
-                        else if (prevOver && !prevOver.isDescendantOf(mouseOverOwner))
+                        if (prevOver && !prevOver.isDescendantOf(mouseOverOwner))
                         {
                             mouseOverOwner.mouseEntered(sharedMouseEvent);
                         }
