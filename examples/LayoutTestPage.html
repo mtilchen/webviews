@@ -24,14 +24,14 @@
                 w: 800,
                 html: 'Some test text....',
 //                draggable: true,
-                showVerticalScroll: true,
+                showVerticalScroll: 'always',
                 style: {
                     backgroundColor: 'green'
                 },
                 subViews: [{
                     id: 'e3',
-                    x: 'center',
-                    y: 'center',
+                    x: 10,
+                    y: 10,
                     h: 200,
                     w: 500,
                     html: 'C',
@@ -40,7 +40,16 @@
                         backgroundImage: 'url(resources/examples/images/norah_xmas3.jpg)',
                         backgroundSize: '100% auto',
                         border: '5px solid black',
-                        transform: 'rotate(25deg)',
+                        transform: new WV.style.Transform2D({
+                            rotate: '20deg',
+                            translateX: '50px',
+                            translateY: '200px',
+                            skewX: '10deg',
+                            skewY: '10deg',
+                            scaleX: 1.3,
+                            scaleY: 0.8
+                        }),
+//                        transformOrigin: '25% 130%',
                         transformOrigin: 'center',
                         borderRadius: '20px',
                         opacity: 0.5,
@@ -65,7 +74,14 @@
                                     stops: ['red', 'orange', 'yellow', 'white']
                                 }),
                                 borderRadius: '20px 0px 0px 0px',
-                                border: '5px solid white'
+                                border: '5px solid white',
+                                transform: new WV.style.Transform2D({
+                                    rotate: '-20deg',
+                                    translateX: '50px',
+                                    translateY: '10px',
+                                    scaleX: 0.75,
+                                    scaleY: 0.75
+                                })
                             },
                             contextMenu: function(e)
                             {
@@ -76,7 +92,7 @@
                             vtype: 'button',
                             x: 0,
                             y: 110,
-                            text: 'A really, really long name for a button'
+                            text: 'Button'
                         }]
                 },{
                     id: 'canvasTest',
@@ -129,7 +145,9 @@
                     autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX,
                     style: {
                         border: '2px solid black',
-                        transform: 'rotate(15deg)',
+                        transform: new WV.style.Transform2D({
+                            rotate: '-25deg'    
+                        }),
                         transformOrigin: 'center',
                         borderRadius: '10px',
                         boxShadow: new WV.style.BoxShadow({

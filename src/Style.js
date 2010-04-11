@@ -121,8 +121,8 @@ WV.style.Stylable = {
             // Adjust the subviews for the new borderWidth
             for (i = 0, l = this.subViews.length; i < l; i++)
             {
-                this.subViews[i].setStyle('marginLeft', this.style.marginLeft);
-                this.subViews[i].setStyle('marginTop', this.style.marginTop);
+                this.subViews[i].setMarginLeft(this.style.marginLeft);
+                this.subViews[i].setMarginTop(this.style.marginTop);
             }
         }
         return this;
@@ -146,7 +146,7 @@ WV.style.Stylable = {
 
     setMarginLeft: function(m)
     {
-        m = parseInt(m, 10) || 0;
+        m = parseFloat(m, 10) || 0;
         var bw = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
 
         this.style.marginLeft = m ? m + 'px' : '';
@@ -160,7 +160,7 @@ WV.style.Stylable = {
 
     setMarginTop: function(m)
     {
-        m = parseInt(m, 10) || 0;
+        m = parseFloat(m, 10) || 0;
         var bw = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
 
         this.style.marginTop = m ? m + 'px' : '';
@@ -317,6 +317,45 @@ WV.style.LinearGradient = WV.extend(Object, {
                                                    stops[i].length * 100);
             }
             str += ')';
+            this.stringValue = str;
+        }
+        return this.stringValue;
+    }
+});
+
+WV.style.Transform2D = WV.extend(Object, {
+    translateX: '0px',
+    translateY: '0px',
+    rotate: null, // If string is supplied it must have units, numbers assumed to be degrees
+    scaleX: 1.0,
+    scaleY: 1.0,
+    skewX: '0deg',
+    skewY: '0deg',
+    // m11,m12,m21,m22
+    constructor: function(config)
+    {
+        WV.apply(this, config);
+    },
+    toString: function()
+    {
+        if (!this.stringValue)
+        {
+            var str = '';
+            // Translate must come first to be consistent with IE Matrix filter results
+            if (this.hasOwnProperty('translateX') || this.hasOwnProperty('translateY'))
+            {
+                str += String.format('translate({0}, {1})', this.translateX, this.translateY);
+            }
+            if (this.rotate)
+            {
+                str += String.format('rotate({0})', this.rotate);
+            }
+            Ext.each(['scale', 'skew'], function(t) {
+                if (this.hasOwnProperty(t + 'X') || this.hasOwnProperty(t + 'Y'))
+                {
+                    str += String.format(' {0}({1}, {2})', t, this[t + 'X'], this[t + 'Y']);
+                }
+            }, this);
             this.stringValue = str;
         }
         return this.stringValue;
