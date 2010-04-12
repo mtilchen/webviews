@@ -181,7 +181,8 @@ WV.style.Color = WV.extend(Object, {
     a: 1,
     constructor: function(config)
     {
-        var template = 'rgba({0},{1},{2},{3})';
+        var template = 'rgba({0},{1},{2},{3})',
+            rgb = ['r', 'g', 'b'];
         
         if (typeof config === 'string')
         {
@@ -194,15 +195,18 @@ WV.style.Color = WV.extend(Object, {
             {
                 if (config.length === 4)
                 {
-                    this.r = parseInt(config.charAt(1) + config.charAt(1), 16); 
-                    this.g = parseInt(config.charAt(2) + config.charAt(2), 16);
-                    this.b = parseInt(config.charAt(3) + config.charAt(3), 16);
+                    var ch;
+
+                    Ext.each(rgb, function(color, idx) {
+                        ch = config.charAt(idx + 1);
+                        this[color] = parseInt(ch + ch, 16);
+                    });
                 }
                 else if (config.length === 7)
                 {
-                    this.r = parseInt(config.substr(1,2), 16);
-                    this.g = parseInt(config.substr(3,2), 16);
-                    this.b = parseInt(config.substr(5,2), 16);    
+                    Ext.each(rgb, function(color, idx) {
+                        this[color] = parseInt(config.substr((idx * 2) + 1, 2), 16);
+                    });
                 }
                 else { throw new Error('Invalid Color: ' + config); }
                 this.stringValue = String.format(template, this.r, this.g,
@@ -220,9 +224,9 @@ WV.style.Color = WV.extend(Object, {
             }
             else if (vals = config.match(rgbRegEx))
             {
-                this.r = parseInt(vals[1]);
-                this.g = parseInt(vals[2]);
-                this.b = parseInt(vals[3]);
+                Ext.each(rgb, function(color, idx) {
+                    this[color] = parseInt(vals[idx + 1]);
+                });
                 this.stringValue = String.format(template, this.r, this.g,
                                                            this.b, this.a);
             }
@@ -303,7 +307,7 @@ WV.style.LinearGradient = WV.extend(Object, {
         else { throw new Error('Invalid stops config: ' + this.stops);}
     },
     // Default to Mozilla syntax (no angle yet as others do not support it.
-    //  Will need to override for other browsers
+    // Will need to override for other browsers
     toString: function()
     {
         if (!this.stringValue)
@@ -341,7 +345,8 @@ WV.style.Transform2D = WV.extend(Object, {
         if (!this.stringValue)
         {
             var str = '';
-            // Translate must come first to be consistent with IE Matrix filter results
+            // Order is translate, rotate, scale, skew as this is the order of the
+            // IE Matrix filter override. Specfying the order might be nice.
             if (this.hasOwnProperty('translateX') || this.hasOwnProperty('translateY'))
             {
                 str += String.format('translate({0}, {1})', this.translateX, this.translateY);
