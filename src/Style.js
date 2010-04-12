@@ -33,6 +33,14 @@ WV.style.Stylable = {
         var setFn = this['set' + name.replace(/([a-z])/, name.charAt(0).toUpperCase())],
             transP;
 
+        // Convert config literals into objects
+        if (value.hasOwnProperty('vtype'))
+        {
+            WV.log('Found config for: ', value.vtype);
+            value = WV.create(value.vtype, value);
+
+        }
+
         if (setFn)
         {
             setFn.call(this, value);
@@ -259,7 +267,7 @@ WV.style.BoxShadow = WV.extend(Object, {
     constructor: function(config)
     {
         WV.apply(this, config);
-        if (typeof this.color === 'string')
+        if (typeof this.color === 'string' || this.color.hasOwnProperty('vtype'))
         {
             this.color = new WV.style.Color(this.color);
         }
@@ -292,7 +300,8 @@ WV.style.LinearGradient = WV.extend(Object, {
             // Normalize stops into: { color: WV.style.Color, length: 0.50 }
             for (i = 0, l = stops.length; i < l; i++)
             {
-                stop = typeof stops[i] === 'string' ? new WV.style.Color(stops[i]) : stops[i];
+                stop = typeof stops[i] === 'string' ? new WV.style.Color(stops[i])
+                                                    : stops[i];
 
                 if (stop instanceof WV.style.Color)
                 {
@@ -300,6 +309,10 @@ WV.style.LinearGradient = WV.extend(Object, {
                         color: stop,
                         length: (i/(stops.length-1)).toFixed(2)
                     }
+                }
+                if (stop.color.hasOwnProperty('vtype'))
+                {
+                    stop.color = new WV.style.Color(stop.color);
                 }
                 stops[i] = stop;
             }
@@ -328,6 +341,7 @@ WV.style.LinearGradient = WV.extend(Object, {
 });
 
 WV.style.Transform2D = WV.extend(Object, {
+    vtype: 'transform2d',
     translateX: '0px',
     translateY: '0px',
     rotate: null, // If string is supplied it must have units, numbers assumed to be degrees

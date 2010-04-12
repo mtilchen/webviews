@@ -56,7 +56,7 @@
                         boxShadow: new WV.style.BoxShadow({
                             xOffset: '10px',
                             yOffset: '10px',
-                                color: 'rgba(0,0,0,0.5)'
+                            color: 'rgba(0,0,0,0.5)'
                         })
                     },
                     subViews: [
@@ -75,13 +75,14 @@
                                 }),
                                 borderRadius: '20px 0px 0px 0px',
                                 border: '5px solid white',
-                                transform: new WV.style.Transform2D({
+                                transform: {
+                                    vtype: 'transform2d',
                                     rotate: '-20deg',
                                     translateX: '50px',
                                     translateY: '10px',
                                     scaleX: 0.75,
                                     scaleY: 0.75
-                                })
+                                }
                             },
                             contextMenu: function(e)
                             {
@@ -145,16 +146,23 @@
                     autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX,
                     style: {
                         border: '2px solid black',
-                        transform: new WV.style.Transform2D({
+                        transform: {
+                            vtype: 'transform2d',
                             rotate: '-25deg'    
-                        }),
+                        },
                         transformOrigin: 'center',
                         borderRadius: '10px',
-                        boxShadow: new WV.style.BoxShadow({
+                        boxShadow: {
+                            vtype: 'boxshadow',
                             xOffset: '5px',
                             yOffset: '5px',
-                            color: 'rgba(0,0,0,0.5)'
-                        })
+                            color: {
+                                vtype: 'color',
+                                r: 0,
+                                g: 0,
+                                b: 0,
+                                a: 0.5 }
+                        }
                     },
                     afterRender: function()
                     {

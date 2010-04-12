@@ -61,7 +61,8 @@
                 style: {
                     border: '5px solid white',
                     borderRadius: '20px',
-                    backgroundImage: new WV.style.LinearGradient({
+                    backgroundImage: {
+                        vtype: 'lineargradient',
                         startFrom: 'left bottom',
                         stops: [
                             'orange',
@@ -79,7 +80,7 @@
                                 length: 0.75
                             },
                             'orange']
-                    })
+                    }
                 }
             });
 
@@ -92,7 +93,8 @@
                 style: {
                     border: '5px solid white',
                     borderRadius: '20px',
-                    backgroundImage: new WV.style.LinearGradient({
+                    backgroundImage: {
+                        vtype: 'lineargradient',
                         startFrom: 'left',
                         stops: [
                             new WV.style.Color({
@@ -100,13 +102,13 @@
                                 g: 0,
                                 b: 255,
                                 a: 1.0
-                            }),
-                            {
-                                color: new WV.style.Color({
+                            }), {
+                                color: {
+                                    vtype: 'color',
                                     r: 255,
                                     g: 255,
                                     b: 255,
-                                    a: 1.0 }),
+                                    a: 1.0 },
                                 length: 0.25
                             },
                             new WV.style.Color({
@@ -115,7 +117,7 @@
                                 b: 0,
                                 a: 1.0
                             })]
-                    })
+                    }
                 }
             });
         });
