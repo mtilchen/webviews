@@ -36,9 +36,7 @@ WV.style.Stylable = {
         // Convert config literals into objects
         if (value.hasOwnProperty('vtype'))
         {
-            WV.log('Found config for: ', value.vtype);
             value = WV.create(value.vtype, value);
-
         }
 
         if (setFn)
@@ -48,7 +46,7 @@ WV.style.Stylable = {
         else
         {
             transP = WV.styleLib[name] || name;
-            this.style[name] = (value || '').toString();
+            this.style[name] = value;
             // Just in case display is set without calling setVisible
             if (name === 'display')
             {
@@ -56,7 +54,7 @@ WV.style.Stylable = {
             }
             if (this.rendered)
             {
-                 this.dom.style[transP] = value;
+                 this.dom.style[transP] = (value || '').toString();
             }
         }
         return this;
@@ -187,10 +185,10 @@ WV.style.Color = WV.extend(Object, {
     g: 0,
     b: 0,
     a: 1,
+    colorName: null,
     constructor: function(config)
     {
-        var template = 'rgba({0},{1},{2},{3})',
-            rgb = ['r', 'g', 'b'];
+        var rgb = ['r', 'g', 'b'];
         
         if (typeof config === 'string')
         {
@@ -217,8 +215,6 @@ WV.style.Color = WV.extend(Object, {
                     });
                 }
                 else { throw new Error('Invalid Color: ' + config); }
-                this.stringValue = String.format(template, this.r, this.g,
-                                                           this.b, this.a);
             }
             // Look for rgb(0,0,0) or rgba(0,0,0,0) style
             else if (vals = config.match(rgbaRegEx))
@@ -227,32 +223,28 @@ WV.style.Color = WV.extend(Object, {
                 this.g = parseInt(vals[2]);
                 this.b = parseInt(vals[3]);
                 this.a = parseFloat(vals[4]);
-                if (this.a === 0) { this.stringValue = 'transparent'; }
-                else { this.stringValue = config; }
             }
             else if (vals = config.match(rgbRegEx))
             {
                 Ext.each(rgb, function(color, idx) {
                     this[color] = parseInt(vals[idx + 1]);
                 });
-                this.stringValue = String.format(template, this.r, this.g,
-                                                           this.b, this.a);
             }
             else // Must be 'white', 'blue' etc...
             {
-                this.stringValue = config;   
+                this.colorName = config;
             }
         }
         else
         {
             WV.apply(this, config);
-            this.stringValue = String.format(template, this.r, this.g,
-                                                       this.b, this.a);
         }
     },
     toString: function()
     {
-        return this.stringValue;
+        return this.colorName || String.format('rgba({0},{1},{2},{3})',
+                                                      this.r, this.g,
+                                                      this.b, this.a);
     }
 });
 
@@ -271,15 +263,15 @@ WV.style.BoxShadow = WV.extend(Object, {
         {
             this.color = new WV.style.Color(this.color);
         }
-        this.stringValue = this.inset ? 'inset ' : '';
-        this.stringValue += String.format('{0} {1} {2} {3} {4}',
-                                          this.color.toString(), this.xOffset,
-                                          this.yOffset, this.blurRadius,
-                                          this.spreadRadius);
     },
     toString: function()
     {
-        return this.stringValue;    
+        var str = this.inset ? 'inset ' : '';
+        str += String.format('{0} {1} {2} {3} {4}',
+                              this.color.toString(), this.xOffset,
+                              this.yOffset, this.blurRadius,
+                              this.spreadRadius);
+        return str;
     }
 
 });
@@ -320,23 +312,18 @@ WV.style.LinearGradient = WV.extend(Object, {
         else { throw new Error('Invalid stops config: ' + this.stops);}
     },
     // Default to Mozilla syntax (no angle yet as others do not support it.
-    // Will need to override for other browsers
     toString: function()
     {
-        if (!this.stringValue)
+        var i, l,
+            stops = this.stops,
+            str = String.format('-moz-linear-gradient({0}', this.startFrom);
+        for (i = 0, l = stops.length; i < l; i++)
         {
-            var i, l,
-                stops = this.stops,
-                str = String.format('-moz-linear-gradient({0}', this.startFrom);
-            for (i = 0, l = stops.length; i < l; i++)
-            {
-                str += String.format(', {0} {1}%', stops[i].color.toString(),
-                                                   stops[i].length * 100);
-            }
-            str += ')';
-            this.stringValue = str;
+            str += String.format(', {0} {1}%', stops[i].color.toString(),
+                                               stops[i].length * 100);
         }
-        return this.stringValue;
+        str += ')';
+        return str;
     }
 });
 
@@ -344,7 +331,7 @@ WV.style.Transform2D = WV.extend(Object, {
     vtype: 'transform2d',
     translateX: '0px',
     translateY: '0px',
-    rotate: null, // If string is supplied it must have units, numbers assumed to be degrees
+    rotate: '0deg',
     scaleX: 1.0,
     scaleY: 1.0,
     skewX: '0deg',
@@ -356,27 +343,23 @@ WV.style.Transform2D = WV.extend(Object, {
     },
     toString: function()
     {
-        if (!this.stringValue)
+        var str = '';
+        // Order is translate, rotate, scale, skew as this is the order of the
+        // IE Matrix filter override. Specfying the order might be nice.
+        if (this.hasOwnProperty('translateX') || this.hasOwnProperty('translateY'))
         {
-            var str = '';
-            // Order is translate, rotate, scale, skew as this is the order of the
-            // IE Matrix filter override. Specfying the order might be nice.
-            if (this.hasOwnProperty('translateX') || this.hasOwnProperty('translateY'))
-            {
-                str += String.format('translate({0}, {1})', this.translateX, this.translateY);
-            }
-            if (this.rotate)
-            {
-                str += String.format('rotate({0})', this.rotate);
-            }
-            Ext.each(['scale', 'skew'], function(t) {
-                if (this.hasOwnProperty(t + 'X') || this.hasOwnProperty(t + 'Y'))
-                {
-                    str += String.format(' {0}({1}, {2})', t, this[t + 'X'], this[t + 'Y']);
-                }
-            }, this);
-            this.stringValue = str;
+            str += String.format('translate({0}, {1})', this.translateX, this.translateY);
         }
-        return this.stringValue;
+        if (this.hasOwnProperty('rotate'))
+        {
+            str += String.format('rotate({0})', this.rotate);
+        }
+        Ext.each(['scale', 'skew'], function(t) {
+            if (this.hasOwnProperty(t + 'X') || this.hasOwnProperty(t + 'Y'))
+            {
+                str += String.format(' {0}({1}, {2})', t, this[t + 'X'], this[t + 'Y']);
+            }
+        }, this);
+        return str;
     }
 });

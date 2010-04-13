@@ -221,7 +221,11 @@ if (Ext.isIE)
         WV.style.Color.override({
             toIEString: function(includeAlpha, alphaAdj)
             {
-                if (this.stringValue.indexOf('rgb') === 0)
+                if (this.colorName)
+                {
+                    return this.colorName;
+                }
+                else
                 {
                     var str = '#';
                     if (includeAlpha)
@@ -231,7 +235,6 @@ if (Ext.isIE)
                     str += WV.decToHexString(this.r, this.g, this.b);
                     return str;
                 }
-                else { return this.stringValue; }
             }
         });
 
@@ -242,14 +245,10 @@ if (Ext.isIE)
         WV.style.LinearGradient.override({
             toString: function()
             {
-                if (!this.stringValue)
-                {
-                    this.stringValue = String.format('progid:DXImageTransform.Microsoft.gradient(GradientType={0}, startColorstr={1}, endColorstr={2})',
-                                            this.startFrom === 'top' ? 0 : 1,
-                                            this.stops[0].color.toIEString(true),
-                                            this.stops[this.stops.length - 1].color.toIEString(true));
-                }
-                return this.stringValue;
+                return String.format('progid:DXImageTransform.Microsoft.gradient(GradientType={0}, startColorstr={1}, endColorstr={2})',
+                                     this.startFrom === 'top' ? 0 : 1,
+                                     this.stops[0].color.toIEString(true),
+                                     this.stops[this.stops.length - 1].color.toIEString(true));
             }
         });
         
@@ -272,23 +271,19 @@ if (Ext.isWebKit)
     WV.style.LinearGradient.override({
         toString: function()
         {
-            if (!this.stringValue)
+            var i, l,
+                stops = this.stops,
+                startAndEndPoints = this.convertStartFrom(),
+                str = String.format('-webkit-gradient(linear, {0}',
+                                              startAndEndPoints);
+            for (i = 0, l = stops.length; i < l; i++)
             {
-                var i, l,
-                    stops = this.stops,
-                    startAndEndPoints = this.convertStartFrom(),
-                    str = String.format('-webkit-gradient(linear, {0}',
-                                                  startAndEndPoints);
-                for (i = 0, l = stops.length; i < l; i++)
-                {
-                    str += String.format(', color-stop({0}, {1})',
-                                                stops[i].length,
-                                                stops[i].color.toString());
-                }
-                str += ')';
-                this.stringValue = str;
+                str += String.format(', color-stop({0}, {1})',
+                                            stops[i].length,
+                                            stops[i].color.toString());
             }
-            return this.stringValue;
+            str += ')';
+            return str;
         },
         convertStartFrom: function()
         {
