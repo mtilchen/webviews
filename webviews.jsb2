@@ -43,6 +43,9 @@
             text: "CanvasView.js",
             path: "src/"
         },{
+            text: "Animation.js",
+            path: "src/"
+        },{
             text: "Sound.js",
             path: "src/"
         },{

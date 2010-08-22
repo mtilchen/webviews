@@ -14,6 +14,7 @@ WV.style.Stylable = {
                 for (var x in this.style)
                 {
                     // Never remove some important styles
+                    // TODO Turn this into a Regex test
                     if (!name.hasOwnProperty(x) && x !== 'position' && x !== 'boxSizing'
                                                 && x.indexOf('margin') !== 0 && x !== 'filter'
                                                 && x.indexOf('overflow') !== 0 && x !== 'display')
@@ -54,7 +55,7 @@ WV.style.Stylable = {
             }
             if (this.rendered)
             {
-                 this.dom.style[transP] = (value || '').toString();
+                 this.dom.style[transP] = (value || '').toString();  // May need to check for value === 0 
             }
         }
         return this;
@@ -67,7 +68,7 @@ WV.style.Stylable = {
 
     buildStyle: function()
     {
-        var prop, trans, buf = [],
+        var prop, trans, val, buf = [],
             bw = this.superView ? parseInt(this.superView.style.borderWidth, 10) || 0 : 0;
 
         buf[buf.length] = 'width: ' + this.w + 'px';
@@ -84,7 +85,8 @@ WV.style.Stylable = {
             {
                 trans = WV.styleLib[prop] || prop;
                 trans = WV.deCamel(trans);
-                buf[buf.length] = trans + ': ' + (this.style[prop] || '').toString();
+                val = (this.style[prop] === 0) ? 0 : (this.style[prop] || '');
+                buf[buf.length] = trans + ': ' + val.toString();
             }
         }
 
@@ -109,13 +111,11 @@ WV.style.Stylable = {
 
     setBorderWidth: function(newVal)
     {
-        newVal = parseInt(newVal, 10) || 0;
-
         var i = 0,
             l = this.subViews.length,
-            bw = newVal ? newVal + 'px' : '';
+            bw = (Math.max(0, parseInt(newVal, 10)) || 0) + 'px'; // No negative border widths
 
-        if (this.style.borderWidth !== bw)
+        if (bw !== (this.style.borderWidth || '0px'))
         {
             this.style.borderWidth = bw;
 
@@ -141,12 +141,16 @@ WV.style.Stylable = {
             return this;
         }
 
-        this.style.opacity = op;
-
-        if (this.rendered)
+        if (this.enabled)
         {
-            this.dom.style.opacity = op;
+            this.style.opacity = op;
+            if (this.rendered)
+            {
+                this.dom.style.opacity = op;
+            }
         }
+        else { this._prevOpacity = op; } // See View.setEnabled
+
         return this;
     },
 
@@ -189,10 +193,11 @@ WV.style.Color = WV.extend(Object, {
     constructor: function(config)
     {
         var rgb = ['r', 'g', 'b'];
-        
+
         if (typeof config === 'string')
         {
             var vals,
+                self = this,
                 rgbRegEx = /rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)/,
                 rgbaRegEx = /rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(0|1|1\.0|0?\.[0-9]{1,2})\s*\)/;
 
@@ -205,13 +210,13 @@ WV.style.Color = WV.extend(Object, {
 
                     Ext.each(rgb, function(color, idx) {
                         ch = config.charAt(idx + 1);
-                        this[color] = parseInt(ch + ch, 16);
+                        self[color] = parseInt(ch + ch, 16);
                     });
                 }
                 else if (config.length === 7)
                 {
                     Ext.each(rgb, function(color, idx) {
-                        this[color] = parseInt(config.substr((idx * 2) + 1, 2), 16);
+                        self[color] = parseInt(config.substr((idx * 2) + 1, 2), 16);
                     });
                 }
                 else { throw new Error('Invalid Color: ' + config); }
@@ -227,7 +232,7 @@ WV.style.Color = WV.extend(Object, {
             else if (vals = config.match(rgbRegEx))
             {
                 Ext.each(rgb, function(color, idx) {
-                    this[color] = parseInt(vals[idx + 1]);
+                    self[color] = parseInt(vals[idx + 1]);
                 });
             }
             else // Must be 'white', 'blue' etc...
@@ -344,8 +349,8 @@ WV.style.Transform2D = WV.extend(Object, {
     toString: function()
     {
         var str = '';
-        // Order is translate, rotate, scale, skew as this is the order of the
-        // IE Matrix filter override. Specfying the order might be nice.
+        // Order is translate, rotate, skew, scale as this is the order of the
+        // IE Matrix filter override. Ability to specfy the order might be nice.
         if (this.hasOwnProperty('translateX') || this.hasOwnProperty('translateY'))
         {
             str += String.format('translate({0}, {1})', this.translateX, this.translateY);
@@ -354,7 +359,7 @@ WV.style.Transform2D = WV.extend(Object, {
         {
             str += String.format('rotate({0})', this.rotate);
         }
-        Ext.each(['scale', 'skew'], function(t) {
+        Ext.each(['skew', 'scale'], function(t) {
             if (this.hasOwnProperty(t + 'X') || this.hasOwnProperty(t + 'Y'))
             {
                 str += String.format(' {0}({1}, {2})', t, this[t + 'X'], this[t + 'Y']);

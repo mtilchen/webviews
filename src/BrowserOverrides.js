@@ -11,7 +11,7 @@ if (Ext.isIE)
             {
                 var buf = [],
                     st = this.style,
-                    op = parseInt((st.opacity || 1) * 100),
+                    op = parseInt((st.opacity === 0 ? 0 : (st.opacity || 1)) * 100),
                     t = st.transform,
                     shad = st.boxShadow;
 
@@ -19,7 +19,7 @@ if (Ext.isIE)
                 {
                     var template = 'progid:DXImageTransform.Microsoft.Matrix(M11={0}, M12={1}, M21={2}, M22={3}, sizingMethod=\'auto expand\') ';
 
-                    // Set a and b to identity, c is a temp 
+                    // Set a and b to identity, c is a temp
                      var a11 = 1, a12 = 0, a21 = 0, a22 = 1,
                          b11 = 1, b12 = 0, b21 = 0, b22 = 1,
                          c11, c12, c21, c22;
@@ -35,22 +35,22 @@ if (Ext.isIE)
                         a21 = sinTheta, a22 = cosTheta;
                     }
 
-                    // Scale
-                    b12 = 0,
-                    b21 = 0,
-                    b11 = parseFloat(t.scaleX) || 1,
-                    b22 = parseFloat(t.scaleY) || 1;
-
-                    c11 = (a11 * b11) + (a12 * b21);
-                    c12 = (a11 * b12) + (a12 * b22);
-                    c21 = (a21 * b11) + (a22 * b21);
-                    c22 = (a21 * b12) + (a22 * b22);
-
                     // Skew
                     b12 = Math.tan((parseInt(t.skewX) || 0) * deg2Rad),
                     b21 = Math.tan((parseInt(t.skewY) || 0) * deg2Rad),
                     b11 = 1,
                     b22 = 1;
+                    
+                    c11 = (a11 * b11) + (a12 * b21);
+                    c12 = (a11 * b12) + (a12 * b22);
+                    c21 = (a21 * b11) + (a22 * b21);
+                    c22 = (a21 * b12) + (a22 * b22);
+
+                    // Scale
+                    b12 = 0,
+                    b21 = 0,
+                    b11 = parseFloat(t.scaleX),
+                    b22 = parseFloat(t.scaleY);
 
                     t.m11 = (c11 * b11) + (c12 * b21);
                     t.m12 = (c11 * b12) + (c12 * b22);
@@ -158,18 +158,26 @@ if (Ext.isIE)
                 if (this.rendered) { this.applyFilters(); }
                 return this;
             },
-            setOpacity: function(val)
+            setOpacity: function(op)
             {
-                if (!(typeof val === 'number') || val === NaN)
+                if (!(typeof op === 'number') || op === NaN)
                 {
                     return this;
                 }
 
-                this.style.opacity = val;
+                if (this.enabled)
+                {
+                    this.style.opacity = op;
+                    if (this.rendered)
+                    {
+                        this.dom.style.opacity = op;
+                    }
+                }
+                else { this._prevOpacity = op; } // See View.setEnabled
 
                 // opacity < 1 will cause artifacts in direct overlapping subviews
                 // if one subview also has opacity while another does not
-                var applySubs = (val < 1);
+                var applySubs = (op < 1);
                 if (this.rendered) { this.applyFilters(applySubs); }
                 return this;
             },
@@ -251,7 +259,7 @@ if (Ext.isIE)
                                      this.stops[this.stops.length - 1].color.toIEString(true));
             }
         });
-        
+
         WV.VMLView = WV.extend(WV.View, {
             vtype: 'vml',
             tag: 'vml:roundrect',

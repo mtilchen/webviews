@@ -60,14 +60,14 @@ WV.View = WV.extend(Ext.util.Observable, {
 
             proto.overrideStyle === true ? Ext.apply(proto.style, WV.View.prototype.style)
                                          : Ext.applyIf(proto.style, this.constructor.superclass.style);
-            
-            this.constructor._styleMerged = true; 
+
+            this.constructor._styleMerged = true;
         }
 
         // Use the merged base style unless we want to override it completely
         var style = Ext.apply({}, config.style);
         Ext.apply(style, WV.View.prototype.style);
-        
+
         if (config.overrideStyle !== true)
         {
             Ext.applyIf(style, this.constructor.prototype.style);
@@ -80,6 +80,9 @@ WV.View = WV.extend(Ext.util.Observable, {
         // no style property was passed in the config. We will fill the empty value in later
         // in the call to setStyle.
         this.style = {};
+
+        // Animations keyed by their id
+        this.animations = {};
 
         // Put all the subViews we wish to add together (class level and config level) and add them all at once
         var subViewsToAdd =  this.constructor.prototype.subViews.concat(config.subViews || []);
@@ -426,7 +429,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             catch(e)
             {
                 WV.log(e);
-                throw Error('Invalid relative size expression: ' + val);    
+                throw Error('Invalid relative size expression: ' + val);
             }
             if (typeof result !== 'number')
             {
@@ -448,7 +451,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         return this;
     },
-    
+
     setX: function(x)
     {
         return this.setOrigin(x, this.y);
@@ -500,24 +503,25 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     setEnabled: function(enabled)
     {
-        var op = this.style.opacity || 1.0;
+        var op = this.style.opacity === 0 ? 0 : (this.style.opacity || 1.0);
 
         if (this.enabled && !enabled)
         {
-            this.style._prevOpacity = op;
-            this.style._prevCursor = this.style.cursor;
+            this._prevOpacity = op;
+            this._prevCursor = this.style.cursor;
             this.setStyle('cursor', 'default');
             // TODO: Look for Window.firstResponder in descendants and resign it?
             this.resignFirstResponder();
             this.setOpacity(Math.min(op || 0.33, 0.33));
+            this.enabled = false;
         }
         else if (!this.enabled && enabled)
         {
-            this.style.opacity = op = this.style._prevOpacity;
-            this.setStyle('cursor', this.style._prevCursor || 'auto');
-            this.setOpacity(op || 1.0);
+            this.style.opacity = op = this._prevOpacity;
+            this.setStyle('cursor', this._prevCursor || 'auto');
+            this.enabled = true;
+            this.setOpacity(op === 0 ? 0 : (op || 1.0));
         }
-        this.enabled = enabled === true;
 
         return this;
     },
@@ -547,7 +551,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             Ext.applyIf(this.domTpl, this.constructor._domTplSpec);
             this._domTpl = WV.createTemplate(this.domTpl);
         }
-        
+
         var tpl = this._domTpl || this.constructor._domTpl,
             sv = this.superView,
             buf = [],
@@ -590,14 +594,14 @@ WV.View = WV.extend(Ext.util.Observable, {
             }
 
             delete this._domTpl;
-            
+
             var start = new Date(),
                         end;
             this.initDom();
 
             end = new Date();
             WV.debug('Init Dom time: ', end.getTime() - start.getTime(), 'ms');
-            
+
             return this;
         }
     },
@@ -647,7 +651,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         this.dom = undefined;
         this.rendered = false;
     },
-    
+
     layoutSubViews: function()
     {
         if (!this.resizeSubViews) { return this; }
@@ -665,64 +669,74 @@ WV.View = WV.extend(Ext.util.Observable, {
         var sv = this.superView,
             m = this.autoResizeMask,
             f,
+            dX, dY,
             dW, dH, pc;
-        
-        if (!m || !sv) { return; }
+
+        if (!m || !sv || (m === WV.RESIZE_NONE)) { return; }
 
         f = this.getFrame();
 
         dW = sv.w - sv.previousW;
         pc = dW / sv.previousW;
 
-        if (m & WV.RESIZE_WIDTH_FLEX)
+        switch(m & (WV.RESIZE_LEFT_FLEX | WV.RESIZE_RIGHT_FLEX | WV.RESIZE_WIDTH_FLEX))
         {
-            if (!(m & WV.RESIZE_LEFT_FLEX) && !(m & WV.RESIZE_RIGHT_FLEX))
-            {
-                f.w = f.w + dW;
-            }
-            else
-            {
-                f.w = f.w + f.w * pc;
-            }
-        }
-        if (m & WV.RESIZE_LEFT_FLEX)
-        {
-            if (m & WV.RESIZE_WIDTH_FLEX)
-            {
-                f.x = f.x + f.x * pc;
-            }
-            else
-            {
+            case WV.RESIZE_NONE:
+                break;
+            case WV.RESIZE_LEFT_FLEX:
                 f.x = f.x + dW;
-            }
+                break;
+            case WV.RESIZE_RIGHT_FLEX:
+                break;
+            case WV.RESIZE_WIDTH_FLEX:
+                f.w = f.w + dW;
+                break;
+            case WV.RESIZE_LEFT_FLEX | WV.RESIZE_RIGHT_FLEX: // TODO Test
+                f.x = f.x + dW/2;
+                break;
+            case WV.RESIZE_LEFT_FLEX | WV.RESIZE_WIDTH_FLEX: // TODO Test
+                dX = f.x * pc;
+                f.x = f.x + dX;
+                f.w = f.w + dW - dX;
+                break;
+            case WV.RESIZE_RIGHT_FLEX | WV.RESIZE_WIDTH_FLEX:
+                f.w = f.w + f.w * pc;
+                break;
+            case WV.RESIZE_LEFT_FLEX | WV.RESIZE_RIGHT_FLEX | WV.RESIZE_WIDTH_FLEX:
+                f.w = f.w + f.w * pc;
+                f.x = f.x + f.x * pc;
         }
 
         dH = sv.h - sv.previousH;
         pc = dH / sv.previousH;
 
-        if (m & WV.RESIZE_HEIGHT_FLEX)
+        switch(m & (WV.RESIZE_TOP_FLEX | WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_HEIGHT_FLEX))
         {
-            if (!(m & WV.RESIZE_TOP_FLEX) && !(m & WV.RESIZE_BOTTOM_FLEX))
-            {
-                f.h = f.h + dH;
-            }
-            else
-            {
-                f.h = f.h + f.h * pc;
-            }
-        }
-        if (m & WV.RESIZE_TOP_FLEX)
-        {
-            if (m & WV.RESIZE_HEIGHT_FLEX)
-            {
-                f.y = f.y + f.y * pc;
-            }
-            else
-            {
+            case WV.RESIZE_NONE:
+                break;
+            case WV.RESIZE_TOP_FLEX:
                 f.y = f.y + dH;
-            }
+                break;
+            case WV.RESIZE_BOTTOM_FLEX:
+                break;
+            case WV.RESIZE_HEIGHT_FLEX:
+                f.h = f.h + dH;
+                break;
+            case WV.RESIZE_TOP_FLEX | WV.RESIZE_BOTTOM_FLEX: // TODO Test
+                f.y = f.y + dH/2;
+                break;
+            case WV.RESIZE_TOP_FLEX | WV.RESIZE_HEIGHT_FLEX: // TODO Test
+                dY = f.y * pc;
+                f.y = f.y + dY;
+                f.h = f.h + dH - dY;
+                break;
+            case WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_HEIGHT_FLEX:
+                f.h = f.h + f.h * pc;
+                break;
+            case WV.RESIZE_TOP_FLEX | WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_HEIGHT_FLEX:
+                f.h = f.h + f.h * pc;
+                f.y = f.y + f.y * pc;
         }
-
         this.setFrame(f);
     },
 
@@ -785,7 +799,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             }
             v = v.superView;
         }
-        
+
         return { x: Math.ceil(convX), y: Math.ceil(convY) };
     },
 
@@ -809,13 +823,13 @@ WV.View = WV.extend(Ext.util.Observable, {
     {
         return this.isDescendantOf(function(sv) {
             return sv.hidden === true;
-        })        
+        })
     },
 
     canBecomeKeyView: function()
     {
         return this.canBecomeFirstResponder() && !this.isDescendantOf(function(sv) {
-            return !sv.enabled || sv.hidden; // 
+            return !sv.enabled || sv.hidden; //
         })
     },
     getNextKeyView: function()
@@ -859,7 +873,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             v = v.getPreviousKeyView();
         }
     },
-    
+
     viewWithVtag: function(vtag)
     {
         var i, l, views = WV.findByVtag(vtag);
@@ -880,7 +894,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     setState: function(newState, shallow, force)
     {
-        // TODO: Account for possible difference in ordering of 'equal' states 
+        // TODO: Account for possible difference in ordering of 'equal' states
         if (typeof newState === 'string' && (force || (newState !== this.state)))
         {
             var end, start = new Date();
