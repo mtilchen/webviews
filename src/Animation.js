@@ -2,7 +2,7 @@
 (function() {
 
     var SEC_MS = 1000,
-        FPS = 25,
+        FPS = 30,
         UNIT_RE = /(^-?(\d+)(.\d*)?)(px|deg)/,
         COLOR_RE = /^#((\d|[A-F]){6})/i,
         animIdSeed = 0,
