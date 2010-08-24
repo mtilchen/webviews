@@ -122,7 +122,13 @@ WV.Control = WV.extend(WV.View, {
     doAction: function()
     {
         WV.debug('Action: ', this.id, '(name/value): ', this.name, ':', this.getValue());
-        if (this.target && typeof this.action === 'string')
+        this.target = this.target || this;
+        if (typeof this.action === 'function')
+        {
+            this.action.call(this.target, this);
+            return true;
+        }
+        if (typeof this.action === 'string')
         {
             this.target[this.action](this);
             return true;
