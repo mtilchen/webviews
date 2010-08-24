@@ -3,6 +3,7 @@
 <head>
   <title>Form Example</title>
 
+    <meta name="viewport" content="width=device-width, user-scalable=0" />
     <link rel="stylesheet" type="text/css" href="../resources/css/webviews.css" />
 
     <script src="../webviews-debug.js"></script>
@@ -136,7 +137,38 @@
                 autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_LEFT_FLEX,
                 x: '{e1}.w - 110',
                 y: '{e1}.h - 40',
-                text: 'Send'
+                text: 'Send',
+                action: function() {
+                    WV.get('e1').setStyle('transform', new WV.style.Transform2D());
+                    WV.addAnimations({
+                        'e1': [{
+                            easing: WV.Animation.EASENONE,
+                            path: 'style.transform.skewY',
+                            from: '0deg', to: '90deg',
+                            duration: 3
+                        },{
+                            easing: WV.Animation.EASENONE,
+                            path: 'style.transform.scaleX',
+                            from: 1, to: 0, duration: 3,
+                            onComplete: function(a, v) {
+                                v.addAnimation([{
+                                    easing: WV.Animation.EASENONE,
+                                    path: 'style.transform.skewY',
+                                    from: '90deg', to: '180deg',
+                                    duration: 3
+                                },{
+                                    easing: WV.Animation.EASENONE,
+                                    path: 'style.transform.scaleX',
+                                    from: 0, to: -1, duration: 3}]);
+                            } 
+                        },{
+                            easing: WV.Animation.EASENONE,
+                            path: 'style.backgroundColor',
+                            to: '#0000FF',
+                            duration: 1,
+                            autoReverse: true,
+                            repeatCount: 2 }]});
+                }
             });
             
             new WV.Button({
