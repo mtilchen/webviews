@@ -263,7 +263,6 @@ WV.style.Button = WV.extend(WV.StyleMap, {
             fontFamily: 'Verdana',
             fontSize: '11px',
             fontWeight: 'normal',
-            lineHeight: '19px',
             textAlign: 'center',
             marginLeft: '0px',
             marginTop: '0px'
@@ -308,8 +307,8 @@ WV.Button = WV.extend(WV.Control, {
         vtype: 'label',
         draggable: false,
         x: 3,
-        y: 3,
-        h: 'h - 6',
+        y: 'center',
+        h: 13,
         w: 'w - 6',
         stateful: true,
         autoResizeMask: WV.RESIZE_WIDTH_FLEX
@@ -431,6 +430,9 @@ WV.ToggleButton = WV.extend(WV.Button, {
 });
 
 WV.style.CheckBox = WV.extend(WV.StyleMap, {
+    defaults: {
+        cursor: 'default'
+    },
     focusborder: {
         states: [{
             name: 'focus',
@@ -496,12 +498,26 @@ WV.style.CheckBox = WV.extend(WV.StyleMap, {
     },
     checkImage: {
         defaults: {
-            display: 'none'
+            display: 'block',
+            visibility: 'hidden'
         },
         states: [{
+            name: 'normal',
+            styles: {
+                marginLeft: '0px',
+                marginTop: '0px'
+            }
+        }, {
+            name: 'active',
+            styles: {
+                marginLeft: '1px',
+                marginTop: '1px'
+            }
+        }, {
             name: 'selected',
             styles: {
-                display: 'block' }
+                visibility: 'visible'
+            }
         }]
     }
 });
@@ -547,9 +563,10 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
     },{
         vtag: 'checkImage',
         vtype: 'image',
-        x: 3,
-        y: -5,
-        w: 15,
+        x: 4,
+        y: -1,
+        w: 11,
+        h: 7,
         stateful: true,
         src: 'resources/images/form/checkmark.png',
         autoResizeMask: WV.RESIZE_NONE
@@ -558,38 +575,215 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
 
 WV.style.RadioButton = WV.extend(WV.StyleMap, {
     defaults: {
-        backgroundImage: 'url(resources/images/form/radio.png)',
-        backgroundPosition: '0px 0px',
-        backgroundRepeat: 'no-repeat'
+        cursor: 'default'
     },
-    states: [{
-        name: 'selected',
-        styles: {
-            backgroundPosition: '0px -13px' }
-    },{
-        name: 'focus',
-        styles: {
-            borderRadius: '0px' }
-    }]
+    focusborder: {
+        states: [{
+            name: 'focus',
+            styles: {
+                borderColor: '#4D78A4',
+                borderRadius: '10px',
+                borderStyle: 'solid',
+                borderWidth: '2px'
+            }
+        },{
+            name: 'selected',
+            styles: {
+                marginTop: '1px'
+            }
+        }]
+    },
+    button: {
+        defaults: {
+            backgroundImage: 'url(resources/images/form/radio.png)',
+            backgroundPosition: '0px 0px',
+            backgroundRepeat: 'no-repeat'
+        },
+        states: [{
+            name: 'normal',
+            styles: {
+                marginTop: '0px'
+            }
+        },{
+            name: 'selected',
+            styles: {
+                backgroundPosition: '0px -13px',
+                marginTop: '1px'
+            }
+        },{
+            name: 'active',
+            styles: {
+                backgroundPosition: '0px -13px',
+                marginTop: '1px'
+            }
+        }]
+    }
 });
 
 WV.RadioButton = WV.extend(WV.ToggleButton, {
     vtype: 'radio',
-    h: 13,
+    h: 14,
     w: 13,
-    clipSubViews: true,
-    autoResizeMask: WV.RESIZE_NONE,
     cls: 'wv-radio-button',
     text: 'Radio',
     styleMap: new WV.style.RadioButton(),
     subViews: [{
+        vtag: 'button',
+        cls: 'wv-radio-button-control',
+        x: 0,
+        y: 'center',
+        h: 13,
+        w: 13,
+        stateful: true,
+        autoResizeMask: WV.RESIZE_RIGHT_FLEX
+    },{
+        vtag: 'focusborder',
+        h: 13,
+        w: 13,
+        y: 'center',
+        stateful: true,
+        autoResizeMask: WV.RESIZE_RIGHT_FLEX
+    },{
         vtag: 'label',
         vtype: 'label',
         x: 16,
+        y: 'center',
         h: 13,
-        w: 'w + 15',
-        autoResizeMask: WV.RESIZE_WIDTH_FLEX
-    }]
+        w: this.w,
+        autoResizeMask: WV.RESIZE_RIGHT_FLEX
+    }],
+    setSelected: function(val)
+    {
+        var sv = this.superView;
+
+        if (sv instanceof WV.RadioGroup)
+        {
+            if (val === true)
+            {
+                var prevSelection = sv.selection;
+                sv.selection = this;
+                
+                if (!this.selected && prevSelection && prevSelection !== this)
+                {
+                    prevSelection.setSelected(false);
+                }
+                WV.RadioButton.superclass.setSelected.call(this, val);
+            }
+            else if (sv.selection !== this)
+            {
+                 WV.RadioButton.superclass.setSelected.call(this, val);                
+            }
+        }
+        else { WV.RadioButton.superclass.setSelected.call(this, val); }
+    }
+});
+
+WV.Matrix = WV.extend(WV.View, {
+    vtype: 'matrix',
+    cls: 'wv-matrix',
+    clipSubViews: true,
+    cellData: null,
+    cellVType: 'view',
+    constructor: function(config)
+    {
+        WV.Matrix.superclass.constructor.call(this, config);
+
+        // If we have cellData then ignore row and column configs
+        if (this.cellData)
+        {
+            this.rows = this.cellData.length;
+            this.columns = 0;
+        }
+        if (!this.rows)
+        {
+            throw new Error('Invalid config, need rows and columns or cellData');
+        }
+        this.cells = new Array(this.rows);
+
+        // Find the row with the most columns if necessary and then init all the arrays.
+        // We need the largest column size to compute cellWidth
+        for (var r = 0; r < this.rows; r++)
+        {
+            this.cells[r] = new Array((this.cellData && this.cellData[r]) ? this.cellData[r].length : this.columns);
+            this.columns = Math.max(this.columns, this.cells[r].length);
+        }
+
+        // Allow the user to specify cell height and width. Adjust the Matrix size to fit.
+        // This will make it easy to use in a ScrollView, which is a common use case.
+        if (this.hasOwnProperty('cellWidth'))
+        {
+            this.setWidth(this.columns * this.cellWidth);
+        }
+        else
+        {
+            this.cellWidth = this.w / this.columns;
+        }
+        if (this.hasOwnProperty('cellHeight'))
+        {
+            this.setHeight(this.rows * this.cellHeight);
+        }
+        else
+        {
+            this.cellHeight = this.h / this.rows;
+        }
+
+        for (r = 0; r < this.rows; r++)
+        {
+            for (var c = 0, l = this.cells[r].length; c < l; c++)
+            {
+                this.cells[r][c] = this.createCellForPosition(r,c);
+                this.initCell(this.cells[r][c], r, c);
+                this.addSubView(this.cells[r][c]);
+            }
+        }
+    },
+    createCellForPosition: function(row, column)
+    {
+        var cell = this.cellData &&
+                   typeof this.cellData[row][column] === 'object' ? WV.apply({}, this.cellData[row][column]) : {};
+
+        WV.apply(cell, {
+            autoResizeMask: WV.RESIZE_ALL,
+            x: this.cellWidth * column,
+            y: this.cellHeight * row,
+            h: this.cellHeight,
+            w: this.cellWidth
+        });
+
+        return WV.create(this.cellVType || 'view', cell);
+    },
+    initCell: function(cell, row, column) {}
+});
+
+WV.RadioGroup = WV.extend(WV.Matrix, {
+    vtype: 'radiogroup',
+    cls: 'wv-radio-group',
+    name: null,
+    selection: null,
+    cellVType: 'radio',
+    initCell: function(cell, row, column)
+    {
+        var data = this.cellData ? this.cellData[row][column] : '';
+
+        cell.name = cell.name || this.name;
+        if (typeof data === 'string')
+        {
+            cell.subViews.label.text = data;
+        }
+
+        // Ensure that the first 'selected' item encountered is the only selected item
+        if (cell.selected)
+        {
+            if (!this.selection)
+            {
+                this.selection = cell;
+            }
+            else
+            {
+                cell.setSelected(false);   
+            }
+        }
+    }
 });
 
 WV.style.TextComponent = WV.extend(WV.StyleMap, {
@@ -610,7 +804,8 @@ WV.style.TextComponent = WV.extend(WV.StyleMap, {
             styles: {
                 borderColor: '#4D78A4',
                 borderWidth: '2px',
-                borderStyle: 'solid' }
+                borderStyle: 'solid'
+            }
         }]
     },
     input: {

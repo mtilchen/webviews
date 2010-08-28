@@ -72,53 +72,31 @@
                 superView: e1,
                 autoResizeMask: WV.RESIZE_NONE,
                 x: 17,
-                y: 144,
+                y: 105,
                 w: 200,
-                text: 'Message',
+                text: 'Labels',
                 style: {
                     fontWeight: 'bold'
                 }
             });
             
-            new WV.TextArea({
+            new WV.RadioGroup({
                 superView: e1,
-                autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
-                x: 15,
-                y: 162,
-                w: e1.w - 30,
-                h: e1.h - 215,
-                nextKeyView: 'test_check'
-            });
-            
-            new WV.Label({
-                superView: e1,
-                autoResizeMask: WV.RESIZE_NONE,
-                x: 17,
-                y: 104,
-                w: 200,
-                text: 'Account',
-                style: {
-                    fontWeight: 'bold'
-                }
-            });
-            
-            new WV.RadioButton({
-                superView: e1,
-                name: 'radio1',
-                selected: true,
+                autoResizeMask: WV.RESIZE_RIGHT_FLEX,
+                w: 500,
+                h: 60,
                 x: 15,
                 y: 120,
-                w: 75
+                name: 'colors',
+//                rows: 5,
+//                columns: 20,
+                cellData: [
+                    ['Red', 'Green', 'Purple', 'Slate', 'Silver', 'Cream'],
+                    ['Cyan', { text: 'Magenta', selected: true }, 'Maroon', 'Gray', 'Brown', 'Dark Brown'],
+                    ['Orange', { text: 'Violet', selected: true }, 'Black', 'Pink', 'Navy', 'White']
+                ]
             });
             
-            new WV.RadioButton({
-                superView: e1,
-                name: 'radio2',
-                x: 170,
-                y: 120,
-                w: 75
-            });
-
             new WV.CheckBox({
                 id: 'test_check',
                 superView: e1,
@@ -130,7 +108,29 @@
                 y: 120,
                 w: 75
             });
-                        
+
+            new WV.Label({
+                superView: e1,
+                autoResizeMask: WV.RESIZE_NONE,
+                x: 17,
+                y: 175,
+                w: 200,
+                text: 'Message',
+                style: {
+                    fontWeight: 'bold'
+                }
+            });
+            
+            new WV.TextArea({
+                superView: e1,
+                autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
+                x: 15,
+                y: 193,
+                w: e1.w - 30,
+                h: e1.h - 250,
+                nextKeyView: 'test_check'
+            });
+            
             new WV.Button({
                 id: 'send',
                 superView: e1,
