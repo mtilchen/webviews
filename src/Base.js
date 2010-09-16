@@ -38,6 +38,7 @@ WV = (function() {
         }
     }
 
+    // TODO: Move this into BrowserOverride
     function initIE()
     {
         var doc = document,
@@ -72,7 +73,7 @@ WV = (function() {
         style: {}, // Namespace for styles
 
         isIPhone: /iphone/.test(userAgent),
-        
+
         id: function()
         {
             return 'view-' + idCount++;
@@ -130,7 +131,7 @@ WV = (function() {
             {
                 o = WV.accumulate(cls.superclass.constructor, prop);
             }
-              
+
             Ext.apply(o, cls.prototype[prop]);
 
             return o;
@@ -176,7 +177,7 @@ WV = (function() {
                                                               : Ext.apply(overrides, overrides.mixins[i]);
                 }
             }
-            
+
             // Set up the vtype for the class if provided
             newCls = Ext.extend(baseCls, overrides);
             if (vtype) { WV.registerVType(vtype, newCls); }
@@ -198,7 +199,7 @@ WV = (function() {
                 if (tmp.length === 1) { tmp = '0' + tmp; }
                 hex += tmp;
             }
-            return hex;  
+            return hex;
         },
 
         apply: Ext.apply,
@@ -220,12 +221,17 @@ WV = (function() {
                                console.log(String.format('<{0}> {1}', time, logStrings.join('')));
                           }
                         : function() {},
+        // TODO logf
         debug: function()
         {
             if (WV.debugMode === true)
             {
                 WV.log.apply(WV, arguments);
             }
+        },
+        archive: function(root)
+        {
+            return JSON.stringify(root, replacer);
         }
     };
 
