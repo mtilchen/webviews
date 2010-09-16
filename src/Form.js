@@ -114,7 +114,7 @@ WV.Control = WV.extend(WV.View, {
                 input.dom.unselectable = this.enabled ? '' : 'on';
             }
         }
-        
+
         this.enabled ? this.setReadOnly(this.hasOwnProperty('readOnly') ? this.readOnly : false) :
                        this.setReadOnly(true);
         return this;
@@ -626,6 +626,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
     w: 13,
     cls: 'wv-radio-button',
     text: 'Radio',
+    unselectedValue: null,
     styleMap: new WV.style.RadioButton(),
     subViews: [{
         vtag: 'button',
@@ -662,7 +663,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
             {
                 var prevSelection = sv.selection;
                 sv.selection = this;
-                
+
                 if (!this.selected && prevSelection && prevSelection !== this)
                 {
                     prevSelection.setSelected(false);
@@ -671,7 +672,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
             }
             else if (sv.selection !== this)
             {
-                 WV.RadioButton.superclass.setSelected.call(this, val);                
+                 WV.RadioButton.superclass.setSelected.call(this, val);
             }
         }
         else { WV.RadioButton.superclass.setSelected.call(this, val); }
@@ -765,7 +766,8 @@ WV.RadioGroup = WV.extend(WV.Matrix, {
     {
         var data = this.cellData ? this.cellData[row][column] : '';
 
-        cell.name = cell.name || this.name;
+        cell.subViews.input.name = cell.name || this.name;
+
         if (typeof data === 'string')
         {
             cell.subViews.label.text = data;
@@ -780,7 +782,7 @@ WV.RadioGroup = WV.extend(WV.Matrix, {
             }
             else
             {
-                cell.setSelected(false);   
+                cell.setSelected(false);
             }
         }
     }
