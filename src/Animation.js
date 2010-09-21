@@ -10,15 +10,13 @@
         uncommittedAnimations = [],
         animationLoopTask = null;
 
-    function now() { return new Date(); }
-
     function adjustFrame(anim)
     {
         var frames = anim.totalFrames,
             frame = anim.currentFrame,
             duration = anim.duration,
             expected = (frame * duration * SEC_MS / frames),
-            elapsed = (now() - anim.startTime),
+            elapsed = (Date.now() - anim.startTime),
             tweak = 0;
 
         if (elapsed < duration * SEC_MS)
@@ -42,7 +40,7 @@
     function commitAnimations()
     {
         var anim,
-            startTime = now(), // Start all the new animations together
+            startTime = Date.now(), // Start all the new animations together
             i, l;
 
         for (i = 0, l = uncommittedAnimations.length; i < l; i++)
@@ -51,7 +49,7 @@
             anim.currentFrame = 0;
             anim.totalFrames = Math.ceil(FPS * anim.duration);
             anim.drawnFrames = 0;
-            anim.startTime =  startTime.getTime() + ((parseFloat(anim.delay) * SEC_MS) || 0);
+            anim.startTime =  startTime + ((parseFloat(anim.delay) * SEC_MS) || 0);
             anim.running = false;
             activeViews[anim.owner.id] = anim.owner;
         }
@@ -87,7 +85,7 @@
 
                     if (!anim.running)
                     {
-                        delay = anim.startTime - now();
+                        delay = anim.startTime - Date.now();
                         if (delay <= 0)
                         {
                             anim.running = true;
@@ -132,7 +130,7 @@
                             {
                                 newVal = anim.easing(anim.currentFrame,
                                                  anim.from, anim.to - anim.from,
-                                                 anim.totalFrames);    
+                                                 anim.totalFrames);
                             }
                             if (anim.units)
                             {
@@ -140,7 +138,7 @@
                             }
                             if (anim.target === view.style)
                             {
-                                view.setStyle(anim.key, newVal);    
+                                view.setStyle(anim.key, newVal);
                             }
                             else if (typeof anim.setterFn === 'function')
                             {
@@ -160,7 +158,7 @@
                         // We're done
                         else
                         {
-                            var realDuration = now() - anim.startTime,
+                            var realDuration = Date.now() - anim.startTime,
                                 stats = {
                                     duration: realDuration,
                                     frames: anim.drawnFrames,
