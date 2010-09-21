@@ -1,3 +1,5 @@
+Date.now = Date.now || function() { return new Date().getTime(); };
+
 /**
  * Additions to classes in the Ext Core library
  */
