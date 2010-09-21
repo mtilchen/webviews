@@ -31,7 +31,9 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     style: {
         position: 'absolute',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        backgroundOrigin: 'border-box',
+        backgroundClip: 'padding-box'
     },
 
     tag: 'div',
@@ -490,14 +492,14 @@ WV.View = WV.extend(Ext.util.Observable, {
     setHidden: function(hidden)
     {
         this.hidden = hidden === true;
-        this.setStyle('display', this.hidden ? 'none' : '');
+        this.setStyle('display', this.hidden ? 'none' : 'block');
         return this;
     },
 
     setClipSubViews: function(clip)
     {
         this.clipSubViews = clip === true;
-        this.setStyle('overflow',  this.clipSubViews ? 'hidden' : '');
+        this.setStyle('overflow',  this.clipSubViews ? 'hidden' : 'visible');
         return this;
     },
 

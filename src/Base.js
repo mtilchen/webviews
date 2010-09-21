@@ -93,10 +93,12 @@ WV = (function() {
         },
 
         styleLib: {
-            backgroundSize: Ext.isGecko ? 'MozBackgroundSize' : 'WebkitBackgroundSize',
-            borderRadius: Ext.isGecko ? 'MozBorderRadius' : Ext.isIE ? 'borderRadius' :'WebkitBorderRadius',
-            boxShadow: Ext.isGecko ? 'MozBoxShadow' : 'WebkitBoxShadow',
-            boxSizing: Ext.isGecko ? 'MozBoxSizing' : Ext.isIE ? 'boxSizing' :'WebkitBoxSizing',
+            backgroundSize: Ext.isGecko ? 'MozBackgroundSize' : Ext.isWebKit ? 'WebkitBackgroundSize' : 'backgroundSize',
+            backgroundOrigin: Ext.isGecko ? 'MozBackgroundOrigin' : Ext.isWebKit ? 'WebkitBackgroundOrigin' : 'backgroundOrigin',
+            backgroundClip: Ext.isGecko ? 'MozBackgroundClip' : Ext.isWebKit ? 'WebkitBackgroundClip' : 'backgroundClip',
+            borderRadius: Ext.isGecko ? 'MozBorderRadius' : Ext.isWebKit ? 'WebkitBorderRadius' : 'borderRadius',
+            boxShadow: Ext.isGecko ? 'MozBoxShadow' : Ext.isWebKit ? 'WebkitBoxShadow' : 'boxShadow',
+            boxSizing: Ext.isGecko ? 'MozBoxSizing' : Ext.isWebKit ? 'WebkitBoxSizing': 'boxSizing',
             transform: Ext.isGecko ? 'MozTransform' : 'WebkitTransform',
             transformOrigin: Ext.isGecko ? 'MozTransformOrigin' : 'WebkitTransformOrigin'
         },
@@ -150,6 +152,11 @@ WV = (function() {
 //                                        : Ext.apply(targetClass.prototype, mixin);
 //            return targetClass;
 //        },
+
+        classForVType: function(vtype)
+        {
+            return vtypes[vtype];
+        },
 
         create: function(vtype, config)
         {
