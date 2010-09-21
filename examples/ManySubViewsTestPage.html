@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-        
+
 <html>
 <head>
   <title>Many Subviews Test Page</title>
@@ -12,7 +12,7 @@
 
             var maxY = WV.Window.h,
                 maxX = WV.Window.w,
-                w = 10, h = 10;
+                w = 100, h = 100;
 
             for (var x = 2; x < (maxX - w); x = x + w)
             {
@@ -25,7 +25,7 @@
                         w: w,
                         autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
                         style: {
-                            backgroundColor: 'lightgrey',
+                            backgroundColor: '#D3D3D3',
                             borderRadius: '5px',
                             border: '1px solid black'
                         }
@@ -34,7 +34,23 @@
             }
 
             WV.log('Created ', this.subViews.length, ' views');
-        });     
+
+            setTimeout(function() {
+
+                for (var s = 0, l = WV.Window.subViews.length; s < l; s++)
+                {
+                    WV.Window.subViews[s].addAnimation(
+                        {
+                            easing: WV.Animation.EASEIN,
+                            path: 'style.borderRadius',
+                            to: '50px',
+                            duration: 0.5,
+                            repeatCount: 5,
+                            autoReverse: true
+                        });
+                }
+            }, 1000);
+        });
   </script>
 </head>
 
