@@ -406,9 +406,9 @@ WV.ToggleButton = WV.extend(WV.Button, {
     constructor: function(config)
     {
         // We need to have a value before the superclass constructor runs because it needs it to call setValue()
-        this.value = config.selected || this.selected ? this.selectedValue : this.unselectedValue;
+        this.value = (config.selected || this.selected) ? (config.selectedValue || this.selectedValue)
+                                                        : (config.unselectedValue || this.unselectedValue);
         WV.ToggleButton.superclass.constructor.call(this, config);
-        return this;
     },
     setValue: function(val)
     {
@@ -621,16 +621,15 @@ WV.style.RadioButton = WV.extend(WV.StyleMap, {
 });
 
 WV.RadioButton = WV.extend(WV.ToggleButton, {
-    vtype: 'radio',
+    vtype: 'radiobutton',
     h: 14,
     w: 13,
-    cls: 'wv-radio-button',
+    cls: 'wv-radiobutton',
     text: 'Radio',
     unselectedValue: null,
     styleMap: new WV.style.RadioButton(),
     subViews: [{
         vtag: 'button',
-        cls: 'wv-radio-button-control',
         x: 0,
         y: 'center',
         h: 13,
@@ -711,7 +710,7 @@ WV.Matrix = WV.extend(WV.View, {
 
         // Allow the user to specify cell height and width. Adjust the Matrix size to fit.
         // This will make it easy to use in a ScrollView, which is a common use case.
-        if (this.hasOwnProperty('cellWidth'))
+        if (this.cellWidth)
         {
             this.setWidth(this.columns * this.cellWidth);
         }
@@ -719,7 +718,7 @@ WV.Matrix = WV.extend(WV.View, {
         {
             this.cellWidth = this.w / this.columns;
         }
-        if (this.hasOwnProperty('cellHeight'))
+        if (this.cellHeight)
         {
             this.setHeight(this.rows * this.cellHeight);
         }
@@ -758,10 +757,10 @@ WV.Matrix = WV.extend(WV.View, {
 
 WV.RadioGroup = WV.extend(WV.Matrix, {
     vtype: 'radiogroup',
-    cls: 'wv-radio-group',
+    cls: 'wv-radiogroup',
     name: null,
     selection: null,
-    cellVType: 'radio',
+    cellVType: 'radiobutton',
     initCell: function(cell, row, column)
     {
         var data = this.cellData ? this.cellData[row][column] : '';
@@ -784,6 +783,227 @@ WV.RadioGroup = WV.extend(WV.Matrix, {
             {
                 cell.setSelected(false);
             }
+        }
+    }
+});
+
+WV.style.ListViewItem = WV.extend(WV.StyleMap, {
+    defaults: {
+        borderBottomColor: '#E7E7E7',
+        borderLeftColor: '#C8C8C8',
+        borderRadius: '2px',
+        borderRightColor: '#E7E7E7',
+        borderStyle: 'solid',
+        borderTopColor: '#C8C8C8',
+        borderWidth: '1px',
+        cursor: 'pointer' },
+    states: [{
+        name: 'focus',
+        styles: {
+            borderBottomColor: '#4D78A4',
+            borderLeftColor: '#4D78A4',
+            borderRightColor: '#4D78A4',
+            borderTopColor: '#4D78A4',
+            borderWidth: '2px'  }
+    }],
+    innerborder: {
+        defaults: {
+            borderRadius: '2px',
+            borderStyle: 'solid',
+            borderWidth: '1px'
+        },
+        states: [{
+            name: 'normal',
+            styles: {
+                backgroundColor: '#FFFFFF',
+                borderColor: '#D1D1D1' }
+        },{
+            name: 'selected',
+            styles: {
+                backgroundColor: 'transparent',
+                backgroundImage: 'url(resources/images/form/shadow-y.png)',
+                backgroundRepeat: 'repeat-y',
+                borderBottomColor: '#A7A9AB',
+                borderLeftColor: '#666',
+                borderRadius: '0px',
+                borderRightColor: 'transparent',
+                borderTopColor: '#777' }
+        },{
+            name: 'focus',
+            styles: {
+                borderRadius: '0px' }
+        }]
+    },
+    label: {
+        defaults: {
+            fontFamily: 'Verdana',
+            fontSize: '11px',
+            fontWeight: 'normal',
+            textAlign: 'center',
+            marginLeft: '0px',
+            marginTop: '0px'
+        },
+        states: [{
+            name: 'normal',
+            styles: {}
+        },{
+            name: 'active',
+            styles: {
+                marginLeft: '1px',
+                marginTop: '1px' }
+        }]
+    }
+});
+
+WV.ListViewItem = WV.extend(WV.ToggleButton, {
+    vtype: 'listviewitem',
+    cls: 'wv-listviewitem',
+    unselectedValue: null,
+    text: 'Item',
+    styleMap: new WV.style.ListViewItem(),
+    subViews: [{
+        vtag: 'innerborder',
+        x: 0,
+        y: 0,
+        h: 'h',
+        w: 'w',
+        stateful: true,
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX
+    },{
+        vtag: 'label',
+        vtype: 'label',
+        draggable: false,
+        x: 3,
+        y: 'center',
+        h: 13,
+        w: 'w - 6',
+        stateful: true,
+        autoResizeMask: WV.RESIZE_WIDTH_FLEX
+    }],
+    constructor: function(config)
+    {
+        if (typeof config === 'string')
+        {
+            config = { text: config }
+        }
+        else
+        {
+            config = config || {};
+            config.text = config.text || this.text;
+        }
+        config.selectedValue = config.selectedValue || config.text;
+
+        WV.ListViewItem.superclass.constructor.call(this, config);
+    },
+    setSelected: function(val)
+    {
+        var sv = this.superView,
+            i, l;
+
+        WV.ListViewItem.superclass.setSelected.call(this, val);
+
+        if (sv instanceof WV.ListView)
+        {
+            if (val === true)
+            {
+                if (!sv.multipleSelect)
+                {
+                    for (i = 0, l = sv.selection.length; i < l; i++)
+                    {
+                        sv.selection[i].setSelected(false);
+                    }
+                    sv.selection = [this];
+                }
+            }
+            if (sv.multipleSelect)
+            {
+                sv.selection = [];
+                for (i = 0, l = sv.cells.length; i < l; i++)
+                {
+                    if (sv.cells[i][0].selected)
+                    {
+                        sv.selection.push(sv.cells[i][0]);
+                    }
+                }
+            }
+        }
+    }
+});
+
+WV.ListView = WV.extend(WV.Matrix, {
+    vtype: 'listview',
+    cls: 'wv-listview',
+    w: 50,
+    cellHeight: 15,
+    name: null,
+    selection: null,
+    cellVType: 'listviewitem',
+    multipleSelect:  true,
+    itemTextAlign: 'center',
+    items: [],
+    constructor: function(config)
+    {
+        var i, l,
+           itemClassStyleMap,
+           align;
+
+        if (!config || !config.items)
+        {
+            throw new Error('WV.ListView needs a configured "items" array');
+        }
+        // Turn the 'items' into the cellData required by WV.Matrix as a convenience
+        config.cellData = [];
+        for (i = 0, l = config.items.length; i < l; i++ )
+        {
+            config.cellData[i] = [typeof config.items[i] === 'string' ? { text: config.items[i] } : config.items[i]];
+        }
+
+        this.selection = [];
+
+        // Override the WV.StyleMap default label text alignment of this ListView's cell class for further convenience
+        itemClassStyleMap = WV.classForVType(this.cellVType).prototype.styleMap;
+        align = config.itemTextAlign || this.itemTextAlign;
+
+        if (align !== itemClassStyleMap.label.defaults.textAlign)
+        {
+            itemClassStyleMap.overrideStyles({ 'label.defaults.textAlign': align });
+        }
+
+        WV.ListView.superclass.constructor.call(this, config);
+    },
+    initCell: function(cell, row, column)
+    {
+        cell.subViews.input.name = cell.name || this.name;
+
+        // Ensure that the first 'selected' item encountered is the only selected item unless multipleSelect is true
+        if (cell.selected)
+        {
+            if (!this.selection.length || this.multipleSelect)
+            {
+                this.selection.push(cell);
+            }
+            else
+            {
+                cell.setSelected(false);
+            }
+        }
+    },
+    setSelected: function(index, selected)
+    {
+        if (WV.isArray(index))
+        {
+            for (var i = 0, l = index.length; i < l; i++)
+            {
+                this.setSelected(index[i], selected);
+            }
+        }
+        else { this.cells[index][0].setSelected(selected); }
+    },
+    clearSelection: function()
+    {
+        while (this.selection.length)
+        {
+            this.selection[0].setSelected(false);
         }
     }
 });

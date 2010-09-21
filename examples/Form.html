@@ -23,7 +23,7 @@
                     borderRadius: '2px'
                 }
             });
-            
+
             new WV.Label({
                 superView: e1,
                 autoResizeMask: WV.RESIZE_NONE,
@@ -79,7 +79,7 @@
                     fontWeight: 'bold'
                 }
             });
-            
+
             new WV.RadioGroup({
                 superView: e1,
                 autoResizeMask: WV.RESIZE_RIGHT_FLEX,
@@ -88,15 +88,25 @@
                 x: 15,
                 y: 120,
                 name: 'colors',
-//                rows: 5,
-//                columns: 20,
                 cellData: [
                     ['Red', 'Green', 'Purple', 'Slate', 'Silver', 'Cream'],
                     ['Cyan', { text: 'Magenta', selected: true }, 'Maroon', 'Gray', 'Brown', 'Dark Brown'],
-                    ['Orange', { text: 'Violet', selected: true }, 'Black', 'Pink', 'Navy', 'White']
-                ]
+                    ['Orange', { text: 'Violet', selected: true }, 'Black', 'Pink', 'Navy', 'White']]
             });
-            
+
+            new WV.ListView({
+                superView: e1,
+                id: 'list',
+                autoResizeMask: WV.RESIZE_LEFT_FLEX,
+                x: 550,
+                y: 120,
+                h: 300,
+                w: 300,
+                name: 'metals',
+                itemTextAlign: 'left',
+                items: ['Gold', 'Silver', { text: 'Platinum', selected: true }, 'Mercury', 'Aluminum', 'Iron']
+            });
+
             new WV.CheckBox({
                 id: 'test_check',
                 superView: e1,
@@ -113,24 +123,24 @@
                 superView: e1,
                 autoResizeMask: WV.RESIZE_NONE,
                 x: 17,
-                y: 175,
+                y: 195,
                 w: 200,
                 text: 'Message',
                 style: {
                     fontWeight: 'bold'
                 }
             });
-            
+
             new WV.TextArea({
                 superView: e1,
                 autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
                 x: 15,
-                y: 193,
+                y: 213,
                 w: e1.w - 30,
-                h: e1.h - 250,
+                h: e1.h - 270,
                 nextKeyView: 'test_check'
             });
-            
+
             new WV.Button({
                 id: 'send',
                 superView: e1,
@@ -160,7 +170,7 @@
                                     easing: WV.Animation.EASENONE,
                                     path: 'style.transform.scaleX',
                                     from: 0, to: -1, duration: 3}]);
-                            } 
+                            }
                         },{
                             easing: WV.Animation.EASENONE,
                             path: 'style.backgroundColor',
@@ -170,7 +180,7 @@
                             repeatCount: 2 }]});
                 }
             });
-            
+
             new WV.Button({
                 superView: e1,
                 canBecomeFirstResponder:function()
