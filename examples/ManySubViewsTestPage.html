@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+  <title>Many Subviews Test Page</title>
+    <meta name="viewport" content="width=device-width, user-scalable=0" />
+    <link rel="stylesheet" type="text/css" href="resources/css/webviews.css" />
+
+    <script src="../webviews-debug.js"></script>
+    <script>
+
+//        WV.debugMode = true;
+
+        WV.init(function(win) {
+
+            var maxY = win.h,
+                maxX = win.w,
+                w = 50, h = 50;
+
+            for (var x = 2; x < (maxX - w); x = x + w)
+            {
+                for (var y = 2; y < (maxY - h); y = y + h)
+                {
+                    win.addSubView({
+                        x: x,
+                        y: y,
+                        h: h,
+                        w: w,
+                        autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
+                        style: {
+                            color: '#D3D3D3',
+//                            cornerRadius: 10,
+                            borderWidth: 1,
+                            borderColor: 'black',
+                            scaleX: 1,
+                            scaleY: 1
+                        }
+                    });
+                }
+            }
+
+            WV.debug('Created ', win.subViews.length, ' views');
+
+            setTimeout(function() {
+
+                for (var s = 0, l = win.subViews.length; s < l; s++)
+                {
+                    win.subViews[s].addAnimation([
+                        {
+                            easing: WV.Animation.EASEIN,
+                            path: 'style.color',
+                            to: '#00FF00',
+                            duration: 1,
+                            repeatCount: 5,
+                            autoReverse: true
+                        }, {
+                            easing: WV.Animation.EASEIN,
+                            path: 'style.scaleX',
+                            to: 0.1,
+                            duration: 1,
+                            repeatCount: 5,
+                            autoReverse: true
+                        }, {
+                            easing: WV.Animation.EASEIN,
+                            path: 'style.scaleY',
+                            to: 0.1,
+                            duration: 1,
+                            repeatCount: 5,
+                            autoReverse: true
+                        }]);
+                }
+            }, 1000);
+        });
+  </script>
+</head>
+
+</html>

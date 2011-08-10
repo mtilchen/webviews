@@ -1,0 +1,44 @@
+Welcome to WebViews. 
+
+WebViews is a JavaScript framework designed to ease the development of sophisticated,
+high-performance, cross-browser web applications using open standards. 
+
+LICENSE
+----------------------------------
+
+WebViews is distributed under the LGPL v3 license. Please refer to 'license.txt' for more information.
+
+BUILDING
+----------------------------------
+
+- Install Java 5 or higher if necessary
+- From project root, run: ./build.sh (.\build.bat on Windows)
+- Build will be saved in 'build/webviews-x.x.x' in project root
+
+RUNNING EXAMPLES
+----------------------------------
+
+- Build the project if source was downloaded (see above)
+- Using a supported browser (see below) open any of the files in the 'build/webviews-x.x.x/examples' directory
+
+SUPPORTED BROWSERS
+----------------------------------
+
+- Internet Explorer 8 and higher
+- Firefox 3.5 and higher
+- Safari 4 and higher
+- Chrome 4 and higher
+
+Note: CSS3 support for a particular browser is limited by the browser's CSS3 implementation 
+
+CREDITS
+-----------------------------------
+
+WebViews makes use of the excellent work in the following libraries/dependencies:
+
+Ext Core: JavaScript Framework (www.extjs.com/product/extcore) MIT License 
+JSBuilder2: JavaScript build tool (www.extjs.com/products/jsbuilder)
+Many design concepts influenced by Apple's Cocoa (AppKit/UIKit): (developer.apple.com)
+
+Licenses for these libraries have been included in the 'licenses' directory of this distribution. 
+ 

@@ -1,0 +1,85 @@
+{
+    projectName: "WebViews",
+    deployDir: "webviews-@VERSION@",
+    licenseText: "Copyright 2010-2011, Matthew P. Tilchen\n\nThis file is part of WebViews.\n\nWebViews is free software: you can redistribute it and/or modify\nit under the terms of the GNU Lesser General Public License as\npublished by the Free Software Foundation, either version 3 of the License, or\n(at your option) any later version.\n\nWebViews is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU Lesser General Public License for more details.\n\n<http://www.gnu.org/licenses/>\n\n",
+    pkgs: [{
+        name: "WebViews Foundation",
+        file: "webviews.js",
+        isDebug: true,
+        fileIncludes: [{
+            text: "ext-core-debug.js",
+            path: "lib/ext-core/"
+        },{
+            text: "ECMA-Additions.js",
+            path: "src/"
+        },{
+            text: "Ext-core-Additions.js",
+            path: "src/"
+        },{
+            text: "Base.js",
+            path: "src/"
+        },{
+            text: "EventMonitor.js",
+            path: "src/"
+        },{
+            text: "Responder.js",
+            path: "src/"
+        },{
+            text: "Style.js",
+            path: "src/"
+        },{
+            text: "StyleMap.js",
+            path: "src/"
+        },{
+            text: "View.js",
+            path: "src/"
+        },{
+            text: "View-Extensions.js",
+            path: "src/"
+        },{
+            text: "Window.js",
+            path: "src/"
+        },{
+            text: "Text.js",
+            path: "src/"
+        },{
+            text: "Form.js",
+            path: "src/"
+        },{
+            text: "Animation.js",
+            path: "src/"
+        },{
+            text: "Sound.js",
+            path: "src/"
+        }]
+    }],
+    resources: [{
+        src: "src/",
+        dest: "src/",
+        filters: ".*\\.js"
+    },{
+        src: "examples/",
+        dest: "examples/",
+        filters: ".*[\\.html|\\.jpg|\\.png|\\.gif|\\.css|\\.js]"
+    },{
+        src: "resources/",
+        dest: "resources/",
+        filters: ".*"
+    },{
+        src: "resources/",
+        dest: "examples/resources/",
+        filters: ".*"
+    },{
+        src: "licenses/",
+        dest: "licenses/",
+        filters: ".*\\.txt"
+    },{
+        src: "LICENSE",
+        dest: "LICENSE",
+        filters: ".*"
+    },{
+        src: "README",
+        dest: "README",
+        filters: ".*"
+   }]
+}

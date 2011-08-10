@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <!--
+        These will not look as nice on IE8. IE gradients can only have two
+        colors and no stops.
+    -->
+    <title>Gradients</title>
+
+    <link rel="stylesheet" type="text/css" href="resources/css/webviews.css" />
+
+    <script src="../webviews-debug.js"></script>
+    <script>
+
+        WV.init(function() {
+
+            this.setStyle('backgroundColor', 'black');
+
+            this.addSubView({
+                x: 50,
+                y: 50,
+                h: '40%',
+                w: '40%',
+                autoResizeMask: WV.RESIZE_ALL,
+                style: {
+                    border: '5px solid white',
+                    borderRadius: '20px',
+                    backgroundImage: new WV.style.LinearGradient({
+                        startFrom: 'top',
+                        stops: ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+                    })
+                }
+            });
+
+            this.addSubView({
+                x: 'w - this.w - 50',
+                y: 50,
+                h: '40%',
+                w: '40%',
+                autoResizeMask: WV.RESIZE_ALL,
+                style: {
+                    border: '5px solid white',
+                    borderRadius: '20px',
+                    backgroundImage: new WV.style.LinearGradient({
+                        startFrom: 'top',
+                        stops: ['gray',
+                        {
+                            color: 'white',
+                            length: 0.33
+                        }, 'gray']
+                    })
+                }
+            });
+
+            this.addSubView({
+                x: 50,
+                y: 'h - this.h - 50',
+                h: '40%',
+                w: '40%',
+                autoResizeMask: WV.RESIZE_ALL,
+                style: {
+                    border: '5px solid white',
+                    borderRadius: '20px',
+                    backgroundImage: {
+                        vtype: 'lineargradient',
+                        startFrom: 'left bottom',
+                        stops: [
+                            'orange',
+                            {
+                                color: 'white',
+                                length: 0.25
+                            },{
+                                color: 'rgba(0,0,0,0.0)',
+                                length: 0.40
+                            },{
+                                color: 'rgba(0,0,0,0.0)',
+                                length: 0.60
+                            },{
+                                color: 'white',
+                                length: 0.75
+                            },
+                            'orange']
+                    }
+                }
+            });
+
+            this.addSubView({
+                x: 'w - this.w - 50',
+                y: 'h - this.h - 50',
+                h: '40%',
+                w: '40%',
+                autoResizeMask: WV.RESIZE_ALL,
+                style: {
+                    border: '5px solid white',
+                    borderRadius: '20px',
+                    backgroundImage: {
+                        vtype: 'lineargradient',
+                        startFrom: 'left',
+                        stops: [
+                            new WV.style.Color({
+                                r: 0,
+                                g: 0,
+                                b: 255,
+                                a: 1.0
+                            }), {
+                                color: {
+                                    vtype: 'color',
+                                    r: 255,
+                                    g: 255,
+                                    b: 255,
+                                    a: 1.0 },
+                                length: 0.25
+                            },
+                            new WV.style.Color({
+                                r: 255,
+                                g: 0,
+                                b: 0,
+                                a: 1.0
+                            })]
+                    }
+                }
+            });
+        });
+  </script>
+</head>
+<body>
+
+</body>
+</html>

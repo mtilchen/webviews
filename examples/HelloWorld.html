@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+  <title>Hello World</title>
+
+    <meta name="viewport" content="width=device-width, user-scalable=0" />
+    <link rel="stylesheet" type="text/css" href="resources/css/webviews.css" />
+
+    <script src="../webviews-debug.js"></script>
+    <script>
+
+        WV.debugMode = true;
+
+        WV.init(function(win) {
+
+            win.setStyle('color', 'red');
+
+            win.addSubView({
+                x: 'center',
+                y: 'center',
+                w: 300,
+                h: 300,
+                autoResizeMask: WV.RESIZE_ALL,
+                style: {
+//                    color: 'black',
+                    color: '#C8C8C8',
+                    borderColor: 'black',
+                    borderWidth: 5,
+                    rotate: 30.0,
+                    transformOriginX: 1.0,
+                    transformOriginY: 0.0,
+                    cornerRadius: 30
+                },
+                mouseDown: function(e)
+                {
+                    this.setStyle('color', 'rgba(0,0,255,0.5)');
+
+                    return WV.View.prototype.mouseDown.call(this, e);
+                },
+                mouseUp: function(e)
+                {
+                    this.setStyle('color', '#C8C8C8');
+
+                    return WV.View.prototype.mouseUp.call(this, e);
+                },
+                subViews:[{
+                    x: 5,
+                    y: 'center',
+                    w: 100,
+                    h: 100,
+                    autoResizeMask: WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_TOP_FLEX| WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX | WV.RESIZE_RIGHT_FLEX,
+                    style: {
+                        color: 'blue',
+                        borderColor: 'black',
+                        borderWidth: 25.0,
+                        opacity: 0.25,
+                        rotate: 45.0,
+                        translateX: 20
+                    }
+                },{
+                    id: 'v1',
+                    x: 'w - 105',
+                    y: 'center',
+                    w: 100,
+                    h: 100,
+                    autoResizeMask: WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_TOP_FLEX| WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX | WV.RESIZE_LEFT_FLEX,
+                    style: {
+                        color: 'blue',
+                        borderColor: 'black',
+                        borderWidth: 25.0,
+                        opacity: 0.75,
+                        rotate: -45.0,
+                        translateX: -20
+                    }
+                }]
+            });
+
+            win.addSubView({
+                id: 'textview',
+                vtype: 'text',
+                text: 'Dude!\n Where\'s\n my\n car?',
+                wrap: true,
+                align: 'center',
+                x: 100,
+                y: 300,
+                w: 300,
+                h: 500,
+                autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_LEFT_FLEX,
+                style: {
+                    color: 'white',
+                    font: '28pt Helvetica',
+                    textColor: 'blue'
+                }
+            });
+        });
+  </script>
+</head>
+<body>
+<!-- disabled:true if it's a label, will prevent scrolling of the text-->
+<!--<textarea wrap="off" disabled="true" style="position: absolute; left: 200px; top: 100px; width: 300px; height: 500px; opacity: 0.5; overflow: hidden; font-family: Helvetica; font-size: 48px;">Test Text</textarea>-->
+</body>
+</html>

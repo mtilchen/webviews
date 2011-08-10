@@ -1,0 +1,21 @@
+JSBuilder2 is a JavaScript and CSS project build tool.
+For additional information, see http://extjs.com/products/jsbuilder/
+
+JSBuilder version 2.0.0
+
+JSBuilder uses the following libraries
+--------------------------------------
+YUI Compressor licensed under BSD License
+http://developer.yahoo.com/yui/compressor/
+http://developer.yahoo.com/yui/license.html
+
+Mozilla's Rhino Project licensed under Mozilla's MPL
+http://www.mozilla.org/rhino/
+http://www.mozilla.org/MPL/
+
+JArgs licensed under BSD License
+http://jargs.sourceforge.net/
+
+JSON in Java licensed under the JSON License
+http://www.json.org/java/index.html
+http://www.json.org/license.html
