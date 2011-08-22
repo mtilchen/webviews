@@ -15,6 +15,9 @@ WV.Text = WV.extend(WV.View, {
 
         this.initDom();
 
+        this.setText(this.text);
+        this.setAlign(this.align);
+
         return this;
     },
     initDom: function()
@@ -23,7 +26,6 @@ WV.Text = WV.extend(WV.View, {
         {
             this._font = this.style.font || '';
             this.dom = this.tpl.append(Ext.getBody(), this, true).dom;
-            this.setText(this.text);
             delete this._font;
         }
         return this.setWrap(this.wrap);
@@ -43,9 +45,12 @@ WV.Text = WV.extend(WV.View, {
     setStyle: function(name, value)
     {
         WV.Text.superclass.setStyle.call(this, name, value);
-        if (name === 'font' && this.dom)
+        if (this.dom)
         {
-            this.dom.style.font = value;
+            if (name === 'font')
+            {
+                this.dom.style.font = value;
+            }
         }
         return this;
     },
@@ -68,12 +73,21 @@ WV.Text = WV.extend(WV.View, {
         this.setNeedsDisplay();
         return this;
     },
+    setAlign: function(align)
+    {
+        this.align = align;
+        if (this.dom)
+        {
+            this.dom.style.textAlign = align;
+        }
+        this.setNeedsDisplay();
+    },
     baseDraw: function(rect, ctx)
     {
         var lines = this.text.split('\n'),
             font = this.style.font,
             height = WV.Text.measure(font, this.text).h,
-            center = this.align === 'center',
+            startX,
             self = this;
 
 
@@ -81,10 +95,28 @@ WV.Text = WV.extend(WV.View, {
         ctx.font = font;
         ctx.fillStyle = this.style.textColor || 'black';
         ctx.textBaseline = 'top';
-        ctx.textAlign = center ? 'center' : 'start';
+
+        switch (this.align)
+        {
+            case 'left':
+                ctx.textAlign = 'start';
+                startX = 0;
+                break;
+            case 'center':
+                ctx.textAlign = 'center';
+                startX = (this.w / 2);
+                break;
+            case 'right':
+                ctx.textAlign = 'end';
+                startX = this.w;
+                break;
+            default:
+                ctx.textAlign = 'start';
+                startX = 0;
+                break;
+        }
 
         lines.forEach(function(line, i) {
-            var startX = center ? (self.w / 2) : 0;
             ctx.fillText(line.trim() || '', startX, i * height);
         });
     }
