@@ -238,7 +238,7 @@
 //        sme.y = y < 0 ? 0 : Math.min(y, target.h);
 //        sme.windowPoint =  { x: be.clientX,   y: be.clientY };
         sme.displayPoint = { x: be.screenX,   y: be.screenY };
-        sme.windowPoint = { x: be[posPropX], y: be[posPropY] };
+        sme.windowPoint = { x: be.canvasX, y: be.canvasY }; // Our WV.Window, not the browser window
         sme.timestamp = be.timeStamp;
         sme.target = targetV;
         sme.targetElement = be.target;
@@ -313,9 +313,9 @@
         },
         monitorEvent: function(name)
         {
-            var win = this.window;
+            var win = this.window; // Our WV.Window
 
-            Ext.EventManager.addListener(this.window.canvas, name.toLowerCase(), function(e) {
+            Ext.EventManager.addListener(window, name.toLowerCase(), function(e) {
 
 
                 // Set these four shared objects before processing the event
@@ -333,6 +333,7 @@
 
                 var el = ev.target,
                         proceed,
+                        rect, canvasRect,
                         isKeyEvent = name.indexOf('key') === 0;
 
                 if (!el) { return wasCancelled; }
@@ -341,10 +342,32 @@
                 {
                     targetV = win.firstResponder;
                 }
-                else
+                else // Mouse event
                 {
-                    targetV = win.hitTest({ x: be[posPropX] - pointerOffset,
-                                            y: be[posPropY] - pointerOffset});
+                    /*
+                     * Target is an element outside a non-full screen app or an absolutely positioned
+                     * within our canvas' rect. In the Translate the point to our canvas' coordinates
+                     */
+                    if (el !== win.canvas)
+                    {
+                        if (el.getAttribute('_textOverlay'))
+                        {
+                            rect = el.getBoundingClientRect();
+                            canvasRect = win.canvas.getBoundingClientRect();
+                            be.canvasX = rect.left + be[posPropX] - canvasRect.left;
+                            be.canvasY = rect.top + be[posPropY] - canvasRect.top;
+                        }
+                        // Not one of our text overlays so do not set targetV, event ignored
+                    }
+                    else
+                    {
+                       // No adjustment needed, the target is our canvas
+                       be.canvasX = be[posPropX];
+                       be.canvasY = be[posPropY];
+                    }
+
+                    targetV = win.hitTest({ x: be.canvasX - pointerOffset,
+                                            y: be.canvasY - pointerOffset});
                 }
 
                 if (targetV)

@@ -26,6 +26,7 @@ WV.Text = WV.extend(WV.View, {
         {
             this._font = this.style.font || '';
             this.dom = this.tpl.append(Ext.getBody(), this, true).dom;
+            this.dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
             delete this._font;
         }
         return this.setWrap(this.wrap);
@@ -87,9 +88,7 @@ WV.Text = WV.extend(WV.View, {
         var lines = this.text.split('\n'),
             font = this.style.font,
             height = WV.Text.measure(font, this.text).h,
-            startX,
-            self = this;
-
+            startX;
 
         WV.Text.superclass.baseDraw.call(this, rect, ctx);
         ctx.font = font;
@@ -115,6 +114,8 @@ WV.Text = WV.extend(WV.View, {
                 startX = 0;
                 break;
         }
+
+        //TODO: Support wrapping
 
         lines.forEach(function(line, i) {
             ctx.fillText(line.trim() || '', startX, i * height);
