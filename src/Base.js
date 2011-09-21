@@ -45,22 +45,6 @@ WV = (function() {
 
         // Hide the vertical scrollbar in IE
         Ext.select('html').setStyle('overflow', 'hidden');
-
-        // Set up VML support
-        if (!doc.namespaces['vml'])
-        {
-            doc.namespaces.add('vml', 'urn:schemas-microsoft-com:vml',
-                               '#default#VML');
-
-        }
-
-        if (document.styleSheets['wv_vml'])
-        {
-            ss = doc.createStyleSheet();
-            ss.owningElement.id = 'wv_vml';
-            ss.cssText = 'vml\\:*{behavior:url(#default#VML)}';
-            ss.cssText += 'vml\\:roundrect {behavior:url(#default#VML)}';
-        }
     }
 
     var pub = {
