@@ -13,7 +13,7 @@ WV.Window = WV.extend(WV.View, {
         WV.apply(this, config);
 
         this.id = config.id || WV.id();
-        this.subViews = [];
+        this.subviews = [];
         this.style = {};
         this.drawQueue = [];
         WV.addToCache(this);
@@ -34,6 +34,9 @@ WV.Window = WV.extend(WV.View, {
             this.canvas = document.createElement('canvas');
 
             this.canvas.id = this.id;
+            this.canvas.style.position = 'absolute';
+            this.canvas.style.top = '0px';
+            this.canvas.style.left = '0px';
 
             body.appendChild(this.canvas);
 
@@ -57,32 +60,29 @@ WV.Window = WV.extend(WV.View, {
 
     setViewsNeedDisplay: function(view)
     {
-        var self = this;
+        var self = this,
+            renderFunc = WV.requestAnimationFrame || setTimeout;
 
-        // Prevent views from being readded to the queue if they are already in line
+        // Prevent views from being re-added to the queue if they are already in line by using a flag.
         // This will prevent recursive death if a view gets setNeedsDisplay called while drawing
-        if (!view || (this.drawQueue.indexOf(view) >= 0)) { return; }
+        if (!view || (view._inDrawQueue_)) { return; }
 
+        view._inDrawQueue_ = true;
         this.drawQueue.push(view);
 
         WV.debug('*****');
         if (!this._displayRef)
         {
-            this._displayRef = setTimeout(function() {
+            this._displayRef = renderFunc(function() {
                 while (self.drawQueue.length)
                 {
                     self.drawQueue[0].redrawIfNeeded();
+                    delete self.drawQueue[0]._inDrawQueue_;
                     self.drawQueue.shift();
                 }
                 WV.debug('Finish Drawing Window');
 
                 self._displayRef = null;
-                // Views were marked while we were displaying so start again
-//                if (self.viewsNeedDisplay)
-//                {
-//                    WV.debug('Still Drawing Window');
-//                    self.setViewsNeedDisplay();
-//                }
             }, 0);
             WV.debug('Start Drawing Window');
         }
@@ -92,7 +92,7 @@ WV.Window = WV.extend(WV.View, {
     {
         if (this.style.color)
         {
-            ctx.fillStyle = this.style.color || 'rgba(0,0,0,0.0)';
+            ctx.fillStyle = this.style.color || 'rgba(0,0,0,0)';
             ctx.fillRect(0,0,this.w,this.h);
         }
         else
@@ -112,7 +112,7 @@ WV.Window = WV.extend(WV.View, {
       this.canvas.height = this.h = h;
 
       this.inLayout = true;
-      this.layoutSubViews();
+      this.layoutSubviews();
       this.inLayout = false;
       this.redrawIfNeeded();
     },

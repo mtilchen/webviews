@@ -12,11 +12,11 @@
     <script src="../webviews-debug.js"></script>
     <script>
 
-        WV.init(function() {
+        WV.init(function(win) {
 
-            this.setStyle('backgroundColor', 'black');
+            win.setStyle('backgroundColor', 'black');
 
-            this.addSubView({
+            win.addSubView({
                 x: 50,
                 y: 50,
                 h: '40%',
@@ -32,7 +32,7 @@
                 }
             });
 
-            this.addSubView({
+            win.addSubView({
                 x: 'w - this.w - 50',
                 y: 50,
                 h: '40%',
@@ -52,7 +52,7 @@
                 }
             });
 
-            this.addSubView({
+            win.addSubView({
                 x: 50,
                 y: 'h - this.h - 50',
                 h: '40%',
@@ -84,7 +84,7 @@
                 }
             });
 
-            this.addSubView({
+            win.addSubView({
                 x: 'w - this.w - 50',
                 y: 'h - this.h - 50',
                 h: '40%',

@@ -1,20 +1,24 @@
 <!DOCTYPE HTML>
-        
+
 <html>
 <head>
   <title>Deep Nesting Test Page</title>
-  
+
     <link rel="stylesheet" type="text/css" href="resources/css/webviews.css" />
 
     <script src="../webviews-debug.js"></script>
     <script>
-    
-        WV.init(function() {
 
-            var top = WV.Window,
+        WV.init(function(win) {
+
+            var top = win,
                 v, i = 0;
 
-            WV.Window.setStyle('border', '1px solid black');
+            win.setStyle({
+                        color: 'white',
+                        borderWidth: 1,
+                        borderColor: 'black'
+                    });
 
             while (top.h > 6 && top.w > 6)
             {
@@ -23,10 +27,12 @@
                     x: 3,
                     y: 3,
                     h: 'h - 6',
-                    w: 'w - 6',                               
+                    w: 'w - 6',
                     autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
                     style: {
-                        border: '1px solid black'
+                        color: 'white',
+                        borderWidth: 1,
+                        borderColor: 'black'
                     }
                 });
                 top = v;

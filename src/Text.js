@@ -1,9 +1,8 @@
 
 WV.Text = WV.extend(WV.View, {
     vtype: 'text',
-    tpl: WV.createTemplate('<div id="{id}" style="position: absolute; left: {x}px; top: {y}px; width: {w}px; height: {h}px; opacity: 0.5; overflow: visible; font: {_font}">{text}</div>'),
+    tpl: WV.createTemplate('<div id="{id}" style="position: absolute; left: {x}px; top: {y}px; width: {w}px; height: {h}px; opacity: 0.0; overflow: visible; font: {_font}">{text}</div>'),
 
-    text: '',
     wrap: false,
     align: 'left',
 
@@ -13,22 +12,28 @@ WV.Text = WV.extend(WV.View, {
 
         WV.Text.superclass.constructor.call(this, config);
 
+        this.setText(this.text || '');
+        this.text = this.lines.join('<br/>');
         this.initDom();
-
-        this.setText(this.text);
+        delete this.text; // Must use getText()
         this.setAlign(this.align);
+        this.selection = {
+            start: 0,
+            end: 0
+        };
 
         return this;
     },
     initDom: function()
     {
-        if (!this.dom && document)
-        {
-            this._font = this.style.font || '';
-            this.dom = this.tpl.append(Ext.getBody(), this, true).dom;
-            this.dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
-            delete this._font;
-        }
+        //TODO: Re-enable transparent text overlay for supporting selection
+//        if (!this.dom && document)
+//        {
+//            this._font = this.style.font || '';
+//            this.dom = this.tpl.append(Ext.getBody(), this, true).dom;
+//            this.dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
+//            delete this._font;
+//        }
         return this.setWrap(this.wrap);
     },
     setFrame: function(frame)
@@ -57,13 +62,20 @@ WV.Text = WV.extend(WV.View, {
     },
     setText: function(text)
     {
-        this.text = text || '';
+        text = text || '';
+        this.lines = text.split('\n');
+
         if (this.dom)
         {
-            this.dom.innerHTML = text.replace(/\n/g, '<br/>');
+            this.dom.innerText = text;
         }
         this.setNeedsDisplay();
     },
+    getText: function()
+    {
+        return this.lines.join('\n');
+    },
+
     setWrap: function(wrap)
     {
         this.wrap = wrap === true;
@@ -85,9 +97,8 @@ WV.Text = WV.extend(WV.View, {
     },
     baseDraw: function(rect, ctx)
     {
-        var lines = this.text.split('\n'),
-            font = this.style.font,
-            height = WV.Text.measure(font, this.text).h,
+        var font = this.style.font,
+            height = WV.Text.measure(font, this.lines[0]).h,
             startX;
 
         WV.Text.superclass.baseDraw.call(this, rect, ctx);
@@ -116,10 +127,51 @@ WV.Text = WV.extend(WV.View, {
         }
 
         //TODO: Support wrapping
-
-        lines.forEach(function(line, i) {
+        // If we have selected regions then we need to paint them separately
+        this.lines.forEach(function(line, i) {
             ctx.fillText(line.trim() || '', startX, i * height);
         });
+    },
+
+    selectedText: function()
+    {
+        return this.text.substring(this.selection.start, this.selection.end);
+    },
+
+    mouseDown: function(e)
+    {
+        WV.log('**** Mouse Down ****');
+        // Clear selection
+        this.beginSelection(this.convertPointFromView(e.windowPoint));
+        return WV.Text.superclass.mouseDown.call(this, e);
+    },
+    mouseDragged: function(e)
+    {
+        WV.log('Selection: ' + window.getSelection().toString());
+        // Clear selection in all other Text instances
+        // Calculate selected characters starting from original insertion point
+        // Redraw
+        return WV.Text.superclass.mouseDragged.call(this, e);
+    },
+
+    beginSelection: function(p /* Point in view coordinates */)
+    {
+        var line = Math.floor(p.y / WV.Text.measure(this.style.font, this.lines[0]).h),
+            i, l,
+            offset = this.lines[line].length;
+
+        for (i = 0, l = this.lines[line].length; i < l; i++)
+        {
+            //TODO: Support center and right align
+            if (p.x < WV.Text.measure(this.style.font, this.lines[line].substring(0, i)).w)
+            {
+                offset = i;
+                break;
+            }
+        }
+
+        WV.log('Selection start line: ' + line);
+        WV.log('Selection start offset: ' + offset);
     }
 });
 
@@ -128,7 +180,7 @@ WV.Text.measure = function(font, text)
     var el = WV.Text._sharedEl || (WV.Text._sharedEl = Ext.DomHelper.append(Ext.getBody(), { id: 'shared-metrics', style: 'position: absolute; top: -1000px; left: -1000px;'}, true).dom);
 
     el.style.font = font;
-    el.innerHTML = text;
+    el.innerHTML = text.replace(/\n/g, '');
 
     return { w: el.clientWidth, h: el.clientHeight };
 }

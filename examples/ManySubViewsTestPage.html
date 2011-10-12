@@ -9,7 +9,7 @@
     <script src="../webviews-debug.js"></script>
     <script>
 
-//        WV.debugMode = true;
+        //WV.debugMode = true;
 
         WV.init(function(win) {
 
@@ -29,7 +29,7 @@
                         autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
                         style: {
                             color: '#D3D3D3',
-//                            cornerRadius: 10,
+                            cornerRadius: 5,
                             borderWidth: 1,
                             borderColor: 'black',
                             scaleX: 1,
@@ -50,23 +50,30 @@
                             easing: WV.Animation.EASEIN,
                             path: 'style.color',
                             to: '#00FF00',
-                            duration: 1,
+                            duration: 0.25,
                             repeatCount: 5,
                             autoReverse: true
-                        }, {
+                        },{
                             easing: WV.Animation.EASEIN,
-                            path: 'style.scaleX',
-                            to: 0.1,
-                            duration: 1,
+                            path: 'style.cornerRadius',
+                            to: 20,
+                            duration: 0.25,
                             repeatCount: 5,
                             autoReverse: true
-                        }, {
-                            easing: WV.Animation.EASEIN,
-                            path: 'style.scaleY',
-                            to: 0.1,
-                            duration: 1,
-                            repeatCount: 5,
-                            autoReverse: true
+//                        }, {
+//                            easing: WV.Animation.EASEIN,
+//                            path: 'style.scaleX',
+//                            to: 0.1,
+//                            duration: 1,
+//                            repeatCount: 5,
+//                            autoReverse: true
+//                        }, {
+//                            easing: WV.Animation.EASEIN,
+//                            path: 'style.scaleY',
+//                            to: 0.1,
+//                            duration: 1,
+//                            repeatCount: 5,
+//                            autoReverse: true
                         }]);
                 }
             }, 1000);

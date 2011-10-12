@@ -1,4 +1,6 @@
 
+//TODO: Add a global error handler that will print out error messages to the window in "dev mode"
+
 Ext.USE_NATIVE_JSON = true;
 Ext.enableGarbageCollector = false;
 
@@ -98,7 +100,8 @@ WV = (function() {
 
         findByVtag: function(vtag)
         {
-            return vtagIndex[vtag];
+            // If there is only one view with the vtag then return it alone, otherwise return the whole array
+            return vtagIndex[vtag].length === 1 ? vtagIndex[vtag][0] : vtagIndex[vtag];
         },
 
         accumulate: function(cls, prop)
@@ -136,6 +139,7 @@ WV = (function() {
 
         create: function(vtype, config)
         {
+            vtype = vtype || 'view';
             return new vtypes[vtype](config);
         },
 
@@ -226,6 +230,11 @@ WV = (function() {
         isArray: Ext.isArray,
         override: Ext.override,
 
+        namespace: Ext.namespace,
+
+        requestAnimationFrame: window.requestAnimationFrame || window.msRequestAnimationFrame ||
+                               window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame,
+
         emptyFn: function() {},
 
         log: logAvailable ? function() {
@@ -251,6 +260,40 @@ WV = (function() {
         archive: function(root)
         {
             return JSON.stringify(root, replacer);
+        },
+
+        // Asynchronously load the view and pass it as an arg to the callback. Add an error if encountered
+        loadView: function(path, cb)
+        {
+            if (typeof cb !== 'function') { return; }
+
+            Ext.Ajax.request({
+              method: 'GET',
+              url: path,
+              disableCaching: true,
+              callback: function(opts, success, response)
+              {
+                var view;
+
+                if (!success)
+                {
+                  cb(null, 'View could not be loaded due to Ajax error');
+                }
+                else
+                {
+                  try {
+                    view = JSON.parse(response.responseText);
+                    view = WV.create(view.vtype, view);
+                  }
+                  catch (e) {
+                    cb(null, e);
+                    return;
+                  }
+
+                  cb(view);
+                }
+              }
+            });
         }
     };
 

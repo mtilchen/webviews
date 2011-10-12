@@ -36,7 +36,7 @@ WV.Link = WV.extend(WV.Label, {
 WV.Image = WV.extend(WV.View, {
     vtype: 'image',
     autoResizeMask: WV.RESIZE_NONE,
-    resizeSubViews: false,
+    resizeSubviews: false,
     preserveAspect: 'width',
     loaded: false,
     useNaturalSize: false,
@@ -116,7 +116,7 @@ WV.ScrollView = WV.extend(WV.View, {
         return this;
     },
 
-    setClipSubViews: function(clip)
+    setClipSubviews: function(clip)
     {
         return this;
     },

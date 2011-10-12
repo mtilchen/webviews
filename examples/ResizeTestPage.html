@@ -1,21 +1,20 @@
 <!DOCTYPE HTML>
-        
+
 <html>
 <head>
   <title>Resize Test Page</title>
-  
+
     <link rel="stylesheet" type="text/css" href="resources/css/webviews.css" />
 
     <script src="../webviews-debug.js"></script>
     <script>
-    
-        WV.init(function() {
 
-            var body = WV.Window;
-            body.setStyle('backgroundColor', 'red');
+        WV.init(function(win) {
+
+            win.setStyle('color', 'red');
 
             var e1 = new WV.View({
-                superView: body,
+                superView: win,
                 id: 'e1',
                 autoResizeMask: WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX | WV.RESIZE_RIGHT_FLEX /*| WV.RESIZE_LEFT_FLEX*/,
                 x: 0,
@@ -23,12 +22,13 @@
                 h: '50%',
                 w: '33.33%',
                 style: {
-                    backgroundColor: 'yellow',
-                    border: '1px solid black'
+                    color: 'yellow',
+                    borderWidth: 1,
+                    borderColor: 'black'
                 }
             });
             var e2 = new WV.View({
-                superView: body,
+                superView: win,
                 id: 'e2',
                 autoResizeMask: WV.RESIZE_LEFT_FLEX | WV.RESIZE_RIGHT_FLEX |
                                 WV.RESIZE_BOTTOM_FLEX |
@@ -38,12 +38,13 @@
                 h: '50%',
                 w: '33.34%',
                 style: {
-                    backgroundColor: 'yellow',
-                    border: '1px solid black'
+                    color: 'yellow',
+                    borderWidth: 1,
+                    borderColor: 'black'
                 }
             });
             var e3 = new WV.View({
-                superView: body,
+                superView: win,
                 id: 'e3',
                 autoResizeMask: WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_LEFT_FLEX | WV.RESIZE_WIDTH_FLEX,
                 x: '66.67%',
@@ -51,12 +52,13 @@
                 h: '50%',
                 w: '33.33%',
                 style: {
-                    backgroundColor: 'yellow',
-                    border: '1px solid black'
+                    color: 'yellow',
+                    borderWidth: 1,
+                    borderColor: 'black'
                 }
             });
             var e4 = new WV.View({
-                superView: body,
+                superView: win,
                 id: 'e4',
                 autoResizeMask: WV.RESIZE_RIGHT_FLEX |
                                 WV.RESIZE_TOP_FLEX |
@@ -66,12 +68,13 @@
                 h: '50%',
                 w: '50%',
                 style: {
-                    backgroundColor: 'yellow',
-                    border: '10px solid black'
+                    color: 'yellow',
+                    borderWidth: 10,
+                    borderColor: 'black'
                 }
             });
             var e5 = new WV.View({
-                superView: body,
+                superView: win,
                 id: 'e5',
                 autoResizeMask: WV.RESIZE_LEFT_FLEX |
                                 WV.RESIZE_TOP_FLEX |
@@ -81,8 +84,9 @@
                 h: '50%',
                 w: '50%',
                 style: {
-                    backgroundColor: 'yellow',
-                    border: '10px solid black'
+                    color: 'yellow',
+                    borderWidth: 10,
+                    borderColor: 'black'
                 }
             });
             var e6 = new WV.View({
@@ -97,9 +101,10 @@
                 w: '{e1}.w - 60',
                 draggable: true,
                 style: {
-                    backgroundColor: 'black',
-                    border: '1px solid red',
-                    borderRadius: '20px'
+                    color: 'black',
+                    borderWidth: 10,
+                    borderColor: 'red',
+                    cornerRadius: 20
                 }
             });
         });

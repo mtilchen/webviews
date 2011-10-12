@@ -34,7 +34,7 @@
             text: "View.js",
             path: "src/"
         },{
-            text: "View-Extensions.js",
+            text: "Image.js",
             path: "src/"
         },{
             text: "Window.js",

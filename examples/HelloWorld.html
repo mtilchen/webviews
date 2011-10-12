@@ -16,20 +16,19 @@
 
             win.setStyle('color', 'red');
 
-            win.addSubView({
-                x: 'center',
+            win.addSubview({
+                x: 600,
                 y: 'center',
                 w: 300,
                 h: 300,
                 autoResizeMask: WV.RESIZE_ALL,
                 style: {
-//                    color: 'black',
                     color: '#C8C8C8',
                     borderColor: 'black',
-                    borderWidth: 5,
-                    rotate: 30.0,
-                    transformOriginX: 1.0,
-                    transformOriginY: 0.0,
+                    borderWidth: 30,
+//                    rotate: 30.0,
+//                    transformOriginX: 1.0,
+//                    transformOriginY: 0.0,
                     cornerRadius: 30
                 },
                 mouseDown: function(e)
@@ -44,12 +43,13 @@
 
                     return WV.View.prototype.mouseUp.call(this, e);
                 },
-                subViews:[{
-                    x: 5,
+                subviews:[{
+                    x: -20,
                     y: 'center',
                     w: 100,
                     h: 100,
-                    autoResizeMask: WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_TOP_FLEX| WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX | WV.RESIZE_RIGHT_FLEX,
+                    autoResizeMask: WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_TOP_FLEX |
+                                    WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX | WV.RESIZE_RIGHT_FLEX,
                     style: {
                         color: 'blue',
                         borderColor: 'black',
@@ -64,7 +64,8 @@
                     y: 'center',
                     w: 100,
                     h: 100,
-                    autoResizeMask: WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_TOP_FLEX| WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX | WV.RESIZE_LEFT_FLEX,
+                    autoResizeMask: WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_TOP_FLEX|
+                                    WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX | WV.RESIZE_LEFT_FLEX,
                     style: {
                         color: 'blue',
                         borderColor: 'black',
@@ -76,21 +77,44 @@
                 }]
             });
 
-            win.addSubView({
+            win.addSubview({
                 id: 'textview',
                 vtype: 'text',
-                text: 'Dude!\n Where\'s\n my\n car?',
+                text: 'Dude!\n\n\n\n\n Where\'s\n my\n car?',
                 wrap: true,
-                align: 'center',
-                x: 100,
+                align: 'left',
+                x: 900,
                 y: 300,
                 w: 300,
-                h: 500,
+                h: 300,
                 autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_LEFT_FLEX,
                 style: {
                     color: 'white',
-                    font: '28pt Helvetica',
+                    font: '28pt Synchro LET',
                     textColor: 'blue'
+                }
+            });
+
+            win.addSubview({
+                id: 'img',
+                x: 300,
+                y: 300,
+                w: 300,
+                h: 200,
+                clipSubviews: true,
+                style: {
+                    borderColor: 'rgba(0,0,0,1)',
+                    borderWidth: 10,
+                    cornerRadius: 30,
+                    color: 'white',
+                    image: {
+//                        useNaturalSize: true,
+                        w: 300,
+                        h: 200,
+                        x: 0,
+                        y: 0,
+                        src: 'resources/examples/images/norah_xmas2.jpg'
+                    }
                 }
             });
         });

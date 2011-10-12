@@ -60,6 +60,8 @@ WV.style.Stylable = {
         return '';
     },
 
+    //TODO: Need setCornerRadius to mark superview as needing display if cornerradius shrinks
+
     setOpacity: function(op)
     {
         if (!(typeof op === 'number') || op === NaN)

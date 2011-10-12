@@ -47,9 +47,9 @@ WV.Control = WV.extend(WV.View, {
     constructor: function(config)
     {
         WV.Control.superclass.constructor.call(this, config);
-        if (!this.subViews.input)
+        if (!this.subviews.input)
         {
-            this.addSubView({
+            this.addSubview({
                 vtype: 'input',
                 vtag: 'input',
                 name: this.name,
@@ -63,7 +63,7 @@ WV.Control = WV.extend(WV.View, {
     {
         WV.Control.superclass.afterRender.call(this);
         // Putting the readOnly attribute in the template during rendering always causes it to be true.
-        var input = this.subViews.input;
+        var input = this.subviews.input;
 
         this.setReadOnly(this.readOnly);
         if (input)
@@ -87,7 +87,7 @@ WV.Control = WV.extend(WV.View, {
 
         if (this.readOnly) { this.resignFirstResponder(); }
 
-        var input = this.subViews.input;
+        var input = this.subviews.input;
 
         if (input && input.rendered && this.enabled)
         {
@@ -103,7 +103,7 @@ WV.Control = WV.extend(WV.View, {
     setEnabled: function(enabled)
     {
         WV.Control.superclass.setEnabled.call(this, enabled);
-        var input = this.subViews.input;
+        var input = this.subviews.input;
 
         if (input && input.rendered)
         {
@@ -139,7 +139,7 @@ WV.Control = WV.extend(WV.View, {
     {
         if (this.rendered)
         {
-            this[this.valuePropName] = this.subViews.input.dom.value;
+            this[this.valuePropName] = this.subviews.input.dom.value;
         }
         return this[this.valuePropName];
     },
@@ -150,11 +150,11 @@ WV.Control = WV.extend(WV.View, {
         this[this.valuePropName] = (val !== undefined && val !== null) ? val : '';
         if (this.rendered)
         {
-            this.subViews.input.dom.value = this[this.valuePropName];
+            this.subviews.input.dom.value = this[this.valuePropName];
         }
         else
         {
-            this.subViews.input.value = this[this.valuePropName];
+            this.subviews.input.value = this[this.valuePropName];
         }
         return this;
     },
@@ -284,9 +284,9 @@ WV.Button = WV.extend(WV.Control, {
     h: 25,
     w: 96,
     text: '',
-    clipSubViews: true,
+    clipSubviews: true,
     styleMap: new WV.style.Button(),
-    subViews: [{
+    subviews: [{
         vtag: 'outerborder',
         x: 1,
         y: 1,
@@ -317,9 +317,9 @@ WV.Button = WV.extend(WV.Control, {
     {
         WV.Button.superclass.constructor.call(this, config);
 
-        if (this.subViews.label)
+        if (this.subviews.label)
         {
-            this.subViews.label.text = this.text;
+            this.subviews.label.text = this.text;
         }
         return this;
     },
@@ -399,7 +399,7 @@ WV.ToggleButton = WV.extend(WV.Button, {
     vtype: 'togglebutton',
     h: 12,
     w: 35,
-    clipSubViews: false,
+    clipSubviews: false,
     selected: false,
     selectedValue: true,
     unselectedValue: false,
@@ -526,10 +526,10 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
     vtype: 'checkbox',
     h: 14,
     w: 14,
-    clipSubViews: false,
+    clipSubviews: false,
     text: 'Check',
     styleMap: new WV.style.CheckBox(),
-    subViews: [{
+    subviews: [{
         vtag: 'focusborder',
         h: 14,
         w: 14,
@@ -628,7 +628,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
     text: 'Radio',
     unselectedValue: null,
     styleMap: new WV.style.RadioButton(),
-    subViews: [{
+    subviews: [{
         vtag: 'button',
         x: 0,
         y: 'center',
@@ -681,7 +681,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
 WV.Matrix = WV.extend(WV.View, {
     vtype: 'matrix',
     cls: 'wv-matrix',
-    clipSubViews: true,
+    clipSubviews: true,
     cellData: null,
     cellVType: 'view',
     constructor: function(config)
@@ -733,7 +733,7 @@ WV.Matrix = WV.extend(WV.View, {
             {
                 this.cells[r][c] = this.createCellForPosition(r,c);
                 this.initCell(this.cells[r][c], r, c);
-                this.addSubView(this.cells[r][c]);
+                this.addSubview(this.cells[r][c]);
             }
         }
     },
@@ -765,11 +765,11 @@ WV.RadioGroup = WV.extend(WV.Matrix, {
     {
         var data = this.cellData ? this.cellData[row][column] : '';
 
-        cell.subViews.input.name = cell.name || this.name;
+        cell.subviews.input.name = cell.name || this.name;
 
         if (typeof data === 'string')
         {
-            cell.subViews.label.text = data;
+            cell.subviews.label.text = data;
         }
 
         // Ensure that the first 'selected' item encountered is the only selected item
@@ -861,7 +861,7 @@ WV.ListViewItem = WV.extend(WV.ToggleButton, {
     unselectedValue: null,
     text: 'Item',
     styleMap: new WV.style.ListViewItem(),
-    subViews: [{
+    subviews: [{
         vtag: 'innerborder',
         x: 0,
         y: 0,
@@ -973,7 +973,7 @@ WV.ListView = WV.extend(WV.Matrix, {
     },
     initCell: function(cell, row, column)
     {
-        cell.subViews.input.name = cell.name || this.name;
+        cell.subviews.input.name = cell.name || this.name;
 
         // Ensure that the first 'selected' item encountered is the only selected item unless multipleSelect is true
         if (cell.selected)
@@ -1055,7 +1055,7 @@ WV.TextField = WV.extend(WV.Control, {
     inputType: 'text',
     valuePropName: 'text',
     styleMap: new WV.style.TextComponent(),
-    subViews: [{
+    subviews: [{
         vtag: 'border',
         x: 2,
         y: 2,
@@ -1067,9 +1067,9 @@ WV.TextField = WV.extend(WV.Control, {
     constructor: function(config)
     {
         WV.TextField.superclass.constructor.call(this, config);
-        var input = this.subViews.input;
+        var input = this.subviews.input;
         input.setFrame({ x: 2, y: 2, w: this.w, h: this.h});
-        // Only initialize the state if we have to. It would otherwise already have been done in addSubView
+        // Only initialize the state if we have to. It would otherwise already have been done in addSubview
         if (input.stateful === false)
         {
             input.stateful = true;
@@ -1085,7 +1085,7 @@ WV.TextField = WV.extend(WV.Control, {
     setReadOnly: function(ro)
     {
         WV.TextField.superclass.setReadOnly.call(this, ro);
-        var input = this.subViews.input;
+        var input = this.subviews.input;
 
         if (input && this.enabled)
         {
@@ -1118,7 +1118,7 @@ WV.TextField = WV.extend(WV.Control, {
     becomeFirstResponder: function(preventSelect)
     {
         var result = WV.TextField.superclass.becomeFirstResponder.call(this),
-            input = this.subViews.input;
+            input = this.subviews.input;
 
         if (result === true)
         {
@@ -1132,7 +1132,7 @@ WV.TextField = WV.extend(WV.Control, {
     resignFirstResponder: function()
     {
         var result = WV.TextField.superclass.resignFirstResponder.call(this),
-            input = this.subViews.input;
+            input = this.subviews.input;
 
         if (result === true)
         {
@@ -1155,8 +1155,8 @@ WV.TextArea = WV.extend(WV.TextField, {
     vtype: 'textarea',
     h: 100,
     cls: 'wv-textarea',
-    subViews: [
-        WV.TextField.prototype.subViews[0],
+    subviews: [
+        WV.TextField.prototype.subviews[0],
     {
         vtag: 'input',
         tag: 'textarea',
@@ -1169,7 +1169,7 @@ WV.TextArea = WV.extend(WV.TextField, {
         // Make the innerHTML consistent with the new value
         if (this.rendered)
         {
-            this.subViews.input.dom.innerHTML = this[this.valuePropName];
+            this.subviews.input.dom.innerHTML = this[this.valuePropName];
         }
         return this;
     }

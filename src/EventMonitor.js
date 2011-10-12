@@ -59,8 +59,7 @@
                             createMouseEvent();
                             mouseDownOwner.mouseDragged(sharedMouseEvent);
                         }
-
-                        return false;
+                        //return false;
                     }
                 }
             },

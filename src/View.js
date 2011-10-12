@@ -21,8 +21,8 @@ WV.View = WV.extend(Ext.util.Observable, {
                     WV.RESIZE_TOP_FLEX  | WV.RESIZE_BOTTOM_FLEX,
     hidden: false,
     rendered: false,
-    resizeSubViews: true,
-    clipSubViews: false,
+    resizeSubviews: true,
+    clipSubviews: false,
     enabled: true,
     draggable: false,
     stateful: false,
@@ -31,7 +31,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     style: {},
 
-    subViews: [],
+    subviews: [],
 
     nextKeyView: null,
     previousKeyView: null,
@@ -75,22 +75,22 @@ WV.View = WV.extend(Ext.util.Observable, {
         // Animations keyed by their id
         this.animations = {};
 
-        // Put all the subViews we wish to add together (class level and config level) and add them all at once
-        var subViewsToAdd =  this.constructor.prototype.subViews.concat(config.subViews || []);
-        this.subViews = [];
+        // Put all the subviews we wish to add together (class level and config level) and add them all at once
+        var subviewsToAdd =  this.constructor.prototype.subviews.concat(config.subviews || []);
+        this.subviews = [];
 
         // Set the styles and other visual properties
         this.setStyle(style, true);
         this.setHidden(this.hidden);
-        this.setClipSubViews(this.clipSubViews);
+        this.setClipSubviews(this.clipSubviews);
         this.setEnabled(this.enabled);
 
         WV.addToCache(this);
 
-        // Add all of our subViews
-        for (var i = 0, l = subViewsToAdd.length; i < l; i++)
+        // Add all of our subviews
+        for (var i = 0, l = subviewsToAdd.length; i < l; i++)
         {
-            this.addSubView(subViewsToAdd[i]);
+            this.addSubview(subviewsToAdd[i]);
         }
 
         // Add ourself to the superView
@@ -99,13 +99,13 @@ WV.View = WV.extend(Ext.util.Observable, {
             // We have not really been added to a superview yet so prevent confusion by removing the reference
             var sv =  this.superView;
             delete this.superView;
-            sv.addSubView(this);
+            sv.addSubview(this);
         }
 
         return this;
     },
 
-    addSubView: function(view)
+    addSubview: function(view)
     {
         var sv = view.superView,
             vtag;
@@ -168,26 +168,26 @@ WV.View = WV.extend(Ext.util.Observable, {
                 view.convertDimensions();
             }
 
-            view.subViewIndex = this.subViews.length;
-            this.subViews[this.subViews.length] = view;
+            view.subviewIndex = this.subviews.length;
+            this.subviews[this.subviews.length] = view;
 
-            // Manage the vtag of the new subView if present. If this view already has a view with the same vtag
+            // Manage the vtag of the new subview if present. If this view already has a view with the same vtag
             // then turn the reference into an Array and store all siblings with identical vtags in it
             if (typeof view.vtag === 'string')
             {
-                vtag = this.subViews[view.vtag];
+                vtag = this.subviews[view.vtag];
 
                 if (!vtag)
                 {
-                    this.subViews[view.vtag] = view;
+                    this.subviews[view.vtag] = view;
                 }
                 else if (WV.isArray(vtag))
                 {
-                    this.subViews[view.vtag].push(view);
+                    this.subviews[view.vtag].push(view);
                 }
                 else
                 {
-                    this.subViews[view.vtag] = [vtag, view];
+                    this.subviews[view.vtag] = [vtag, view];
                 }
             }
             if (view.window) { view.setNeedsDisplay(); }
@@ -200,19 +200,19 @@ WV.View = WV.extend(Ext.util.Observable, {
     {
         var sv = this.superView;
 
-        if (sv && (typeof this.subViewIndex === 'number'))
+        if (sv && (typeof this.subviewIndex === 'number'))
         {
-            var i, l, superSubs = sv.subViews;
-            for (i = this.subViewIndex + 1, l = superSubs.length; i < l; i++)
+            var i, l, superSubs = sv.subviews;
+            for (i = this.subviewIndex + 1, l = superSubs.length; i < l; i++)
             {
-                superSubs[i].subViewIndex -= 1;
+                superSubs[i].subviewIndex -= 1;
             }
-            superSubs.splice(this.subViewIndex, 1);
+            superSubs.splice(this.subviewIndex, 1);
         }
 
         this.superView = undefined;
         this.nextResponder = undefined;
-        this.subViewIndex = undefined;
+        this.subviewIndex = undefined;
         this.window = undefined;
 
         if (sv) { sv.setNeedsDisplay(); }
@@ -254,27 +254,18 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             if (needsLayout)
             {
+                // Prevent drawing while geometry is recalculated
                 this.window.inLayout = true;
-                this.layoutSubViews();
+                this.layoutSubviews();
                 this.window.inLayout = false;
             }
 
-            // The new frame completely contains the old frame so just mark this view as needing display
-            if (WV.rectContainsRect({ x: this.x, y: this.y, w: this.w, h: this.h },
-                                    { x: previousX, y: previousY,  w: this.previousW,  h: this.previousH }))
-            {
-                this.window.setViewsNeedDisplay(this);
-            }
-            // Otherwise we need to redraw our superview at the very least
-            else if (this.superView)
-            {
-                this.superView.setNeedsDisplay(WV.rectUnion({ x: previousX, y: previousY, w: this.previousW, h: this.previousH },
-                                                            { x: this.x,    y: this.y,    w: this.w,         h: this.h }));
-            }
+            this.setNeedsDisplay(WV.rectUnion({ x: previousX, y: previousY, w: this.previousW, h: this.previousH },
+                                              { x: this.x,    y: this.y,    w: this.w,         h: this.h }));
         }
         else if (needsLayout)
         {
-            this.layoutSubViews();
+            this.layoutSubviews();
         }
 
         return this;
@@ -309,23 +300,39 @@ WV.View = WV.extend(Ext.util.Observable, {
     // rect must be in coordinate system of "this"
     setNeedsDisplay: function(rect)
     {
-        var bounds = { x: 0, y:0, w: this.w, h: this.h },
-            invalid = rect || bounds,
+        var frame = { x: this.x, y: this.y, w: this.w, h: this.h },
+            invalid = rect || frame,
             sv = this.superView;
 
-        // TODO: Keep track of the invalid rect
+        // Find the first non-transparent view to start with
+        if (sv && !this.isOpaque())
+        {
+            sv.setNeedsDisplay(this.convertRectToView(invalid, sv));
+        }
 
         // If our current frame completely contains the invalid rect then we are done, just draw ourself on top
-        if (!WV.rectContainsRect(bounds, invalid) && sv)
+        else if (sv && !WV.rectContainsRect(frame, invalid))
         {
             // Otherwise find our first ancestor that completely contains the invalid rect
-            sv.setNeedsDisplay(this.convertRectToView(invalid, this.superView));
+            sv.setNeedsDisplay(this.convertRectToView(invalid, sv));
         }
 
         else if (this.window)
         {
             this.window.setViewsNeedDisplay(this);
+            // Now make sure to draw all the views that could potentially be drawn beneath the current one
+            // because they are further right on the tree
+            // TODO: optimize this by looking at the frames for all the views to the right to see if they intersect with the invalid rect
+            while (sv)
+            {
+              for (var i = this.subviewIndex + 1; i < sv.subviews.length; i++)
+              {
+                this.window.setViewsNeedDisplay(sv.subviews[i]);
+              }
+              sv = sv.superView;
+            }
         }
+        return this;
     },
 
     redrawIfNeeded: function(top)
@@ -337,7 +344,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             var ctx = this.window.context2d,
                 frame = this.getFrame(),
                 origin,
-                i, l = this.subViews.length;
+                i, l = this.subviews.length;
 
             ctx.save();
 
@@ -352,17 +359,22 @@ WV.View = WV.extend(Ext.util.Observable, {
             }
 
             ctx.translate(origin.x, origin.y);
+
             this.baseDraw(frame, ctx);
+            this.drawBorder(frame, ctx);
 
             if (l)
             {
+                if (this.clipSubviews)
+                {
+                    this.clip(ctx, frame.w, frame.h, this.style.cornerRadius || 0, 0);
+                }
                 for (i = 0; i < l; i++)
                 {
-                    this.subViews[i].window = this.window; // TODO: Do this somewhere else?
-                    this.subViews[i].redrawIfNeeded(false);
+                    this.subviews[i].window = this.window; // TODO: Do this somewhere else?
+                    this.subviews[i].redrawIfNeeded(false);
                 }
             }
-
             ctx.restore();
             this.needsDisplay = false;
         }
@@ -373,9 +385,10 @@ WV.View = WV.extend(Ext.util.Observable, {
         var st = this.style,
             bw = st.borderWidth || 0,
             cr = st.cornerRadius,
+            clip = this.clipSubviews,
+            transparentBlack = 'rgba(0,0,0,0)',
             deg2Rad = Math.PI * 2 / 360;
 
-        // TODO: Draw basic attributes here
         ctx.globalAlpha = st.opacity || 1.0;
 
         if (st.translateX || st.translateY)
@@ -414,76 +427,173 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             ctx.scale(st.scaleX || 1, st.scaleY || 1);
         }
+        // Draw the elements of views with a corner radius in a particular order
         if (cr)
         {
-            var w = this.w - bw / 2,
-                h = this.h - bw / 2,
-                x = bw / 2,
-                y = bw / 2;
+            var w = this.w,
+                h = this.h,
+                t = 0;
 
-            ctx.beginPath();
-            ctx.moveTo(x, cr + y);
-            ctx.arcTo(x, y, cr + x, y, cr);
-            ctx.lineTo(w - cr, y);
-            ctx.arcTo(w, y, w, cr + y, cr);
-            ctx.lineTo(w, h - cr);
-            ctx.arcTo(w, h, w - cr, h, cr);
-            ctx.lineTo(cr + x, h);
-            ctx.arcTo(x, h, x, h - cr, cr);
-            ctx.lineTo(x, cr + y);
-            ctx.closePath();
+            if (clip || !bw)
+            {
+                if (clip)
+                {
+                    ctx.save();
+                    this.clip(ctx, this.w, this.h, cr, 0);
+                }
+
+                if (!bw)
+                {
+                    ctx.fillStyle = st.color || transparentBlack;
+                    ctx.fill();
+                    this.drawImage(rect, ctx);
+                }
+            }
+
             if (bw)
             {
-                ctx.strokeStyle = st.borderColor || 'black';
-                ctx.lineWidth = bw;
-                ctx.stroke();
+                w = Math.ceil(this.w - bw);
+                h = Math.ceil(this.h - bw);
+                t = bw;
 
                 // Draw the background just inside the border
-                w = this.w - bw,
-                h = this.h - bw,
-                x = bw,
-                y = bw,
-                cr = Math.abs(cr - bw/2);
+                var crIn = Math.abs(cr - bw);
 
                 ctx.beginPath();
-                ctx.moveTo(x, cr + y);
-                ctx.arcTo(x, y, cr + x, y, cr);
-                ctx.lineTo(w - cr, y);
-                ctx.arcTo(w, y, w, cr + y, cr);
-                ctx.lineTo(w, h - cr);
-                ctx.arcTo(w, h, w - cr, h, cr);
-                ctx.lineTo(cr + x, h);
-                ctx.arcTo(x, h, x, h - cr, cr);
-                ctx.lineTo(x, cr + y);
+                ctx.moveTo(t, crIn);
+                ctx.arcTo(t, t, t + crIn, t, crIn);
+                ctx.lineTo(w - crIn, t);
+                ctx.arcTo(w, t, w, t + crIn, crIn);
+                ctx.lineTo(w, h - crIn);
+                ctx.arcTo(w, h, w - crIn, h, crIn);
+                ctx.lineTo(t + crIn, h);
+                ctx.arcTo(t, h, t, h - crIn, crIn);
                 ctx.closePath();
-                ctx.fillStyle = st.color || 'black';
+
+                ctx.fillStyle = st.color || transparentBlack;
                 ctx.fill();
-            }
-            else
-            {
-                ctx.fillStyle = st.color || 'black';
-                ctx.fill();
+                this.drawImage(rect, ctx);
             }
         }
         else
         {
-            ctx.fillStyle = st.color || 'black';
+            ctx.fillStyle = st.color || transparentBlack;
 
+            if (clip)
+            {
+              ctx.save();
+              this.clip(ctx, this.w, this.h);
+            }
             if (bw)
             {
-              ctx.strokeStyle = st.borderColor || 'black';
-              ctx.lineWidth = bw;
-              ctx.strokeRect(bw / 2, bw / 2, this.w - bw, this.h - bw);
               ctx.fillRect(bw, bw, this.w - 2 * bw, this.h - 2 * bw);
             }
+            else
+            {
+              ctx.fillRect(0, 0, this.w, this.h);
+            }
 
-            else { ctx.fillRect(0, 0, this.w, this.h); }
+            this.drawImage(rect, ctx);
         }
 
         this.draw(rect, ctx);
+
+        if (clip)
+        {
+            ctx.restore();
+        }
+    },
+
+    clip: function(ctx, w, h, cr, t)
+    {
+        if (cr)
+        {
+            ctx.beginPath();
+            ctx.moveTo(t, cr);
+            ctx.arcTo(t, t, t + cr, t, cr - t);
+            ctx.lineTo(w - cr, t);
+            ctx.arcTo(w, t, w, t + cr, cr - t);
+            ctx.lineTo(w, h - cr);
+            ctx.arcTo(w, h, w - cr, h, cr - t);
+            ctx.lineTo(t + cr, h);
+            ctx.arcTo(t, h, t, h - cr, cr - t);
+            ctx.closePath();
+        }
+        else
+        {
+            ctx.rect(0, 0, w, h);
+        }
+        ctx.clip();
+    },
+
+    drawBorder: function(rect, ctx)
+    {
+        var st = this.style,
+            bw = st.borderWidth || 0,
+            cr = st.cornerRadius,
+            transparentBlack = 'rgba(0,0,0,0)',
+            w = this.w - bw/2,
+            h = this.h - bw/2,
+            t = bw/2;
+
+        if (bw)
+        {
+            ctx.strokeStyle = st.borderColor || transparentBlack;
+            ctx.lineWidth = bw;
+
+            if (cr)
+            {
+                ctx.beginPath();
+                ctx.moveTo(t, cr);
+                ctx.arcTo(t, t, t + cr, t, cr - t);
+                ctx.lineTo(w - cr, t);
+                ctx.arcTo(w, t, w, t + cr, cr - t);
+                ctx.lineTo(w, h - cr);
+                ctx.arcTo(w, h, w - cr, h, cr - t);
+                ctx.lineTo(t + cr, h);
+                ctx.arcTo(t, h, t, h - cr, cr - t);
+                ctx.closePath();
+
+                ctx.stroke();
+            }
+            else
+            {
+                w = this.w - bw,
+                h = this.h - bw,
+                ctx.strokeRect(t, t, w, h);
+            }
+        }
     },
 
     draw: function(rect, ctx) { },
+
+    drawImage: function(rect, ctx)
+    {
+        if (this.style.image)
+        {
+            // Convert a config object to a WV.Image instance
+            if (!(this.style.image instanceof WV.Image))
+            {
+                this.style.image = new WV.Image(this.style.image, this);
+            }
+
+            this.style.image.draw(rect, ctx);
+        }
+    },
+
+    imageDidLoad: function(image)
+    {
+        return this.setNeedsDisplay();
+    },
+
+    isOpaque: function()
+    {
+       // TODO: Make this rgba opacity detection correct
+        var st = this.style,
+            opacity = st.opacity || 1;
+
+        return !(opacity < 1 || !st.color || st.color === 'rgba(0,0,0,0)')
+    },
 
     clear: function(previous)
     {
@@ -634,21 +744,31 @@ WV.View = WV.extend(Ext.util.Observable, {
         return this.h - (2 * (this.style.borderWidth || 0));
     },
 
-    setHidden: function(hidden)
+    setHidden: function(hide)
     {
-        var dirty = (this.hidden !== (hidden === true));
+        var sv = this.superView;
 
-        this.hidden = hidden === true;
-        if (dirty)
+        if (!this.hidden && hide)
         {
+            this.hidden = true;
+           //TODO: Need to hide subviews outside of our bounds
+            if (sv) { sv.setNeedsDisplay(); }
+        }
+        else if (this.hidden && !hide)
+        {
+            this.hidden = false;
             this.setNeedsDisplay();
         }
         return this;
     },
 
-    setClipSubViews: function(clip)
+
+    setClipSubviews: function(clip)
     {
-        this.clipSubViews = clip === true;
+        //TODO: If we are turning clipping on then we are shrinking and need to repaint our superview
+        //TODO: Make sure subviews are not drawn outside of our bounds with clipping on
+        this.clipSubviews = clip === true;
+        this.setNeedsDisplay();
         return this;
     },
 
@@ -679,9 +799,9 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     destroy: function(top)
     {
-        for (var i = 0, l = this.subViews.length; i < l; i++)
+        for (var i = 0, l = this.subviews.length; i < l; i++)
         {
-            this.subViews[i].destroy(false);
+            this.subviews[i].destroy(false);
         }
 
         WV.removeFromCache(this);
@@ -695,11 +815,11 @@ WV.View = WV.extend(Ext.util.Observable, {
         this.rendered = false;
     },
 
-    layoutSubViews: function()
+    layoutSubviews: function()
     {
-        if (!this.resizeSubViews) { return this; }
+        if (!this.resizeSubviews) { return this; }
 
-        var subs = this.subViews,
+        var subs = this.subviews,
             i, l = subs.length;
 
         for (i = 0; i < l; i++)
@@ -788,7 +908,7 @@ WV.View = WV.extend(Ext.util.Observable, {
     hitTest: function(point)
     {
         var convP, hit,
-            subs = this.subViews,
+            subs = this.subviews,
             sv = this.superView;
 
         if (this.hidden || !this.enabled)
@@ -1000,11 +1120,11 @@ WV.View = WV.extend(Ext.util.Observable, {
 
             if (shallow !== true)
             {
-                for (i = 0,l = this.subViews.length; i < l; i++)
+                for (i = 0,l = this.subviews.length; i < l; i++)
                 {
-                    if (this.subViews[i].stateful === true)
+                    if (this.subviews[i].stateful === true)
                     {
-                        this.subViews[i].setState(this.state, shallow, force);
+                        this.subviews[i].setState(this.state, shallow, force);
                     }
                 }
             }

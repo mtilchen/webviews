@@ -10,33 +10,6 @@
         uncommittedAnimations = [],
         animationLoopTask = null;
 
-    function adjustFrame(anim)
-    {
-        var frames = anim.totalFrames,
-            frame = anim.currentFrame,
-            duration = anim.duration,
-            expected = (frame * duration * SEC_MS / frames),
-            elapsed = (Date.now() - anim.startTime),
-            tweak = 0;
-
-        if (elapsed < duration * SEC_MS)
-        {
-            tweak = Math.round((elapsed / expected - 1) * frame);
-        }
-        else
-        {
-            tweak = frames - (frame + 1);
-        }
-        if (tweak > 0 && isFinite(tweak))
-        {
-            if (frame + tweak >= frames)
-            {
-                tweak = frames - (frame + 1);
-            }
-            anim.currentFrame += tweak;
-        }
-    }
-
     function commitAnimations()
     {
         var anim,
@@ -46,11 +19,12 @@
         for (i = 0, l = uncommittedAnimations.length; i < l; i++)
         {
             anim = uncommittedAnimations[i];
-            anim.currentFrame = 0;
+            anim.lastFrame = -1;
             anim.totalFrames = Math.ceil(FPS * anim.duration);
             anim.drawnFrames = 0;
             anim.startTime =  startTime + ((parseFloat(anim.delay) * SEC_MS) || 0);
             anim.running = false;
+            anim.cancelled = false;
             activeViews[anim.owner.id] = anim.owner;
         }
         uncommittedAnimations = [];
@@ -60,9 +34,11 @@
 
     function runAnimations()
     {
+        var renderFunc = WV.requestAnimationFrame || setInterval;
+
         if (animationLoopTask) { return; }
 
-        animationLoopTask = setInterval(function() {
+        animationLoopTask = renderFunc(function(now) {
             var anim,
                 animId,
                 view,
@@ -71,9 +47,9 @@
                 delay,
                 newVal,
                 reRun,
-                deactivatedIndexList = [],
                 futureAnimTask = null;
 
+            now = now || Date.now();
             for (var viewId in activeViews)
             {
                 view = activeViews[viewId];
@@ -83,9 +59,15 @@
                     reRun = false;
                     anim = view.animations[animId];
 
-                    if (!anim.running)
+                    if (anim.cancelled)
                     {
-                        delay = anim.startTime - Date.now();
+                        delete view.animations[animId];
+                        view._animCount--;
+                    }
+
+                    else if (!anim.running)
+                    {
+                        delay = anim.startTime - now;
                         if (delay <= 0)
                         {
                             anim.running = true;
@@ -105,14 +87,14 @@
                             futureAnimTask = setTimeout(runAnimations, shortestDelay);
                         }
                     }
-                    if (anim.running)
+                    else
                     {
-                        // Run a frame
-                        if (anim.currentFrame < anim.totalFrames)
+                        // Compute the current frame and only draw it if we need to
+                        anim.currentFrame = Math.min(((now - anim.startTime) / SEC_MS * FPS), anim.totalFrames);
+                        if ((anim.currentFrame > anim.lastFrame) && (anim.currentFrame <= anim.totalFrames))
                         {
                             dirty = true;
-                            anim.currentFrame++;
-                            adjustFrame(anim);
+                            anim.lastFrame = anim.currentFrame;
                             view.rendered = false; // Hack, but it prevents any writes to the DOM until we are done
 
                             if (anim.isColor) // We need to ease r, g and b independently
@@ -152,13 +134,13 @@
                             view.rendered = true;
                             if (anim.needsLayout)
                             {
-                                view.layoutSubViews();
+                                view.layoutSubviews();
                             }
                         }
                         // We're done
-                        else
+                        if (anim.currentFrame >= anim.totalFrames)
                         {
-                            var realDuration = Date.now() - anim.startTime,
+                            var realDuration = now - anim.startTime,
                                 stats = {
                                     duration: realDuration,
                                     frames: anim.drawnFrames,
@@ -218,8 +200,13 @@
                 clearInterval(animationLoopTask);
                 animationLoopTask = null;
             }
+            else if (WV.requestAnimationFrame)
+            {
+               animationLoopTask = null;
+               runAnimations();
+            }
             commitAnimations();
-        }, (1/FPS) * SEC_MS);
+        }, (1/FPS) * SEC_MS)  ;
     }
 
     WV.Animation = WV.extend(Object, {
@@ -331,7 +318,7 @@
             {
                 var anim;
                 config.owner = this;
-                anim = new WV.Animation(config);
+                anim = config instanceof WV.Animation ? anim : new WV.Animation(config);
                 uncommittedAnimations.push(anim);
                 this._animCount = this._animCount || 0;
                 this._animCount += 1;
@@ -342,7 +329,19 @@
                     commitAnimations();
                 }
             }
-            return this;
+            return anim;
+        },
+        removeAllAnimations: function()
+        {
+          for (var animId in this.animations)
+          {
+              this.removeAnimation(this.animations[animId]);
+          }
+        },
+        removeAnimation: function(animation)
+        {
+            // The animation loop will pick this up and it will be removed properly
+           this.animations[animation.id].cancelled = true;
         }
     });
 

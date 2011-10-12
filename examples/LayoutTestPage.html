@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-        
+
 <html>
 <head>
   <title>Layout Test Page</title>
@@ -9,13 +9,13 @@
     <script src="../webviews-debug.js"></script>
     <script src="http://maps.google.com/maps?file=api&v=2.x&key=ABQIAAAA2CKu_qQN-JHtlfQ5L7BLlRT2yXp_ZAY8_ufC3CFXhHIE1NvwkxQl3I3p2yrGARYK4f4bkjp9NHpm5w"></script>
     <script>
-    
-        WV.init(function() {
+
+        WV.init(function(win) {
 
             this.setStyle('backgroundColor', 'red');
 
             var e1 = new WV.ScrollView({
-                superView: this,
+                superView: win,
                 id: 'e1',
                 autoResizeMask: WV.RESIZE_NONE,
                 x: 0,
@@ -148,7 +148,7 @@
                         border: '2px solid black',
                         transform: {
                             vtype: 'transform2d',
-                            rotate: '-25deg'    
+                            rotate: '-25deg'
                         },
                         transformOrigin: 'center',
                         borderRadius: '10px',
