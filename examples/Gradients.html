@@ -14,56 +14,57 @@
 
         WV.init(function(win) {
 
-            win.setStyle('backgroundColor', 'black');
+            win.setStyle('color', 'black');
 
-            win.addSubView({
+            win.addSubview({
                 x: 50,
                 y: 50,
                 h: '40%',
                 w: '40%',
                 autoResizeMask: WV.RESIZE_ALL,
                 style: {
-                    border: '5px solid white',
-                    borderRadius: '20px',
-                    backgroundImage: new WV.style.LinearGradient({
-                        startFrom: 'top',
+                    borderWidth: 5,
+                    borderColor: 'white',
+                    cornerRadius: 20,
+                    linearGradient: {
                         stops: ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
-                    })
+                    }
                 }
             });
 
-            win.addSubView({
+            win.addSubview({
                 x: 'w - this.w - 50',
                 y: 50,
                 h: '40%',
                 w: '40%',
                 autoResizeMask: WV.RESIZE_ALL,
                 style: {
-                    border: '5px solid white',
-                    borderRadius: '20px',
-                    backgroundImage: new WV.style.LinearGradient({
-                        startFrom: 'top',
+                    borderWidth: 5,
+                    borderColor: 'white',
+                    cornerRadius: 20,
+                    linearGradient: {
+                        startFrom: 'top-left',
                         stops: ['gray',
                         {
                             color: 'white',
                             length: 0.33
                         }, 'gray']
-                    })
+                    }
                 }
             });
 
-            win.addSubView({
+            win.addSubview({
                 x: 50,
                 y: 'h - this.h - 50',
                 h: '40%',
                 w: '40%',
                 autoResizeMask: WV.RESIZE_ALL,
                 style: {
-                    border: '5px solid white',
-                    borderRadius: '20px',
-                    backgroundImage: {
-                        vtype: 'lineargradient',
-                        startFrom: 'left bottom',
+                    borderWidth: 5,
+                    borderColor: 'white',
+                    cornerRadius: 20,
+                    linearGradient: {
+                        startFrom: 'bottom-left',
                         stops: [
                             'orange',
                             {
@@ -84,39 +85,22 @@
                 }
             });
 
-            win.addSubView({
+            win.addSubview({
                 x: 'w - this.w - 50',
                 y: 'h - this.h - 50',
                 h: '40%',
                 w: '40%',
                 autoResizeMask: WV.RESIZE_ALL,
                 style: {
-                    border: '5px solid white',
-                    borderRadius: '20px',
-                    backgroundImage: {
-                        vtype: 'lineargradient',
+                    borderWidth: 5,
+                    borderColor: 'white',
+                    cornerRadius: 20,
+                    linearGradient: {
                         startFrom: 'left',
-                        stops: [
-                            new WV.style.Color({
-                                r: 0,
-                                g: 0,
-                                b: 255,
-                                a: 1.0
-                            }), {
-                                color: {
-                                    vtype: 'color',
-                                    r: 255,
-                                    g: 255,
-                                    b: 255,
-                                    a: 1.0 },
+                        stops: ['rgba(0,0,255,1.0)', {
+                                color: 'rgba(255,255,255,1.0)',
                                 length: 0.25
-                            },
-                            new WV.style.Color({
-                                r: 255,
-                                g: 0,
-                                b: 0,
-                                a: 1.0
-                            })]
+                            }, 'rgba(255,0,0,1.0)']
                     }
                 }
             });

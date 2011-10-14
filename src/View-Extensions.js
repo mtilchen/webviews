@@ -116,7 +116,7 @@ WV.ScrollView = WV.extend(WV.View, {
         return this;
     },
 
-    setClipSubviews: function(clip)
+    setClipToBounds: function(clip)
     {
         return this;
     },

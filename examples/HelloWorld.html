@@ -25,11 +25,16 @@
                 style: {
                     color: '#C8C8C8',
                     borderColor: 'black',
-                    borderWidth: 30,
-//                    rotate: 30.0,
-//                    transformOriginX: 1.0,
-//                    transformOriginY: 0.0,
-                    cornerRadius: 30
+                    borderWidth: 20,
+                    rotate: 30.0,
+                    transformOriginX: 1.0,
+                    transformOriginY: 0.0,
+                    cornerRadius: 30,
+                    shadow: {
+                        blurRadius: 2,
+                        offsetX: 10,
+                        offsetY: 30
+                    }
                 },
                 mouseDown: function(e)
                 {
@@ -91,7 +96,13 @@
                 style: {
                     color: 'white',
                     font: '28pt Synchro LET',
-                    textColor: 'blue'
+                    textColor: 'blue',
+                    shadow: {
+                        blurRadius: 20,
+                        color: 'black',
+                        offsetX: 0,
+                        offsetY: 0
+                    }
                 }
             });
 
@@ -101,18 +112,15 @@
                 y: 300,
                 w: 300,
                 h: 200,
-                clipSubviews: true,
+                clipToBounds: true,
                 style: {
-                    borderColor: 'rgba(0,0,0,1)',
+                    borderColor: 'rgba(0,0,0,0.5)',
                     borderWidth: 10,
                     cornerRadius: 30,
                     color: 'white',
                     image: {
-//                        useNaturalSize: true,
                         w: 300,
                         h: 200,
-                        x: 0,
-                        y: 0,
                         src: 'resources/examples/images/norah_xmas2.jpg'
                     }
                 }

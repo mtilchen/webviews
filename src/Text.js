@@ -95,13 +95,12 @@ WV.Text = WV.extend(WV.View, {
         }
         this.setNeedsDisplay();
     },
-    baseDraw: function(rect, ctx)
+    draw: function(ctx, rect)
     {
         var font = this.style.font,
             height = WV.Text.measure(font, this.lines[0]).h,
             startX;
 
-        WV.Text.superclass.baseDraw.call(this, rect, ctx);
         ctx.font = font;
         ctx.fillStyle = this.style.textColor || 'black';
         ctx.textBaseline = 'top';
@@ -114,11 +113,11 @@ WV.Text = WV.extend(WV.View, {
                 break;
             case 'center':
                 ctx.textAlign = 'center';
-                startX = (this.w / 2);
+                startX = (rect.w / 2);
                 break;
             case 'right':
                 ctx.textAlign = 'end';
-                startX = this.w;
+                startX = rect.w;
                 break;
             default:
                 ctx.textAlign = 'start';

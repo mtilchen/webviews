@@ -2,6 +2,8 @@
 WV.style = {};
 
 WV.style.Stylable = {
+
+    // TODO: Support paths like: shadow.color
     // name can be an object and value === true specifies that the "set" is additive, it will not remove styles not present in the new style object
     // Otherwise, name and value act as one would expect
     setStyle: function(name, value)
@@ -23,7 +25,6 @@ WV.style.Stylable = {
             {
                 this.setStyle(s, name[s]);
             }
-            this.setNeedsDisplay();
         }
 
         else
@@ -44,9 +45,11 @@ WV.style.Stylable = {
             {
                 this.style[name] = value;
             }
+
+            // TODO: Intelligently decide this based on the style that is changing, don't just default to the superview
+            (this.superView || this).setNeedsDisplay();
         }
 
-        this.setNeedsDisplay();
         return this;
     },
 
@@ -59,8 +62,6 @@ WV.style.Stylable = {
     {
         return '';
     },
-
-    //TODO: Need setCornerRadius to mark superview as needing display if cornerradius shrinks
 
     setOpacity: function(op)
     {
@@ -76,105 +77,66 @@ WV.style.Stylable = {
         else { this._prevOpacity = op; } // See View.setEnabled
 
         return this;
+    },
+
+  //TODO: Need setImage
+  //TODO: Need setRadialGradient
+ //TODO: Need setCornerRadius to mark superview as needing display if cornerradius shrinks
+
+    setLinearGradient: function(gradient)
+    {
+        if (gradient && typeof gradient === 'object')
+        {
+            if (gradient instanceof WV.style.LinearGradient)
+            {
+              this.style.linearGradient = gradient;
+            }
+            else // We got a config object
+            {
+              this.style.linearGradient = new WV.style.LinearGradient(gradient);
+            }
+        }
+
+        return this;
+    },
+
+    setShadow: function(shadow)
+    {
+        if (shadow && typeof shadow === 'object')
+        {
+            if (shadow instanceof WV.style.BoxShadow)
+            {
+              this.style.shadow = shadow;
+            }
+            else // We got a config object
+            {
+              this.style.shadow = new WV.style.BoxShadow(shadow);
+            }
+        }
+        return this;
     }
 };
 
-WV.style.Color = WV.extend(Object, {
-    vtype: 'color',
-    r: 0,
-    g: 0,
-    b: 0,
-    a: 1,
-    colorName: null,
-    constructor: function(config)
-    {
-        var rgb = ['r', 'g', 'b'];
-
-        if (typeof config === 'string')
-        {
-            var vals,
-                self = this,
-                rgbRegEx = /rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)/,
-                rgbaRegEx = /rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(0|1|1\.0|0?\.[0-9]{1,2})\s*\)/;
-
-            // Look for an #RGB or #RRGGBB style
-            if (config.indexOf('#') === 0)
-            {
-                if (config.length === 4)
-                {
-                    var ch;
-
-                    Ext.each(rgb, function(color, idx) {
-                        ch = config.charAt(idx + 1);
-                        self[color] = parseInt(ch + ch, 16);
-                    });
-                }
-                else if (config.length === 7)
-                {
-                    Ext.each(rgb, function(color, idx) {
-                        self[color] = parseInt(config.substr((idx * 2) + 1, 2), 16);
-                    });
-                }
-                else { throw new Error('Invalid Color: ' + config); }
-            }
-            // Look for rgb(0,0,0) or rgba(0,0,0,0) style
-            else if (vals = config.match(rgbaRegEx))
-            {
-                this.r = parseInt(vals[1]);
-                this.g = parseInt(vals[2]);
-                this.b = parseInt(vals[3]);
-                this.a = parseFloat(vals[4]);
-            }
-            else if (vals = config.match(rgbRegEx))
-            {
-                Ext.each(rgb, function(color, idx) {
-                    self[color] = parseInt(vals[idx + 1]);
-                });
-            }
-            else // Must be 'white', 'blue' etc...
-            {
-                this.colorName = config;
-            }
-        }
-        else
-        {
-            WV.apply(this, config);
-        }
-    },
-    toString: function()
-    {
-        return this.colorName || String.format('rgba({0},{1},{2},{3})',
-                                                      this.r, this.g,
-                                                      this.b, this.a);
-    }
-});
 
 WV.style.BoxShadow = WV.extend(Object, {
     vtype: 'boxshadow',
-    xOffset: '0px',
-    yOffset: '0px',
-    blurRadius: '0px',
-    spreadRadius: '0px',
+    offsetX: 5,
+    offsetY: 5,
+    blurRadius: 0,
+    spreadRadius: 0,
     inset: false,
-    color: new WV.style.Color('rgba(0,0,0,0.5'),
+    color: 'rgba(0,0,0,0.5)',
     constructor: function(config)
     {
         WV.apply(this, config);
-        if (typeof this.color === 'string' || this.color.hasOwnProperty('vtype'))
-        {
-            this.color = new WV.style.Color(this.color);
-        }
     },
-    toString: function()
+    apply: function(ctx)
     {
-        var str = this.inset ? 'inset ' : '';
-        str += String.format('{0} {1} {2} {3} {4}',
-                              this.color.toString(), this.xOffset,
-                              this.yOffset, this.blurRadius,
-                              this.spreadRadius);
-        return str;
+      ctx.shadowOffsetX = this.offsetX;
+      ctx.shadowOffsetY = this.offsetY;
+      ctx.shadowBlur = this.blurRadius;
+      ctx.shadowColor = this.color;
     }
-
 });
 
 WV.style.LinearGradient = WV.extend(Object, {
@@ -190,77 +152,52 @@ WV.style.LinearGradient = WV.extend(Object, {
         {
             var stop, i, l;
 
-            // Normalize stops into: { color: WV.style.Color, length: 0.50 }
+            // Normalize stops into: { color: 'css string', length: 0.50 }
             for (i = 0, l = stops.length; i < l; i++)
             {
-                stop = typeof stops[i] === 'string' ? new WV.style.Color(stops[i])
+                stop = typeof stops[i] === 'string' ? { color: stops[i], length: (i/(stops.length-1)).toFixed(2) }
                                                     : stops[i];
-
-                if (stop instanceof WV.style.Color)
-                {
-                    stop = {
-                        color: stop,
-                        length: (i/(stops.length-1)).toFixed(2)
-                    }
-                }
-                if (stop.color.hasOwnProperty('vtype'))
-                {
-                    stop.color = new WV.style.Color(stop.color);
-                }
                 stops[i] = stop;
             }
+
+            this.stops = stops;
         }
-        else { throw new Error('Invalid stops config: ' + this.stops);}
+        else { throw new Error('Invalid stops config: ' + this.stops); }
     },
-    // Default to Mozilla syntax (no angle yet as others do not support it.
-    toString: function()
+
+    toCanvasGradient: function(ctx, bounds)
     {
+        // TODO: Support angle
         var i, l,
             stops = this.stops,
-            str = String.format('-moz-linear-gradient({0}', this.startFrom);
+            startX = bounds.w/2,
+            startY = 0,
+            endX = startX,
+            endY = bounds.h,
+            gradient;
+
+        switch(this.startFrom)
+        {
+          case 'top-left':
+            startX = 0; startY = 0; endX = bounds.w; endY = bounds.h;
+            break;
+          case 'left':
+            startX = 0; startY = bounds.h/2; endX = bounds.w; endY = startY;
+            break;
+          case 'bottom-left':
+            startX = 0; startY = bounds.h; endX = bounds.w; endY = 0;
+            break;
+          default:
+            startX = bounds.w/2; startY = 0; endX = startX; endY = bounds.h;
+        }
+
+        gradient = ctx.createLinearGradient(startX, startY, endX, endY);
+
         for (i = 0, l = stops.length; i < l; i++)
         {
-            str += String.format(', {0} {1}%', stops[i].color.toString(),
-                                               stops[i].length * 100);
+          gradient.addColorStop(stops[i].length, stops[i].color);
         }
-        str += ')';
-        return str;
-    }
-});
 
-WV.style.Transform2D = WV.extend(Object, {
-    vtype: 'transform2d',
-    translateX: '0px',
-    translateY: '0px',
-    rotate: '0deg',
-    scaleX: 1.0,
-    scaleY: 1.0,
-    skewX: '0deg',
-    skewY: '0deg',
-    // m11,m12,m21,m22
-    constructor: function(config)
-    {
-        WV.apply(this, config);
-    },
-    toString: function()
-    {
-        var str = '';
-        // Order is translate, rotate, skew, scale as this is the order of the
-        // IE Matrix filter override. Ability to specfy the order might be nice.
-        if (this.hasOwnProperty('translateX') || this.hasOwnProperty('translateY'))
-        {
-            str += String.format('translate({0}, {1})', this.translateX, this.translateY);
-        }
-        if (this.hasOwnProperty('rotate'))
-        {
-            str += String.format('rotate({0})', this.rotate);
-        }
-        Ext.each(['skew', 'scale'], function(t) {
-            if (this.hasOwnProperty(t + 'X') || this.hasOwnProperty(t + 'Y'))
-            {
-                str += String.format(' {0}({1}, {2})', t, this[t + 'X'], this[t + 'Y']);
-            }
-        }, this);
-        return str;
+        return gradient;
     }
 });

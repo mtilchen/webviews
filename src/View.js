@@ -22,7 +22,7 @@ WV.View = WV.extend(Ext.util.Observable, {
     hidden: false,
     rendered: false,
     resizeSubviews: true,
-    clipSubviews: false,
+    clipToBounds: false,
     enabled: true,
     draggable: false,
     stateful: false,
@@ -82,7 +82,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         // Set the styles and other visual properties
         this.setStyle(style, true);
         this.setHidden(this.hidden);
-        this.setClipSubviews(this.clipSubviews);
+        this.setClipToBounds(this.clipToBounds);
         this.setEnabled(this.enabled);
 
         WV.addToCache(this);
@@ -365,9 +365,9 @@ WV.View = WV.extend(Ext.util.Observable, {
 
             if (l)
             {
-                if (this.clipSubviews)
+                if (this.clipToBounds)
                 {
-                    this.clip(ctx, frame.w, frame.h, this.style.cornerRadius || 0, 0);
+                    this.roundedRect(ctx, frame.w, frame.h, this.style.cornerRadius || 0, 0, true);
                 }
                 for (i = 0; i < l; i++)
                 {
@@ -385,8 +385,10 @@ WV.View = WV.extend(Ext.util.Observable, {
         var st = this.style,
             bw = st.borderWidth || 0,
             cr = st.cornerRadius,
-            clip = this.clipSubviews,
-            transparentBlack = 'rgba(0,0,0,0)',
+            clip = this.clipToBounds,
+            linearGradient = st.linearGradient ? st.linearGradient.toCanvasGradient(ctx, rect) : null,
+            fill = linearGradient || st.color || 'transparent',
+            shadow = st.shadow,
             deg2Rad = Math.PI * 2 / 360;
 
         ctx.globalAlpha = st.opacity || 1.0;
@@ -427,62 +429,32 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             ctx.scale(st.scaleX || 1, st.scaleY || 1);
         }
+
+        ctx.fillStyle = fill;
+
+        // TODO: Handle shadow in case where image/fill overlap
+        if (shadow && !clip) { shadow.apply(ctx); }
         // Draw the elements of views with a corner radius in a particular order
         if (cr)
         {
-            var w = this.w,
-                h = this.h,
-                t = 0;
-
-            if (clip || !bw)
+            if (clip)
             {
-                if (clip)
-                {
-                    ctx.save();
-                    this.clip(ctx, this.w, this.h, cr, 0);
-                }
-
-                if (!bw)
-                {
-                    ctx.fillStyle = st.color || transparentBlack;
-                    ctx.fill();
-                    this.drawImage(rect, ctx);
-                }
+                ctx.save();
             }
 
-            if (bw)
-            {
-                w = Math.ceil(this.w - bw);
-                h = Math.ceil(this.h - bw);
-                t = bw;
+            // Draw the background up to the border, clipping if needed
+            this.roundedRect(ctx, this.w, this.h, cr, 0, clip);
 
-                // Draw the background just inside the border
-                var crIn = Math.abs(cr - bw);
-
-                ctx.beginPath();
-                ctx.moveTo(t, crIn);
-                ctx.arcTo(t, t, t + crIn, t, crIn);
-                ctx.lineTo(w - crIn, t);
-                ctx.arcTo(w, t, w, t + crIn, crIn);
-                ctx.lineTo(w, h - crIn);
-                ctx.arcTo(w, h, w - crIn, h, crIn);
-                ctx.lineTo(t + crIn, h);
-                ctx.arcTo(t, h, t, h - crIn, crIn);
-                ctx.closePath();
-
-                ctx.fillStyle = st.color || transparentBlack;
-                ctx.fill();
-                this.drawImage(rect, ctx);
-            }
+            ctx.fill();
+            this.drawImage(ctx, rect);
         }
         else
         {
-            ctx.fillStyle = st.color || transparentBlack;
-
             if (clip)
             {
               ctx.save();
-              this.clip(ctx, this.w, this.h);
+              ctx.rect(0, 0, this.w, this.h);
+              ctx.clip();
             }
             if (bw)
             {
@@ -493,10 +465,17 @@ WV.View = WV.extend(Ext.util.Observable, {
               ctx.fillRect(0, 0, this.w, this.h);
             }
 
-            this.drawImage(rect, ctx);
+            this.drawImage(ctx, rect);
         }
 
-        this.draw(rect, ctx);
+        if (shadow && !clip) {
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.shadowColor = 'transparent';
+        }
+
+        this.draw(ctx, rect);
 
         if (clip)
         {
@@ -504,12 +483,13 @@ WV.View = WV.extend(Ext.util.Observable, {
         }
     },
 
-    clip: function(ctx, w, h, cr, t)
+    // TODO: Move this to a function added to the Canvas2DContext prototoype
+    roundedRect: function(ctx, w, h, cr, t, clip)
     {
         if (cr)
         {
             ctx.beginPath();
-            ctx.moveTo(t, cr);
+            ctx.moveTo(t, t + cr);
             ctx.arcTo(t, t, t + cr, t, cr - t);
             ctx.lineTo(w - cr, t);
             ctx.arcTo(w, t, w, t + cr, cr - t);
@@ -523,7 +503,9 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             ctx.rect(0, 0, w, h);
         }
-        ctx.clip();
+        if (clip) { ctx.clip(); }
+
+        return this;
     },
 
     drawBorder: function(rect, ctx)
@@ -531,29 +513,18 @@ WV.View = WV.extend(Ext.util.Observable, {
         var st = this.style,
             bw = st.borderWidth || 0,
             cr = st.cornerRadius,
-            transparentBlack = 'rgba(0,0,0,0)',
             w = this.w - bw/2,
             h = this.h - bw/2,
             t = bw/2;
 
-        if (bw)
+        if (bw && st.borderColor)
         {
-            ctx.strokeStyle = st.borderColor || transparentBlack;
+            ctx.strokeStyle = st.borderColor;
             ctx.lineWidth = bw;
 
             if (cr)
             {
-                ctx.beginPath();
-                ctx.moveTo(t, cr);
-                ctx.arcTo(t, t, t + cr, t, cr - t);
-                ctx.lineTo(w - cr, t);
-                ctx.arcTo(w, t, w, t + cr, cr - t);
-                ctx.lineTo(w, h - cr);
-                ctx.arcTo(w, h, w - cr, h, cr - t);
-                ctx.lineTo(t + cr, h);
-                ctx.arcTo(t, h, t, h - cr, cr - t);
-                ctx.closePath();
-
+                this.roundedRect(ctx, w, h, cr, t, false);
                 ctx.stroke();
             }
             else
@@ -567,7 +538,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     draw: function(rect, ctx) { },
 
-    drawImage: function(rect, ctx)
+    drawImage: function(ctx, rect)
     {
         if (this.style.image)
         {
@@ -577,7 +548,7 @@ WV.View = WV.extend(Ext.util.Observable, {
                 this.style.image = new WV.Image(this.style.image, this);
             }
 
-            this.style.image.draw(rect, ctx);
+            this.style.image.draw(ctx, rect);
         }
     },
 
@@ -588,11 +559,13 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     isOpaque: function()
     {
-       // TODO: Make this rgba opacity detection correct
         var st = this.style,
-            opacity = st.opacity || 1;
+            color = st.color || 'transparent',
+            borderColor = st.borderColor || 'transparent',
+            opacity = st.opacity || 1,
+            regex = /^transparent$|rgba(.*)(0\.\d)|(,0)\)$/;  // Look for alpha < 1 in rgba() style color strings
 
-        return !(opacity < 1 || !st.color || st.color === 'rgba(0,0,0,0)')
+        return !(opacity < 1 || regex.exec(color) || (st.borderWidth && regex.exec(borderColor)));
     },
 
     clear: function(previous)
@@ -602,7 +575,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         if (previous)
         {
-            origin = { x: this.previousX  || this.x, y: this.previousY || this.y };
+            origin = { x: this.x, y: this.y };
             h = this.previousH || this.h;
             w = this.previousW || this.w;
         }
@@ -763,11 +736,11 @@ WV.View = WV.extend(Ext.util.Observable, {
     },
 
 
-    setClipSubviews: function(clip)
+    setClipToBounds: function(clip)
     {
         //TODO: If we are turning clipping on then we are shrinking and need to repaint our superview
         //TODO: Make sure subviews are not drawn outside of our bounds with clipping on
-        this.clipSubviews = clip === true;
+        this.clipToBounds = clip === true;
         this.setNeedsDisplay();
         return this;
     },

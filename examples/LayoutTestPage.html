@@ -35,7 +35,7 @@
                     h: 200,
                     w: 500,
                     html: 'C',
-                    clipSubViews: true,
+                    clipToBounds: true,
                     style: {
                         backgroundImage: 'url(resources/examples/images/norah_xmas3.jpg)',
                         backgroundSize: '100% auto',
@@ -133,7 +133,7 @@
                 h: 500,
                 w: this.w - e1.w,
                 html: 'B',
-                clipSubViews: true,
+                clipToBounds: true,
                 style: {
                     background: 'url(resources/examples/images/bg.jpg)'
                 },
@@ -210,7 +210,7 @@
                 autoResizeMask: WV.RESIZE_WIDTH_FLEX,
                 template: new Ext.Template('<div id="testTemp" style="position: absolute; top: 0px; left: 0px; height: 50px; width: 100px; background-color: cyan;">Template: {0}</div>'),
                 templateData: ['Value'],
-                clipSubViews: true,
+                clipToBounds: true,
                 style: {
                     backgroundColor: 'white',
                     textOverflow: 'ellipsis',

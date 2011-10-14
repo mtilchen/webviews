@@ -284,7 +284,7 @@ WV.Button = WV.extend(WV.Control, {
     h: 25,
     w: 96,
     text: '',
-    clipSubviews: true,
+    clipToBounds: true,
     styleMap: new WV.style.Button(),
     subviews: [{
         vtag: 'outerborder',
@@ -399,7 +399,7 @@ WV.ToggleButton = WV.extend(WV.Button, {
     vtype: 'togglebutton',
     h: 12,
     w: 35,
-    clipSubviews: false,
+    clipToBounds: false,
     selected: false,
     selectedValue: true,
     unselectedValue: false,
@@ -526,7 +526,7 @@ WV.CheckBox = WV.extend(WV.ToggleButton, {
     vtype: 'checkbox',
     h: 14,
     w: 14,
-    clipSubviews: false,
+    clipToBounds: false,
     text: 'Check',
     styleMap: new WV.style.CheckBox(),
     subviews: [{
@@ -681,7 +681,7 @@ WV.RadioButton = WV.extend(WV.ToggleButton, {
 WV.Matrix = WV.extend(WV.View, {
     vtype: 'matrix',
     cls: 'wv-matrix',
-    clipSubviews: true,
+    clipToBounds: true,
     cellData: null,
     cellVType: 'view',
     constructor: function(config)
