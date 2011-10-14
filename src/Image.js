@@ -9,6 +9,10 @@ WV.Image = WV.extend(Object, {
 
     constructor: function(config, ownerView)
     {
+        if (typeof config === 'string')
+        {
+          config = { src: config };
+        }
         WV.apply(this, config);
 
         // Assign an owner if one is supplied
