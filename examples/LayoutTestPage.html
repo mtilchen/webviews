@@ -7,14 +7,14 @@
     <link rel="stylesheet" type="text/css" href="resources/css/webviews.css" />
 
     <script src="../webviews-debug.js"></script>
-    <script src="http://maps.google.com/maps?file=api&v=2.x&key=ABQIAAAA2CKu_qQN-JHtlfQ5L7BLlRT2yXp_ZAY8_ufC3CFXhHIE1NvwkxQl3I3p2yrGARYK4f4bkjp9NHpm5w"></script>
+    <!--<script src="http://maps.google.com/maps?file=api&v=2.x&key=ABQIAAAA2CKu_qQN-JHtlfQ5L7BLlRT2yXp_ZAY8_ufC3CFXhHIE1NvwkxQl3I3p2yrGARYK4f4bkjp9NHpm5w"></script>-->
     <script>
 
         WV.init(function(win) {
 
-            this.setStyle('backgroundColor', 'red');
+            win.setStyle('color', 'red');
 
-            var e1 = new WV.ScrollView({
+            var e1 = new WV.View({
                 superView: win,
                 id: 'e1',
                 autoResizeMask: WV.RESIZE_NONE,
@@ -22,247 +22,123 @@
                 y: 0,
                 h: 500,
                 w: 800,
-                html: 'Some test text....',
-//                draggable: true,
-                showVerticalScroll: 'always',
                 style: {
-                    backgroundColor: 'green'
+                    color: 'green'
                 },
-                subViews: [{
+                subviews: [{
                     id: 'e3',
                     x: 10,
                     y: 10,
                     h: 200,
                     w: 500,
-                    html: 'C',
                     clipToBounds: true,
                     style: {
-                        backgroundImage: 'url(resources/examples/images/norah_xmas3.jpg)',
-                        backgroundSize: '100% auto',
-                        border: '5px solid black',
-                        transform: new WV.style.Transform2D({
-                            rotate: '20deg',
-                            translateX: '50px',
-                            translateY: '200px',
-                            skewX: '10deg',
-                            skewY: '10deg',
-                            scaleX: 1.3,
-                            scaleY: 0.8
-                        }),
-//                        transformOrigin: '25% 130%',
-                        transformOrigin: 'center',
-                        borderRadius: '20px',
+                        image: 'resources/examples/images/norah_xmas3.jpg',
+                        borderWidth: 5,
+                        borderColor: 'black',
+//                        cornerRadius: 40,
+                        rotate: 20,
+                        translateX: 50,
+                        translateY: 200,
+                        skewX: 10,
+                        skewY: 10,
+                        scaleX: 1.3,
+                        scaleY: 0.8,
+                        transformOriginX: 0.25,
+                        transformOriginY: 1.3,
                         opacity: 0.5,
-                        boxShadow: new WV.style.BoxShadow({
-                            xOffset: '10px',
-                            yOffset: '10px',
+                        shadow: {
+                            offsetX: 10,
+                            offsetY: 10,
                             color: 'rgba(0,0,0,0.5)'
-                        })
-                    },
-                    subViews: [
-                        {
-                            id: 'e4',
-                            x: 0,
-                            y: 0,
-                            h: 100,
-                            w: 200,
-                            draggable: true,
-                            style: {
-                                backgroundImage: new WV.style.LinearGradient({
-                                    angle: '-45deg',
-                                    startFrom: 'left',
-                                    stops: ['red', 'orange', 'yellow', 'white']
-                                }),
-                                borderRadius: '20px 0px 0px 0px',
-                                border: '5px solid white',
-                                transform: {
-                                    vtype: 'transform2d',
-                                    rotate: '-20deg',
-                                    translateX: '50px',
-                                    translateY: '10px',
-                                    scaleX: 0.75,
-                                    scaleY: 0.75
-                                }
-                            },
-                            contextMenu: function(e)
-                            {
-                                e.cancel();
-                            }
-                        },{
-                            id: 'testbutton',
-                            vtype: 'button',
-                            x: 0,
-                            y: 110,
-                            text: 'Button'
-                        }]
-                },{
-                    id: 'canvasTest',
-                    vtype: 'canvasview',
-                    x: 50,
-                    y: 100,
-                    h: 150,
-                    w: 150,
-                    drawRect: function(rect)
-                    {
-                        if (!Ext.isIE)
-                        {
-                            var ctx = this.getContext();
-
-                            ctx.beginPath();
-                            ctx.arc(75, 75, 50, 0, Math.PI * 2, true); // Outer circle
-                            ctx.moveTo(110, 75);
-                            ctx.arc(75, 75, 35, 0, Math.PI, false);   // Mouth
-                            ctx.moveTo(65, 65);
-                            ctx.arc(60, 65, 5, 0, Math.PI * 2, true);  // Left eye
-                            ctx.moveTo(95, 65);
-                            ctx.arc(90, 65, 5, 0, Math.PI * 2, true);  // Right eye
-                            ctx.stroke();
                         }
-
-                        return this;
-                    }
+                    },
+                    subviews: [{
+                        id: 'e4',
+                        x: 0,
+                        y: 0,
+                        h: 100,
+                        w: 200,
+                        style: {
+                            linearGradient: {
+                                startFrom: 'left',
+                                stops: ['red', 'orange', 'yellow', 'white']
+                            },
+                            cornerRadius: 20,
+                            borderWidth: 5,
+                            borderColor: 'white',
+                            rotate: 20,
+                            translateX: 50,
+                            translateY: 10,
+                            scaleX: 0.75,
+                            scaleY: 0/75
+                        }
+                    }]
                 }]
             });
 
             var e2 = new WV.View({
-                superView: this,
+                superView: win,
                 id: 'e2',
                 autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_BOTTOM_FLEX,
                 x: e1.w,
                 y: 0,
                 h: 500,
-                w: this.w - e1.w,
-                html: 'B',
+                w: win.w - e1.w,
                 clipToBounds: true,
                 style: {
-                    background: 'url(resources/examples/images/bg.jpg)'
-                },
-                subViews: [{
-                    id: 'gmap',
-                    x: 10,
-                    y: 175,
-                    w: '90%',
-                    h: 200,
-                    autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX,
-                    style: {
-                        border: '2px solid black',
-                        transform: {
-                            vtype: 'transform2d',
-                            rotate: '-25deg'
-                        },
-                        transformOrigin: 'center',
-                        borderRadius: '10px',
-                        boxShadow: {
-                            vtype: 'boxshadow',
-                            xOffset: '5px',
-                            yOffset: '5px',
-                            color: {
-                                vtype: 'color',
-                                r: 0,
-                                g: 0,
-                                b: 0,
-                                a: 0.5 }
-                        }
-                    },
-                    afterRender: function()
-                    {
-                        this.constructor.prototype.afterRender.call(this);
-                        this.map = new GMap2(this.dom);
-                        this.map.addControl(new GSmallMapControl());
-                        this.map.addControl(new GMapTypeControl());
-                        this.map.enableDragging();
-                        this.map.enableScrollWheelZoom();
-                        this.map.enableDoubleClickZoom();
-
-                        this.map.setCenter(new GLatLng(42.331427,-83.045754), 14);
-
-                        return this;
-                    },
-                    setDisabled: function(val)
-                    {
-                        this.constructor.prototype.setDisabled.call(this, val);
-                        if (this.rendered)
-                        {
-                            if (!this.disabled)
-                            {
-                                this.map.enableDragging();
-                                this.map.enableScrollWheelZoom();
-                                this.map.enableDoubleClickZoom();
-                            }
-                            else
-                            {
-                                this.map.disableDragging();
-                                this.map.disableScrollWheelZoom();
-                                this.map.disableDoubleClickZoom();
-                            }
-                        }
-                    }
-                }]
-            });
-
-            var e5 = new WV.TemplateView({
-                superView: e2,
-                id: 'e5',
-                x: 5,
-                y: 5,
-                h: 100,
-                w: 200,
-                autoResizeMask: WV.RESIZE_WIDTH_FLEX,
-                template: new Ext.Template('<div id="testTemp" style="position: absolute; top: 0px; left: 0px; height: 50px; width: 100px; background-color: cyan;">Template: {0}</div>'),
-                templateData: ['Value'],
-                clipToBounds: true,
-                style: {
-                    backgroundColor: 'white',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
+                    image: 'resources/examples/images/bg.jpg'
                 }
             });
 
-            var img = new WV.Image({
+            var img = new WV.View({
                 superView: e2,
                 id: 'img',
                 autoResizeMask: WV.RESIZE_WIDTH_FLEX,
                 w: '50%',
+                h: '50%',
                 draggable: false,
-                src: 'resources/examples/images/norah_xmas2.jpg'
-            });
-
-            var label = new WV.Link({
-                superView: e2,
-                id: 'label',
-                autoResizeMask: WV.RESIZE_NONE,
-                x: 15,
-                y: 370,
-                w: 200,
-                url: 'http://maps.google.com',
-                newWindow: true,
                 style: {
-                    fontFamily: 'Lucida Handwriting'
-                },
-                text: 'Go to Google Maps'
+                    image: 'resources/examples/images/norah_xmas2.jpg'
+                }
             });
 
-            var text = new WV.TextField({
-                superView: e2,
-                id: 'text_test',
-                autoResizeMask: WV.RESIZE_NONE,
-                x: 15,
-                y: 400,
-                w: 200,
-                text: 'Lorem ipsum'
-            });
-
-            var password = new WV.PasswordField({
-                superView: e2,
-                id: 'pw_test',
-                autoResizeMask: WV.RESIZE_NONE,
-                x: 15,
-                y: 450,
-                w: 200,
-                text: '123456'
-            });
-
-            var textarea = new WV.TextArea({
+//            var label = new WV.Link({
+//                superView: e2,
+//                id: 'label',
+//                autoResizeMask: WV.RESIZE_NONE,
+//                x: 15,
+//                y: 370,
+//                w: 200,
+//                url: 'http://maps.google.com',
+//                newWindow: true,
+//                style: {
+//                    fontFamily: 'Lucida Handwriting'
+//                },
+//                text: 'Go to Google Maps'
+//            });
+//
+//            var text = new WV.TextField({
+//                superView: e2,
+//                id: 'text_test',
+//                autoResizeMask: WV.RESIZE_NONE,
+//                x: 15,
+//                y: 400,
+//                w: 200,
+//                text: 'Lorem ipsum'
+//            });
+//
+//            var password = new WV.PasswordField({
+//                superView: e2,
+//                id: 'pw_test',
+//                autoResizeMask: WV.RESIZE_NONE,
+//                x: 15,
+//                y: 450,
+//                w: 200,
+//                text: '123456'
+//            });
+//
+            var textarea = new WV.Text({
                 superView: e2,
                 id: 'textarea_test',
                 autoResizeMask: WV.RESIZE_WIDTH_FLEX,
@@ -272,11 +148,6 @@
                 h: 85,
                 text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas nec velit augue, eu consectetur nunc. Donec eget tortor erat. Vestibulum ut ligula vitae mauris aliquet porta in nec felis. Proin orci diam, gravida vel blandit in, tincidunt id mi. Sed mollis, ante in luctus auctor, felis lacus convallis tortor, sit'
             });
-
-            WV.log(WV.get('e4').superView === WV.get('e3'));
-            WV.log(WV.get('e3').superView === e1);
-            WV.log(e2.superView === WV.Window);
-
         });
   </script>
 </head>
