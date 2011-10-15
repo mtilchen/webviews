@@ -398,6 +398,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             ctx.translate(st.translateX || 0, st.translateY || 0);
         }
 
+        // TODO: Support skew
         if (st.rotate)
         {
             // The calculations below assume a) flipped y-axis b) clockwise rotation
@@ -484,11 +485,13 @@ WV.View = WV.extend(Ext.util.Observable, {
     },
 
     // TODO: Move this to a function added to the Canvas2DContext prototoype
+   // TODO: Handle situation where t > cr
     roundedRect: function(ctx, w, h, cr, t, clip)
     {
+        ctx.beginPath();
+
         if (cr)
         {
-            ctx.beginPath();
             ctx.moveTo(t, t + cr);
             ctx.arcTo(t, t, t + cr, t, cr - t);
             ctx.lineTo(w - cr, t);
@@ -497,12 +500,13 @@ WV.View = WV.extend(Ext.util.Observable, {
             ctx.arcTo(w, h, w - cr, h, cr - t);
             ctx.lineTo(t + cr, h);
             ctx.arcTo(t, h, t, h - cr, cr - t);
-            ctx.closePath();
         }
         else
         {
             ctx.rect(0, 0, w, h);
         }
+        // "rect" needs begin/close path too or clipping problems result
+        ctx.closePath();
         if (clip) { ctx.clip(); }
 
         return this;

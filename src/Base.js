@@ -310,7 +310,7 @@ WV = (function() {
 
             initializers[i]['initFunction'].call(null, win);
             win.window = win; // This will allow subviews to be drawn
-            win.redrawIfNeeded(true, true);
+            win.redrawIfNeeded();
         }
 
         end = new Date();
