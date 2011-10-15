@@ -258,22 +258,6 @@
                 if (isNaN(this.to)) { throw new Error('Invalid "to" value'); }
             }
 
-            // Look for color properties
-            else if (this.from instanceof WV.style.Color)
-            {
-                this.isColor = true;
-                this.from = [this.from.r, this.from.g, this.from.b];
-                if (this.to instanceof WV.style.Color)
-                {
-                    this.to = [this.to.r, this.to.g, this.to.b];
-                }
-                else if (COLOR_RE.test(this.to))
-                {
-                    this.to = [parseInt(this.to.substr(1,2), 16), parseInt(this.to.substr(3,2), 16),
-                               parseInt(this.to.substr(5,2), 16)];
-                }
-                else { throw new Error('"to" value is not a valid color'); }
-            }
             else if (COLOR_RE.test(this.from))
             {
                 this.isColor = true;
