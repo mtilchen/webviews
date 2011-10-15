@@ -15,13 +15,13 @@
 
             var maxY = win.h,
                 maxX = win.w,
-                w = 50, h = 50;
+                w = 300, h = 300;
 
             for (var x = 2; x < (maxX - w); x = x + w)
             {
                 for (var y = 2; y < (maxY - h); y = y + h)
                 {
-                    win.addSubView({
+                    win.addSubview({
                         x: x,
                         y: y,
                         h: h,
@@ -29,51 +29,41 @@
                         autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
                         style: {
                             color: '#D3D3D3',
-                            cornerRadius: 5,
-                            borderWidth: 1,
-                            borderColor: 'black',
-                            scaleX: 1,
-                            scaleY: 1
+                            cornerRadius: 10,
+                            borderWidth: 5,
+                            borderColor: 'black'
                         }
                     });
                 }
             }
 
-            WV.debug('Created ', win.subViews.length, ' views');
+            WV.debug('Created ', win.subviews.length, ' views');
 
             setTimeout(function() {
 
-                for (var s = 0, l = win.subViews.length; s < l; s++)
+                for (var s = 0, l = win.subviews.length; s < l; s++)
                 {
-                    win.subViews[s].addAnimation([
+                    win.subviews[s].addAnimation([
                         {
-                            easing: WV.Animation.EASEIN,
+                            easing: WV.Animation.EASEBOTH,
                             path: 'style.color',
                             to: '#00FF00',
-                            duration: 0.25,
+                            duration: 0.5,
                             repeatCount: 5,
                             autoReverse: true
                         },{
-                            easing: WV.Animation.EASEIN,
+                            easing: WV.Animation.EASEBOTH,
                             path: 'style.cornerRadius',
-                            to: 20,
-                            duration: 0.25,
+                            to: 50,
+                            duration: 0.5,
                             repeatCount: 5,
                             autoReverse: true
-//                        }, {
-//                            easing: WV.Animation.EASEIN,
-//                            path: 'style.scaleX',
-//                            to: 0.1,
-//                            duration: 1,
-//                            repeatCount: 5,
-//                            autoReverse: true
-//                        }, {
-//                            easing: WV.Animation.EASEIN,
-//                            path: 'style.scaleY',
-//                            to: 0.1,
-//                            duration: 1,
-//                            repeatCount: 5,
-//                            autoReverse: true
+                        }, {
+                            path: 'style.rotate',
+                            from: 0,
+                            to: 360,
+                            duration: 5,
+                            repeatCount: 0
                         }]);
                 }
             }, 1000);
