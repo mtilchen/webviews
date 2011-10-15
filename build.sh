@@ -1,6 +1,6 @@
 
 WV_VERSION=`git describe`
-WV_BUILD_VERSION=`git describe --abbrev=0`
+WV_BUILD_VERSION=`git describe --always`
 
 WV_BUILD_DIR=./build/webviews-$WV_BUILD_VERSION
 
