@@ -293,15 +293,25 @@
     }
 
     WV.EventMonitor = WV.extend(Object, {
-        constructor: function(window)
+        constructor: function(ownerWindow)
         {
-            this.window = window;
+            this.window = ownerWindow;
 
-            this.monitorEvent('mouseDown');
-            this.monitorEvent('mouseUp');
-            this.monitorEvent('mouseMove');
-            this.monitorEvent('mouseOut');
-            this.monitorEvent('mouseWheel');
+            if (window.navigator.msPointerEnabled)
+            {
+              this.monitorEvent('MSPointerDown', true);
+              this.monitorEvent('MSPointerUp', true);
+              this.monitorEvent('MSPointerMove', true);
+              this.monitorEvent('MSPointerOut', true);
+            }
+            else
+            {
+              this.monitorEvent('mouseDown');
+              this.monitorEvent('mouseUp');
+              this.monitorEvent('mouseMove');
+              this.monitorEvent('mouseOut');
+              this.monitorEvent('mouseWheel');
+            }
             this.monitorEvent('click');
             this.monitorEvent('contextMenu');
             this.monitorEvent('dragStart');
@@ -310,12 +320,13 @@
             this.monitorEvent('keyDown');
             this.monitorEvent('keyUp');
         },
-        monitorEvent: function(name)
+        monitorEvent: function(name, preserveCase)
         {
-            var win = this.window; // Our WV.Window
+            var win = this.window, // Our WV.Window
+                registerName = preserveCase ? name : name.toLocaleLowerCase(),  // Listen for events using this name/type
+                ename = name.replace('MSPointer', 'mouse');  // ename represents the name of the function we will invoke on firstResponder
 
-            Ext.EventManager.addListener(window, name.toLowerCase(), function(e) {
-
+            Ext.EventManager.addListener(Ext.getBody().dom, registerName, function(e) {
 
                 // Set these four shared objects before processing the event
                 ev = e;
@@ -333,7 +344,7 @@
                 var el = ev.target,
                         proceed,
                         rect, canvasRect,
-                        isKeyEvent = name.indexOf('key') === 0;
+                        isKeyEvent = ename.indexOf('key') === 0;
 
                 if (!el) { return wasCancelled; }
 
@@ -371,25 +382,25 @@
 
                 if (targetV)
                 {
-                    proceed = monitors[name].before ? monitors[name].before() : true;
+                    proceed = monitors[ename].before ? monitors[ename].before() : true;
 
-                    if (proceed !== false && targetV[name])
+                    if (proceed !== false && targetV[ename])
                     {
                         if (isKeyEvent)
                         {
                             createKeyEvent();
-                            targetV[name](sharedKeyEvent);
+                            targetV[ename](sharedKeyEvent);
                         }
                         else
                         {
                             createMouseEvent();
-                            targetV[name](sharedMouseEvent);
+                            targetV[ename](sharedMouseEvent);
                         }
                     }
 
-                    if (monitors[name].after)
+                    if (monitors[ename].after)
                     {
-                        monitors[name].after();
+                        monitors[ename].after();
                     }
                 }
                 else
