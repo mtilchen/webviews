@@ -232,9 +232,6 @@ WV = (function() {
 
         namespace: Ext.namespace,
 
-        requestAnimationFrame: window.requestAnimationFrame || window.msRequestAnimationFrame ||
-                               window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame,
-
         emptyFn: function() {},
 
         log: logAvailable ? function() {

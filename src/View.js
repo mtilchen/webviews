@@ -402,7 +402,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         if (st.rotate)
         {
             // The calculations below assume a) flipped y-axis b) clockwise rotation
-            var radians = parseInt(st.rotate) * deg2Rad,
+            var radians = st.rotate * deg2Rad,
                 cosTheta = Math.cos(radians),
                 sinTheta = Math.sin(radians),
                 orgX = (st.transformOriginX || 0.5) * this.w,

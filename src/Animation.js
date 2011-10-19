@@ -8,7 +8,7 @@
         animIdSeed = 0,
         activeViews = {},
         uncommittedAnimations = [],
-        animationLoopTask = null;
+        isAnimating;
 
     function commitAnimations()
     {
@@ -29,184 +29,182 @@
         }
         uncommittedAnimations = [];
 
-        if (l) { runAnimations(); }
+        if (l && !isAnimating)
+        {
+          isAnimating = true;
+          requestAnimationFrame(runAnimations);
+        }
     }
 
-    function runAnimations()
+    function runAnimations(now)
     {
-        var renderFunc = WV.requestAnimationFrame || setInterval;
+      var anim,
+          animId,
+          view,
+          dirty,
+          shortestDelay = 10^5,
+          delay,
+          newVal,
+          reRun,
+          futureAnimTask = null;
 
-        if (animationLoopTask) { return; }
+      now = now || Date.now();
+      for (var viewId in activeViews)
+      {
+          view = activeViews[viewId];
+          dirty = false;
+          for (animId in view.animations)
+          {
+              reRun = false;
+              anim = view.animations[animId];
 
-        animationLoopTask = renderFunc(function(now) {
-            var anim,
-                animId,
-                view,
-                dirty,
-                shortestDelay = 10^5,
-                delay,
-                newVal,
-                reRun,
-                futureAnimTask = null;
+              if (anim.cancelled)
+              {
+                  delete view.animations[animId];
+                  view._animCount--;
+              }
 
-            now = now || Date.now();
-            for (var viewId in activeViews)
-            {
-                view = activeViews[viewId];
-                dirty = false;
-                for (animId in view.animations)
-                {
-                    reRun = false;
-                    anim = view.animations[animId];
+              else if (!anim.running)
+              {
+                  delay = anim.startTime - now;
+                  if (delay <= 0)
+                  {
+                      anim.running = true;
+                      if (typeof anim.onStart === 'function')
+                      {
+                          anim.onStart.call(anim.scope || view, anim, view);
+                      }
+                  }
+                  // Start the animation loop later when this animation needs to start
+                  else
+                  {
+                      if (delay < shortestDelay)
+                      {
+                          shortestDelay = delay;
+                      }
+                      clearTimeout(futureAnimTask);
+                      futureAnimTask = setTimeout(function() { requestAnimationFrame(runAnimations); },
+                                                  shortestDelay);
+                  }
+              }
+              else
+              {
+                  // Compute the current frame and only draw it if we need to
+                  anim.currentFrame = Math.min(((now - anim.startTime) / SEC_MS * FPS), anim.totalFrames);
+                  if ((anim.currentFrame > anim.lastFrame) && (anim.currentFrame <= anim.totalFrames))
+                  {
+                      dirty = true;
+                      anim.lastFrame = anim.currentFrame;
+                      view.rendered = false; // Hack, but it prevents any writes to the DOM until we are done
 
-                    if (anim.cancelled)
-                    {
-                        delete view.animations[animId];
-                        view._animCount--;
-                    }
+                      if (anim.isColor) // We need to ease r, g and b independently
+                      {
+                          newVal = [];
+                          for (var i = 0; i < 3; i++)
+                          {
+                              newVal[i] = anim.easing(anim.currentFrame,
+                                           anim.from[i], anim.to[i] - anim.from[i],
+                                           anim.totalFrames);
+                          }
+                          newVal = '#' + WV.decToHexString(newVal[0], newVal[1], newVal[2]);
+                      }
+                      else
+                      {
+                          newVal = anim.easing(anim.currentFrame,
+                                           anim.from, anim.to - anim.from,
+                                           anim.totalFrames);
+                      }
+                      if (anim.units)
+                      {
+                          newVal = newVal + anim.units;
+                      }
+                      if (anim.target === view.style)
+                      {
+                          view.setStyle(anim.key, newVal);
+                      }
+                      else if (typeof anim.setterFn === 'function')
+                      {
+                          anim.setterFn.call(anim.target, newVal);
+                      }
+                      else
+                      {
+                          anim.target[anim.key] = newVal;
+                      }
+                      anim.drawnFrames++;
+                      view.rendered = true;
+                      if (anim.needsLayout)
+                      {
+                          view.layoutSubviews();
+                      }
+                  }
+                  // We're done
+                  if (anim.currentFrame >= anim.totalFrames)
+                  {
+                      var realDuration = now - anim.startTime,
+                          stats = {
+                              duration: realDuration,
+                              frames: anim.drawnFrames,
+                              fps:  Math.round(anim.drawnFrames / realDuration * SEC_MS) };
 
-                    else if (!anim.running)
-                    {
-                        delay = anim.startTime - now;
-                        if (delay <= 0)
-                        {
-                            anim.running = true;
-                            if (typeof anim.onStart === 'function')
-                            {
-                                anim.onStart.call(anim.scope || view, anim, view);
-                            }
-                        }
-                        // Start the animation loop later when this animation needs to start
-                        else
-                        {
-                            if (delay < shortestDelay)
-                            {
-                                shortestDelay = delay;
-                            }
-                            clearTimeout(futureAnimTask);
-                            futureAnimTask = setTimeout(runAnimations, shortestDelay);
-                        }
-                    }
-                    else
-                    {
-                        // Compute the current frame and only draw it if we need to
-                        anim.currentFrame = Math.min(((now - anim.startTime) / SEC_MS * FPS), anim.totalFrames);
-                        if ((anim.currentFrame > anim.lastFrame) && (anim.currentFrame <= anim.totalFrames))
-                        {
-                            dirty = true;
-                            anim.lastFrame = anim.currentFrame;
-                            view.rendered = false; // Hack, but it prevents any writes to the DOM until we are done
+                      anim.running = false;
+                      if (typeof anim.onComplete === 'function')
+                      {
+                          anim.onComplete.call(anim.scope || view, anim, view, stats);
+                      }
+                      if (anim.autoReverse)
+                      {
+                          var tmp = anim.from;
+                              anim.from = anim.to;
+                              anim.to = tmp;
+                          if (anim.reversed !== true)
+                          {
+                              anim.reversed = true;
+                              reRun = true;
+                              uncommittedAnimations.push(anim);
+                          }
+                          else
+                          {
+                              anim.reversed = false;
+                          }
+                      }
 
-                            if (anim.isColor) // We need to ease r, g and b independently
-                            {
-                                newVal = [];
-                                for (var i = 0; i < 3; i++)
-                                {
-                                    newVal[i] = anim.easing(anim.currentFrame,
-                                                 anim.from[i], anim.to[i] - anim.from[i],
-                                                 anim.totalFrames);
-                                }
-                                newVal = '#' + WV.decToHexString(newVal[0], newVal[1], newVal[2]);
-                            }
-                            else
-                            {
-                                newVal = anim.easing(anim.currentFrame,
-                                                 anim.from, anim.to - anim.from,
-                                                 anim.totalFrames);
-                            }
-                            if (anim.units)
-                            {
-                                newVal = newVal + anim.units;
-                            }
-                            if (anim.target === view.style)
-                            {
-                                view.setStyle(anim.key, newVal);
-                            }
-                            else if (typeof anim.setterFn === 'function')
-                            {
-                                anim.setterFn.call(anim.target, newVal);
-                            }
-                            else
-                            {
-                                anim.target[anim.key] = newVal;
-                            }
-                            anim.drawnFrames++;
-                            view.rendered = true;
-                            if (anim.needsLayout)
-                            {
-                                view.layoutSubviews();
-                            }
-                        }
-                        // We're done
-                        if (anim.currentFrame >= anim.totalFrames)
-                        {
-                            var realDuration = now - anim.startTime,
-                                stats = {
-                                    duration: realDuration,
-                                    frames: anim.drawnFrames,
-                                    fps:  Math.round(anim.drawnFrames / realDuration * SEC_MS) };
+                      if (anim.repeatCount > 0 && anim.reversed !== true)
+                      {
+                          anim.repeatCount--;
+                          reRun = true;
+                          uncommittedAnimations.push(anim);
+                      }
 
-                            anim.running = false;
-                            if (typeof anim.onComplete === 'function')
-                            {
-                                anim.onComplete.call(anim.scope || view, anim, view, stats);
-                            }
-                            if (anim.autoReverse)
-                            {
-                                var tmp = anim.from;
-                                    anim.from = anim.to;
-                                    anim.to = tmp;
-                                if (anim.reversed !== true)
-                                {
-                                    anim.reversed = true;
-                                    reRun = true;
-                                    uncommittedAnimations.push(anim);
-                                }
-                                else
-                                {
-                                    anim.reversed = false;
-                                }
-                            }
+                      if (!reRun)
+                      {
+                          delete view.animations[animId];
+                          view._animCount--;
+                      }
+                  }
+              }
+          }
 
-                            if (anim.repeatCount > 0 && anim.reversed !== true)
-                            {
-                                anim.repeatCount--;
-                                reRun = true;
-                                uncommittedAnimations.push(anim);
-                            }
+          if (view._animCount === 0) // Remember that onComplete functions may add more animations
+          {
+              delete view._animCount;
+              delete activeViews[viewId];
+          }
+          if (dirty)
+          {
+              view.setNeedsDisplay();
+          }
+      }
 
-                            if (!reRun)
-                            {
-                                delete view.animations[animId];
-                                view._animCount--;
-                            }
-                        }
-                    }
-                }
-
-                if (view._animCount === 0) // Remember that onComplete functions may add more animations
-                {
-                    delete view._animCount;
-                    delete activeViews[viewId];
-                }
-                if (dirty)
-                {
-                    view.setNeedsDisplay();
-                }
-            }
-
-            if (!viewId) // There were no views in activeViews
-            {
-                clearInterval(animationLoopTask);
-                animationLoopTask = null;
-            }
-            else if (WV.requestAnimationFrame)
-            {
-               animationLoopTask = null;
-               runAnimations();
-            }
-            commitAnimations();
-        }, (1/FPS) * SEC_MS)  ;
+      if (!viewId) // We are done animating all the views.
+      {
+        isAnimating = false;
+        requestAnimationFrame(commitAnimations);
+      }
+      else
+      {
+        commitAnimations();
+        requestAnimationFrame(runAnimations);
+      }
     }
 
     WV.Animation = WV.extend(Object, {

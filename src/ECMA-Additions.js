@@ -33,4 +33,11 @@
             pad(this.getMilliseconds(), 100)
         ]);
     };
+
+    // Normalize requestAnimationFrame
+    window.requestAnimationFrame = window.requestAnimationFrame || window.msRequestAnimationFrame ||
+                                   window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame ||
+                                   function(callback, el) {
+                                      window.setTimeout(callback, 1000 / 60);
+                                   };
 })();
