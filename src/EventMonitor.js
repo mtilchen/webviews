@@ -1,9 +1,9 @@
 
 (function() {
 
-    var pointerOffset = WV.isMac ? 1 : 0,
-        mouseDownOwner,
-        mouseOverOwner,
+    var pointerOffset = Ext.isMac ? 1 : 0,
+        mouseDownOwners = {},
+        mouseOverOwners = {},
         downX = 0,
         downY = 0,
         wheelDelta = 0,
@@ -16,48 +16,50 @@
         targetV, // Current target View
         sharedMouseEvent = { cancel: cancel },
         sharedKeyEvent = { cancel: cancel },
-        posProp = Ext.isIE ? 'offset' : 'layer',
+        posProp = Ext.isGecko ? 'layer' : 'offset',
         posPropX = posProp + 'X',
         posPropY = posProp + 'Y',
+        touchId,
         monitors = {
             mouseDown: {
                 before: function()
                 {
                     clickCount++;
                     clickReset.delay(500);
-                    downX = be.clientX, downY = be.clientY;
-                    mouseDownOwner = targetV;
+                    downX = be.clientX;
+                    downY = be.clientY;
+                    mouseDownOwners[touchId] = targetV;
                 }
             },
             mouseMove: {
                 before: function()
                 {
-                    var prevOver = mouseOverOwner;
-                    mouseOverOwner = targetV;
+                    var prevOver = mouseOverOwners[touchId];
+                    mouseOverOwners[touchId] = targetV;
 
                     // Mouse entered/exited
-                    if (prevOver !== mouseOverOwner)
+                    if (prevOver !== mouseOverOwners[touchId])
                     {
                         createMouseEvent();
-                        if (prevOver && !mouseOverOwner.isDescendantOf(prevOver))
+                        if (prevOver && !mouseOverOwners[touchId].isDescendantOf(prevOver))
                         {
                             prevOver.mouseExited(sharedMouseEvent);
                         }
 
-                        if (prevOver && !prevOver.isDescendantOf(mouseOverOwner))
+                        if (prevOver && !prevOver.isDescendantOf(mouseOverOwners[touchId]))
                         {
-                            mouseOverOwner.mouseEntered(sharedMouseEvent);
+                            mouseOverOwners[touchId].mouseEntered(sharedMouseEvent);
                         }
                     }
 
-                    if (mouseDownOwner === targetV)
+                    if (mouseDownOwners[touchId] /*=== targetV */)
                     {
                         // 'draggable' here refers to drag and drop functionality
                         if (targetV.draggable === false)
                         {
                             wasDragged = true;
                             createMouseEvent();
-                            mouseDownOwner.mouseDragged(sharedMouseEvent);
+                            mouseDownOwners[touchId].mouseDragged(sharedMouseEvent);
                         }
                         //return false;
                     }
@@ -68,18 +70,18 @@
                 before: function()
                 {
                     // Always call mouseUp on the mouseDownOwner after a drag
-                    if (wasDragged && mouseDownOwner)
+                    if (wasDragged && mouseDownOwners[touchId])
                     {
                         createMouseEvent();
-                        mouseDownOwner.mouseUp(sharedMouseEvent);
+                        mouseDownOwners[touchId].mouseUp(sharedMouseEvent);
                         return false;
                     }
                 },
                 after: function()
                 {
-                    mouseDownOwner = null;
+                    mouseDownOwners[touchId] = null;
                     wasDragged = false;
-                    downX = 0, downY = 0;
+                    downX = 0; downY = 0;
                 }
             },
             mouseOut: {
@@ -89,14 +91,14 @@
                     if (ev.xy[0] < 0 || ev.xy[1] < 0 ||
                         ev.xy[0] >= Ext.lib.Dom.getViewportWidth() || ev.xy[1] >= Ext.lib.Dom.getViewportHeight())
                     {
-                        mouseDownOwner = null;
+                        mouseDownOwners[touchId] = null;
                         wasDragged = false;
 
-                        if (mouseOverOwner)
+                        if (mouseOverOwners[touchId])
                         {
                             createMouseEvent();
-                            mouseOverOwner.mouseExited(sharedMouseEvent);
-                            mouseOverOwner = null;
+                            mouseOverOwners[touchId].mouseExited(sharedMouseEvent);
+                            mouseOverOwners[touchId] = null;
                         }
                     }
                     return false;
@@ -171,7 +173,7 @@
             dragEnd: {
                 before: function()
                 {
-                    mouseDownOwner = null;
+                    mouseDownOwners[touchId] = null;
                     if (targetV.draggable === false)
                     {
                         return false;
@@ -240,8 +242,9 @@
         sme.windowPoint = { x: be.canvasX, y: be.canvasY }; // Our WV.Window, not the browser window
         sme.timestamp = be.timeStamp;
         sme.target = targetV;
+        sme.touchId = touchId;
         sme.targetElement = be.target;
-        sme.mouseDownOwner = mouseDownOwner;
+        sme.mouseDownOwner = mouseDownOwners[touchId];
         sme.clickCount = be.type === 'click' ? be.detail : clickCount;
         sme.leftButton = clickCount > 0 && (ev.button === 0);
         sme.middleButton = clickCount > 0 && (ev.button === 1);
@@ -377,11 +380,13 @@
                     }
 
                     targetV = win.hitTest({ x: be.canvasX - pointerOffset,
-                                            y: be.canvasY - pointerOffset});
+                                            y: be.canvasY - 2 * pointerOffset });
                 }
 
                 if (targetV)
                 {
+                    touchId = be.pointerId || 1;
+
                     proceed = monitors[ename].before ? monitors[ename].before() : true;
 
                     if (proceed !== false && targetV[ename])
@@ -395,6 +400,12 @@
                         {
                             createMouseEvent();
                             targetV[ename](sharedMouseEvent);
+
+                            // Prevent our handler from being called twice in MSPointer environments
+                            if (be.preventMouseEvent)
+                            {
+                              be.preventMouseEvent();
+                            }
                         }
                     }
 
