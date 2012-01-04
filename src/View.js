@@ -198,7 +198,6 @@ WV.View = WV.extend(Ext.util.Observable, {
                     this.subviews[view.vtag] = [vtag, view];
                 }
             }
-            if (view.window) { view.setNeedsDisplay(); }
         }
 
         else // View was already a subview of this superView (this === sv), so just move and re-index

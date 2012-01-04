@@ -306,8 +306,6 @@ WV = (function() {
             var win = new WV.Window(initializers[i].appConfig);
 
             initializers[i]['initFunction'].call(null, win);
-            win.window = win; // This will allow subviews to be drawn
-            win.redrawIfNeeded();
         }
 
         end = new Date();
