@@ -23,7 +23,6 @@
             while (top.h > 6 && top.w > 6)
             {
                 v = new WV.View({
-                    superView: top,
                     x: 3,
                     y: 3,
                     h: 'h - 6',
@@ -35,6 +34,7 @@
                         borderColor: 'black'
                     }
                 });
+                top.addSubview(v);
                 top = v;
                 i++;
             }

@@ -13,8 +13,7 @@
 
             win.setStyle('color', 'red');
 
-            var e1 = new WV.View({
-                superView: win,
+            win.addSubview({
                 id: 'e1',
                 autoResizeMask: WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX | WV.RESIZE_RIGHT_FLEX /*| WV.RESIZE_LEFT_FLEX*/,
                 x: 0,
@@ -27,8 +26,7 @@
                     borderColor: 'black'
                 }
             });
-            var e2 = new WV.View({
-                superView: win,
+            win.addSubview({
                 id: 'e2',
                 autoResizeMask: WV.RESIZE_LEFT_FLEX | WV.RESIZE_RIGHT_FLEX |
                                 WV.RESIZE_BOTTOM_FLEX |
@@ -43,8 +41,7 @@
                     borderColor: 'black'
                 }
             });
-            var e3 = new WV.View({
-                superView: win,
+            win.addSubview({
                 id: 'e3',
                 autoResizeMask: WV.RESIZE_BOTTOM_FLEX | WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_LEFT_FLEX | WV.RESIZE_WIDTH_FLEX,
                 x: '66.67%',
@@ -57,8 +54,7 @@
                     borderColor: 'black'
                 }
             });
-            var e4 = new WV.View({
-                superView: win,
+            win.addSubview({
                 id: 'e4',
                 autoResizeMask: WV.RESIZE_RIGHT_FLEX |
                                 WV.RESIZE_TOP_FLEX |
@@ -73,8 +69,7 @@
                     borderColor: 'black'
                 }
             });
-            var e5 = new WV.View({
-                superView: win,
+            win.addSubview({
                 id: 'e5',
                 autoResizeMask: WV.RESIZE_LEFT_FLEX |
                                 WV.RESIZE_TOP_FLEX |
@@ -89,8 +84,7 @@
                     borderColor: 'black'
                 }
             });
-            var e6 = new WV.View({
-                superView: e2,
+            WV.get('e2').addSubview({
                 id: 'e6',
                 autoResizeMask: WV.RESIZE_LEFT_FLEX   | WV.RESIZE_HEIGHT_FLEX |
                                 WV.RESIZE_TOP_FLEX    | WV.RESIZE_WIDTH_FLEX  |

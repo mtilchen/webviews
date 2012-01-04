@@ -14,8 +14,7 @@
 
             win.setStyle('color', 'red');
 
-            var e1 = new WV.View({
-                superView: win,
+            win.addSubview({
                 id: 'e1',
                 autoResizeMask: WV.RESIZE_NONE,
                 x: 0,
@@ -77,22 +76,20 @@
                 }]
             });
 
-            var e2 = new WV.View({
-                superView: win,
+            win.addSubview({
                 id: 'e2',
                 autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_BOTTOM_FLEX,
-                x: e1.w,
+                x: '{e1}.w',
                 y: 0,
                 h: 500,
-                w: win.w - e1.w,
+                w: win.w - WV.get('e1').w,
                 clipToBounds: true,
                 style: {
                     image: 'resources/examples/images/bg.jpg'
                 }
             });
 
-            var img = new WV.View({
-                superView: e2,
+            WV.get('e2').addSubview({
                 id: 'img',
                 autoResizeMask: WV.RESIZE_WIDTH_FLEX,
                 w: '50%',
@@ -138,8 +135,8 @@
 //                text: '123456'
 //            });
 //
-            var textarea = new WV.Text({
-                superView: e2,
+            WV.get('e2').addSubview({
+                vtype: 'text',
                 id: 'textarea_test',
                 autoResizeMask: WV.RESIZE_WIDTH_FLEX,
                 x: 225,

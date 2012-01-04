@@ -15,7 +15,7 @@
 
             var maxY = win.h,
                 maxX = win.w,
-                w = 200, h = 200;
+                w = 250, h = 250;
 
             for (var x = 2; x < (maxX - w); x = x + w)
             {
@@ -49,14 +49,14 @@
                             path: 'style.color',
                             to: '#00FF00',
                             duration: 0.5,
-                            repeatCount: 5,
+                            repeatCount: 4,
                             autoReverse: true
                         },{
                             easing: WV.Animation.EASEBOTH,
                             path: 'style.cornerRadius',
-                            to: 50,
+                            to: w/2,
                             duration: 0.5,
-                            repeatCount: 5,
+                            repeatCount: 4,
                             autoReverse: true
                         }, {
                             path: 'style.rotate',

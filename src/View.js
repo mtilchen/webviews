@@ -20,7 +20,6 @@ WV.View = WV.extend(Ext.util.Observable, {
     autoResizeMask: WV.RESIZE_LEFT_FLEX | WV.RESIZE_RIGHT_FLEX |
                     WV.RESIZE_TOP_FLEX  | WV.RESIZE_BOTTOM_FLEX,
     hidden: false,
-    rendered: false,
     resizeSubviews: true,
     clipToBounds: false,
     enabled: true,
@@ -75,8 +74,8 @@ WV.View = WV.extend(Ext.util.Observable, {
         // Animations keyed by their id
         this.animations = {};
 
-        // Put all the subviews we wish to add together (class level and config level) and add them all at once
-        var subviewsToAdd =  this.constructor.prototype.subviews.concat(config.subviews || []);
+        // Put all the subviews we wish to add together (class level and config level, if present) and add them all at once
+        var subviewsToAdd =  (this.constructor.prototype.subviews || []).concat(config.subviews || []);
         this.subviews = [];
 
         // Set the styles and other visual properties
@@ -87,31 +86,36 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         WV.addToCache(this);
 
+        // If a superView was passed in then size ourself relatively if needed
+        if (this.superView)
+        {
+            this.convertDimensions();
+        }
+
         // Add all of our subviews
         for (var i = 0, l = subviewsToAdd.length; i < l; i++)
         {
             this.addSubview(subviewsToAdd[i]);
         }
 
-        // Add ourself to the superView
-        if (this.superView)
-        {
-            // We have not really been added to a superview yet so prevent confusion by removing the reference
-            var sv =  this.superView;
-            delete this.superView;
-            sv.addSubview(this);
-        }
-
         return this;
     },
 
-    addSubview: function(view)
+    insertSubview: function(view, idx)
     {
         var sv = view.superView,
-            vtag;
+            subviewCount = this.subviews.length,
+            vtag,
+            i, l;
+
+        idx = Math.min(idx === undefined ? subviewCount : idx, subviewCount);
 
         if (!(view instanceof WV.View) && (typeof view === 'object'))
         {
+            // Set the superView here so we can convert relative dimensions of the added view its subviews
+            // may depend on (created and added recursively by calling the constructor)
+            view.superView = this;
+
             view = view.vtype ? WV.create(view.vtype, view) : new WV.View(view);
         }
         if (this !== sv)
@@ -121,7 +125,7 @@ WV.View = WV.extend(Ext.util.Observable, {
                 view.removeFromSuperView();
             }
 
-            sv = view.superView = this;
+            view.superView = this;
             view.nextResponder = this;
 
             // If the view is stateful then set its state to match that of the new superView if it too is stateful,
@@ -168,8 +172,12 @@ WV.View = WV.extend(Ext.util.Observable, {
                 view.convertDimensions();
             }
 
-            view.subviewIndex = this.subviews.length;
-            this.subviews[this.subviews.length] = view;
+            this.subviews.splice(idx, 0, view);
+            // re-index
+            for (i = idx, l = subviewCount + 1; i < l; i++)
+            {
+              this.subviews[i].subviewIndex = i;
+            }
 
             // Manage the vtag of the new subview if present. If this view already has a view with the same vtag
             // then turn the reference into an Array and store all siblings with identical vtags in it
@@ -193,7 +201,43 @@ WV.View = WV.extend(Ext.util.Observable, {
             if (view.window) { view.setNeedsDisplay(); }
         }
 
+        else // View was already a subview of this superView (this === sv), so just move and re-index
+        {
+          var oldIdx = view.subviewIndex;
+
+          this.subviews.splice(oldIdx, 1);
+          this.subviews.splice(idx, 0, view);
+          for (i = Math.min(oldIdx, idx), l  = subviewCount; i < l; i++)
+          {
+            this.subviews[i].subviewIndex = i;
+          }
+
+          if (idx < oldIdx)
+          {
+            this.setNeedsDisplay();
+          }
+          else
+          {
+            view.setNeedsDisplay();
+          }
+        }
+
         return this;
+    },
+
+    addSubview: function(view)
+    {
+      return this.insertSubview(view, this.subviews.length);
+    },
+
+    bringSubviewToFront: function(view)
+    {
+      return this.addSubview(view);
+    },
+
+    sendSubviewToBack: function(view)
+    {
+      return this.insertSubview(view, 0);
     },
 
     removeFromSuperView: function()
@@ -391,7 +435,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             shadow = st.shadow,
             deg2Rad = Math.PI * 2 / 360;
 
-        ctx.globalAlpha = st.opacity || 1.0;
+        ctx.globalAlpha = st.opacity === 0 ? 0 : st.opacity || 1.0;
 
         if (st.translateX || st.translateY)
         {
@@ -415,8 +459,8 @@ WV.View = WV.extend(Ext.util.Observable, {
 //          m21 = sinTheta, m22 = cosTheta;
 
            // Clockwise
-            m11 = cosTheta, m12 = sinTheta,
-            m21 = -sinTheta, m22 = cosTheta;
+            m11 = cosTheta; m12 = sinTheta;
+            m21 = -sinTheta; m22 = cosTheta;
 
             // Calculate the shift of the point we are rotating around because the canvas rotates
             // around its origin.
@@ -446,7 +490,11 @@ WV.View = WV.extend(Ext.util.Observable, {
             // Draw the background up to the border, clipping if needed
             this.roundedRect(ctx, this.w, this.h, cr, 0, clip);
 
-            ctx.fill();
+            if (fill !== 'transparent')
+            {
+              ctx.fill();
+            }
+
             this.drawImage(ctx, rect);
         }
         else
@@ -457,13 +505,16 @@ WV.View = WV.extend(Ext.util.Observable, {
               ctx.rect(0, 0, this.w, this.h);
               ctx.clip();
             }
-            if (bw)
+            if (fill !== 'transparent')
             {
-              ctx.fillRect(bw, bw, this.w - 2 * bw, this.h - 2 * bw);
-            }
-            else
-            {
-              ctx.fillRect(0, 0, this.w, this.h);
+              if (bw)
+              {
+                ctx.fillRect(bw, bw, this.w - 2 * bw, this.h - 2 * bw);
+              }
+              else
+              {
+                ctx.fillRect(0, 0, this.w, this.h);
+              }
             }
 
             this.drawImage(ctx, rect);
@@ -558,7 +609,17 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     imageDidLoad: function(image)
     {
-        return this.setNeedsDisplay();
+      if (image.useNaturalSize)
+      {
+        var w = h = image.naturalWidth,
+            h = image.naturalHeight;
+
+        if (this.h != h || this.w != w)
+        {
+          return this.setSize(image.naturalWidth, image.naturalHeight);
+        }
+      }
+      return this.setNeedsDisplay();
     },
 
     isOpaque: function()
@@ -683,10 +744,11 @@ WV.View = WV.extend(Ext.util.Observable, {
     {
         if (!this.superView) { return this; }
 
-        if (typeof this.w === 'string') { this.w = this.convertRelative('width', this.w); }
-        if (typeof this.h === 'string') { this.h = this.convertRelative('height', this.h); }
-        if (typeof this.x === 'string') { this.x = this.convertRelative('x', this.x); }
-        if (typeof this.y === 'string') { this.y = this.convertRelative('y', this.y); }
+        // Call convertRelative this way to allow this function to be called on object literals
+        if (typeof this.w === 'string') { this.w = WV.View.prototype.convertRelative.call(this, 'width', this.w); }
+        if (typeof this.h === 'string') { this.h = WV.View.prototype.convertRelative.call(this, 'height', this.h); }
+        if (typeof this.x === 'string') { this.x = WV.View.prototype.convertRelative.call(this, 'x', this.x); }
+        if (typeof this.y === 'string') { this.y = WV.View.prototype.convertRelative.call(this, 'y', this.y); }
 
         return this;
     },
@@ -784,12 +846,11 @@ WV.View = WV.extend(Ext.util.Observable, {
         WV.removeFromCache(this);
         this.id = undefined;
 
-        if (top !== false && this.rendered)
+        if (top !== false)
         {
             this.removeFromSuperView();
         }
         this.purgeListeners();
-        this.rendered = false;
     },
 
     layoutSubviews: function()
@@ -1061,6 +1122,10 @@ WV.View = WV.extend(Ext.util.Observable, {
         if (!views) { return null; }
         else
         {
+            if (!Array.isArray(views))
+            {
+              views = [views];
+            }
             for (i = 0, l = views.length; i < l; i++)
             {
                 if (views[i].isDescendantOf(this))
