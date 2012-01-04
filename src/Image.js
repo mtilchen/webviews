@@ -24,6 +24,7 @@ WV.Image = WV.extend(Object, {
             this.naturalHeight = img.height;
             this.naturalWidth = img.width;
             this.loaded = true;
+
             if (this.ownerView)
             {
                 this.ownerView.imageDidLoad(this);
@@ -41,7 +42,19 @@ WV.Image = WV.extend(Object, {
 
         if (this.loaded)
         {
+          if (this.pattern)
+          {
+            if (typeof this.pattern === 'string')
+            {
+              this.pattern = ctx.createPattern(this._image, this.pattern);
+            }
+            ctx.fillStyle = this.pattern;
+            ctx.fillRect(x, y, w, h);
+          }
+          else
+          {
             ctx.drawImage(this._image, x, y, w, h);
+          }
         }
         else { WV.debug('Image not loaded: ' + this.id); }
     }
