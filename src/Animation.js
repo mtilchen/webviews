@@ -2,7 +2,7 @@
 (function() {
 
     var SEC_MS = 1000,
-        FPS = 30,
+        FPS = 35,
         UNIT_RE = /(^-?(\d+)(.\d*)?)(px|deg)/,
         COLOR_RE = /^#((\d|[A-F]){6})/i,
         animIdSeed = 0,
@@ -32,7 +32,7 @@
         if (l && !isAnimating)
         {
           isAnimating = true;
-          requestAnimationFrame(runAnimations);
+          runAnimations();
         }
     }
 
@@ -83,7 +83,7 @@
                           shortestDelay = delay;
                       }
                       clearTimeout(futureAnimTask);
-                      futureAnimTask = setTimeout(function() { requestAnimationFrame(runAnimations); },
+                      futureAnimTask = setTimeout(runAnimations,
                                                   shortestDelay);
                   }
               }
@@ -95,7 +95,6 @@
                   {
                       dirty = true;
                       anim.lastFrame = anim.currentFrame;
-                      view.rendered = false; // Hack, but it prevents any writes to the DOM until we are done
 
                       if (anim.isColor) // We need to ease r, g and b independently
                       {
@@ -131,11 +130,6 @@
                           anim.target[anim.key] = newVal;
                       }
                       anim.drawnFrames++;
-                      view.rendered = true;
-                      if (anim.needsLayout)
-                      {
-                          view.layoutSubviews();
-                      }
                   }
                   // We're done
                   if (anim.currentFrame >= anim.totalFrames)
@@ -188,10 +182,6 @@
           {
               delete view._animCount;
               delete activeViews[viewId];
-          }
-          if (dirty)
-          {
-              view.setNeedsDisplay();
           }
       }
 
@@ -319,11 +309,13 @@
           {
               this.removeAnimation(this.animations[animId]);
           }
+          return this;
         },
         removeAnimation: function(animation)
         {
             // The animation loop will pick this up and it will be removed properly
            this.animations[animation.id].cancelled = true;
+          return this;
         }
     });
 
