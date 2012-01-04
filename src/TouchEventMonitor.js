@@ -107,7 +107,7 @@
               {
                 // If the ctrl AND alt keys are down and this is a Tab or Tab-shift then change the key view.
                 // This will allow tabbing out of views that would otherwise consume the Tab key (TextArea)
-                if (ev.getCharCode() === 9 && ev.ctrlKey && ev.altKey)
+                if (ev.charCode === 9 && ev.ctrlKey && ev.altKey)
                 {
                   if (ev.shiftKey)
                   {
