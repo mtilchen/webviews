@@ -55,37 +55,40 @@ WV.Window = WV.extend(WV.View, {
 
         this.eventMonitor = new WV.EventMonitor(this);
 
+        if (window.TouchEvent)
+        {
+          this.touchEventMonitor = new WV.TouchEventMonitor(this);
+        }
+
         this.context2d = this.canvas.getContext('2d');
+
+        this.window = this; // For consistency
     },
 
     setViewsNeedDisplay: function(view)
     {
-        var self = this,
-            renderFunc = WV.requestAnimationFrame || setTimeout;
+        var queue = this.drawQueue;
+
 
         // Prevent views from being re-added to the queue if they are already in line by using a flag.
         // This will prevent recursive death if a view gets setNeedsDisplay called while drawing
         if (!view || (view._inDrawQueue_)) { return; }
 
         view._inDrawQueue_ = true;
-        this.drawQueue.push(view);
+        queue.push(view);
 
         WV.debug('*****');
-        if (!this._displayRef)
-        {
-            this._displayRef = renderFunc(function() {
-                while (self.drawQueue.length)
-                {
-                    self.drawQueue[0].redrawIfNeeded();
-                    delete self.drawQueue[0]._inDrawQueue_;
-                    self.drawQueue.shift();
-                }
-                WV.debug('Finish Drawing Window');
 
-                self._displayRef = null;
-            }, 0);
-            WV.debug('Start Drawing Window');
-        }
+        window.requestAnimationFrame(function() {
+            while (queue.length)
+            {
+                queue[0].redrawIfNeeded();
+                delete queue[0]._inDrawQueue_;
+                queue.shift();
+            }
+            WV.debug('Finish Drawing Window');
+        }, this.canvas);
+        WV.debug('Start Drawing Window');
     },
 
     baseDraw: function(rect, ctx)
