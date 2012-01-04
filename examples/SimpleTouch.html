@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Touch Example</title>
+
+    <meta name="viewport" content="width=device-width, user-scalable=0"/>
+    <link rel="stylesheet" type="text/css" href="resources/css/webviews.css"/>
+
+    <script src="../webviews-debug.js"></script>
+    <script>
+
+        WV.init(function (win) {
+
+            win.setStyle('color', 'lightgray');
+
+            win.addSubview({
+                x: 'center',
+                y: 'center',
+                w: '40%',
+                h: '40%',
+                style: {
+                    color: '777777',
+                    cornerRadius: 30,
+                    borderWidth: 5,
+                    borderColor: 'black'
+                },
+                touchesBegan:function(touches, e)
+                {
+                    touches.forEach(function(t) {
+                        var point = t.locationInView(this);
+
+                        console.log('began: ' + t.id + ' (' + point.x + ', ' + point.y + ')');
+                    }, this);
+                    WV.View.prototype.touchesBegan.call(this, touches, e);
+                },
+                touchesMoved:function(touches, e)
+                {
+                    touches.forEach(function(t) {
+                        var point = t.locationInView(this);
+
+                        console.log('moved: ' + t.id + ' (' + point.x + ', ' + point.y + ')');
+                    }, this);
+
+                    var point = touches[0].locationInView(this),
+                        previousPoint = touches[0].previousLocationInView(this);
+
+                    this.setOrigin(this.x + point.x - previousPoint.x,
+                                   this.y + point.y - previousPoint.y);
+
+                    WV.View.prototype.touchesBegan.call(this, touches, e);
+                },
+                touchesEnded:function(touches, e)
+                {
+                    touches.forEach(function(t) {
+                        var point = t.locationInView(this);
+
+                        console.log('ended: ' + t.id + ' (' + point.x + ', ' + point.y + ')');
+                    }, this);
+                    WV.View.prototype.touchesBegan.call(this, touches, e);
+                }
+            });
+        });
+
+    </script>
+</head>
+
+</html>

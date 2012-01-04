@@ -16,11 +16,11 @@ WV.Responder = {
 
         else if (this.canBecomeFirstResponder() === true)
         {
-            if (WV.Window.firstResponder)
+            if (this.window && this.window.firstResponder)
             {
-                if (WV.Window.firstResponder.resignFirstResponder() === true)
+                if (this.window.firstResponder.resignFirstResponder() === true)
                 {
-                    WV.Window.firstResponder = this;
+                    this.window.firstResponder = this;
                     this.isFirstResponder = true;
                     return true;
                 }
@@ -29,9 +29,9 @@ WV.Responder = {
                     return false;
                 }
             }
-            else
+            else if (this.window)
             {
-                WV.Window.firstResponder = this;
+                this.window.firstResponder = this;
                 this.isFirstResponder = true;
                 return true;
             }
@@ -42,9 +42,9 @@ WV.Responder = {
     {
         if (this.canResignFirstResponder() === true)
         {
-            if (this === WV.Window.firstResponder)
+            if (this.window && (this === this.window.firstResponder))
             {
-                WV.Window.firstResponder = undefined;
+                this.window.firstResponder = undefined;
             }
             this.isFirstResponder = false;
             return true;
@@ -54,7 +54,7 @@ WV.Responder = {
             return false;
         }
     },
-    noResponderFor: function(eName, e)
+    noResponderFor: function(eName, e, misc)
     {
         // Play sound for keyDown?
         if (WV.debugMode && false)
@@ -62,6 +62,10 @@ WV.Responder = {
             if (eName.indexOf('key') === 0)
             {
                 WV.log('Key: ', e.character);
+            }
+            else if (eName.indexOf('touch') === 0)
+            {
+                WV.log(eName, ':\t', misc, '\t', e);
             }
             else
             {
@@ -132,5 +136,21 @@ WV.Responder = {
     keyUp: function(e)
     {
         this.nextResponder ? this.nextResponder.keyUp(e) : this.noResponderFor('keyUp', e);
+    },
+    touchesBegan: function(touches, e)
+    {
+      this.nextResponder ? this.nextResponder.touchesBegan(touches, e) : this.noResponderFor('touchesBegan', e, touches);
+    },
+    touchesMoved: function(touches, e)
+    {
+      this.nextResponder ? this.nextResponder.touchesMoved(touches, e) : this.noResponderFor('touchesMoved', e, touches);
+    },
+    touchesEnded: function(touches, e)
+    {
+      this.nextResponder ? this.nextResponder.touchesEnded(touches, e) : this.noResponderFor('touchesEnded', e, touches);
+    },
+    touchesCancelled: function(touches, e)
+    {
+      this.nextResponder ? this.nextResponder.touchesCancelled(touches, e) : this.noResponderFor('touchesCancelled', e, touches);
     }
 };

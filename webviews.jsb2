@@ -22,6 +22,9 @@
             text: "EventMonitor.js",
             path: "src/"
         },{
+            text: "TouchEventMonitor.js",
+            path: "src/"
+        },{
             text: "Responder.js",
             path: "src/"
         },{
