@@ -1,41 +1,5 @@
-WV.FormView = WV.extend(WV.View, {
-    vtype: 'form',
-    tag: 'form',
-    method: 'POST',
-    action: null,
-    accept: null,
-    acceptCharset: null,
-    contentType: 'application/x-www-form-urlencoded',
-    domTpl: { method: '{method}', action: '{action}', enctype: '{contentType}', 'accept-charset': '{acceptCharset}' }
-});
-
-WV.Input = WV.extend(WV.View, {
-    vtype: 'input',
-    tag: 'input',
-    name: null,
-    value: null,
-    inputType: 'hidden',
-    domTpl: { type: '{inputType}', name: '{name}', value: '{value}' },
-    getForm: function()
-    {
-        if (this.rendered)
-        {
-            return WV.get(this.dom.form.id);
-        }
-        return undefined;
-    },
-    mouseDown: function(e)
-    {
-        if (this.rendered && (this.dom.disabled || this.dom.readOnly))
-        {
-            e.cancel();
-        }
-        return WV.Input.superclass.mouseDown.call(this, e);
-    }
-});
 
 WV.Control = WV.extend(WV.View, {
-    inputType: 'hidden',
     stateful: true,
     state: 'normal',
     name: '',
@@ -49,32 +13,8 @@ WV.Control = WV.extend(WV.View, {
         WV.Control.superclass.constructor.call(this, config);
         if (!this.subviews.input)
         {
-            this.addSubview({
-                vtype: 'input',
-                vtag: 'input',
-                name: this.name,
-                inputType: this.inputType
-            });
         }
         this.setValue(this[this.valuePropName]);
-        return this;
-    },
-    afterRender: function()
-    {
-        WV.Control.superclass.afterRender.call(this);
-        // Putting the readOnly attribute in the template during rendering always causes it to be true.
-        var input = this.subviews.input;
-
-        this.setReadOnly(this.readOnly);
-        if (input)
-        {
-            input.dom.disabled = !this.enabled;
-            if (Ext.isIE && this.readOnly || !this.enabled)
-            {
-                input.dom.contentEditable = false;
-                input.dom.unselectable = 'on';
-            }
-        }
         return this;
     },
     canBecomeFirstResponder: function()
@@ -87,33 +27,11 @@ WV.Control = WV.extend(WV.View, {
 
         if (this.readOnly) { this.resignFirstResponder(); }
 
-        var input = this.subviews.input;
-
-        if (input && input.rendered && this.enabled)
-        {
-            input.dom.readOnly = this.readOnly;
-            if (Ext.isIE)
-            {
-                input.dom.contentEditable = !this.readOnly;
-                input.dom.unselectable = this.readOnly ? 'on' : '';
-            }
-        }
         return this;
     },
     setEnabled: function(enabled)
     {
         WV.Control.superclass.setEnabled.call(this, enabled);
-        var input = this.subviews.input;
-
-        if (input && input.rendered)
-        {
-            input.dom.disabled = !this.enabled;
-            if (Ext.isIE)
-            {
-                input.dom.contentEditable = this.enabled;
-                input.dom.unselectable = this.enabled ? '' : 'on';
-            }
-        }
 
         this.enabled ? this.setReadOnly(this.hasOwnProperty('readOnly') ? this.readOnly : false) :
                        this.setReadOnly(true);
@@ -137,10 +55,6 @@ WV.Control = WV.extend(WV.View, {
     },
     getValue: function()
     {
-        if (this.rendered)
-        {
-            this[this.valuePropName] = this.subviews.input.dom.value;
-        }
         return this[this.valuePropName];
     },
     setValue: function(val)
@@ -148,14 +62,7 @@ WV.Control = WV.extend(WV.View, {
         if (this.readOnly === true) { return this; }
 
         this[this.valuePropName] = (val !== undefined && val !== null) ? val : '';
-        if (this.rendered)
-        {
-            this.subviews.input.dom.value = this[this.valuePropName];
-        }
-        else
-        {
-            this.subviews.input.value = this[this.valuePropName];
-        }
+
         return this;
     },
     becomeFirstResponder: function()
@@ -181,81 +88,76 @@ WV.Control = WV.extend(WV.View, {
 
 WV.style.Button = WV.extend(WV.StyleMap, {
     defaults: {
-        borderBottomColor: '#E7E7E7',
-        borderLeftColor: '#C8C8C8',
-        borderRadius: '2px',
-        borderRightColor: '#E7E7E7',
-        borderStyle: 'solid',
-        borderTopColor: '#C8C8C8',
-        borderWidth: '1px',
-        cursor: 'pointer' },
+        borderBottomColor: 'E7E7E7',
+        borderLeftColor: 'C8C8C8',
+        cornerRadius: 2,
+        borderRightColor: 'E7E7E7',
+        borderTopColor: 'C8C8C8',
+        borderColor: 'C8C8C8',
+        borderWidth: 1 },
     states: [{
         name: 'focus',
         styles: {
-            borderBottomColor: '#4D78A4',
-            borderLeftColor: '#4D78A4',
-            borderRightColor: '#4D78A4',
-            borderTopColor: '#4D78A4',
-            borderWidth: '2px'  }
+            borderBottomColor: '4D78A4',
+            borderLeftColor: '4D78A4',
+            borderRightColor: '4D78A4',
+            borderTopColor: '4D78A4',
+            borderColor: '4D78A4',
+            borderWidth: 2  }
     }],
     outerborder: {
         defaults: {
-            borderRadius: '2px',
-            borderStyle: 'solid',
-            borderWidth: '1px' },
+            cornerRadius: 2,
+            borderWidth: 1 },
         states: [{
             name: 'normal',
             styles: {
-                borderBottomColor: '#7E7E7E',
-                borderLeftColor: '#939393',
-                borderRightColor: '#939393',
-                borderTopColor: '#ABABAB' }
+                borderBottomColor: '7E7E7E',
+                borderLeftColor: '939393',
+                borderRightColor: '939393',
+                borderColor: '939393',
+                borderTopColor: 'ABABAB' }
         },{
             name: 'active',
             styles: {
-                backgroundColor: '#D2D4D7',
-                backgroundImage: 'url(resources/images/form/shadow-x.png)',
-                backgroundRepeat: 'repeat-x',
-                borderBottomColor: '#4D4D4D',
-                borderLeftColor: '#3D3D3D',
-                borderRadius: '0px',
-                borderRightColor: '#5C5C5C',
-                borderTopColor: '#515151' }
+                color: 'D2D4D7',
+                image: 'resources/images/form/shadow-x.png',
+                cornerRadius: 0,
+                borderBottomColor: '4D4D4D',
+                borderLeftColor: '3D3D3D',
+                borderRightColor: '5C5C5C',
+                borderColor: '5C5C5C',
+                borderTopColor: '515151' }
         },{
             name: 'focus',
             styles: {
-                borderRadius: '0px' }
+                cornerRadius: 0 }
         }]
     },
     innerborder: {
         defaults: {
-            borderRadius: '2px',
-            borderStyle: 'solid',
-            borderWidth: '1px'
+            cornerRadius: 2,
+            borderWidth: 1
         },
         states: [{
             name: 'normal',
             styles: {
-                backgroundColor: '#F9F9F9',
-                borderBottomColor: '#D1D1D1',
-                borderLeftColor: '#EDEDED',
-                borderRightColor: '#EDEDED',
-                borderTopColor: '#FAFAFA' }
+                backgroundColor: 'F9F9F9',
+                borderBottomColor: 'D1D1D1',
+                borderLeftColor: 'EDEDED',
+                borderRightColor: 'EDEDED',
+                borderColor: 'FAFAFA' }
         },{
             name: 'active',
             styles: {
-                backgroundColor: 'transparent',
-                backgroundImage: 'url(resources/images/form/shadow-y.png)',
-                backgroundRepeat: 'repeat-y',
-                borderBottomColor: '#A7A9AB',
-                borderLeftColor: '#666',
-                borderRadius: '0px',
-                borderRightColor: 'transparent',
-                borderTopColor: '#777' }
+                color: 'transparent',
+                image: 'resources/images/form/shadow-y.png',
+                cornerRadius: 0,
+                borderColor: '777' }
         },{
             name: 'focus',
             styles: {
-                borderRadius: '0px' }
+                cornerRadius: 0 }
         }]
     },
     label: {
@@ -263,18 +165,11 @@ WV.style.Button = WV.extend(WV.StyleMap, {
             fontFamily: 'Verdana',
             fontSize: '11px',
             fontWeight: 'normal',
-            textAlign: 'center',
-            marginLeft: '0px',
-            marginTop: '0px'
+            textAlign: 'center'
         },
         states: [{
             name: 'normal',
             styles: {}
-        },{
-            name: 'active',
-            styles: {
-                marginLeft: '1px',
-                marginTop: '1px' }
         }]
     }
 });
@@ -439,7 +334,7 @@ WV.style.CheckBox = WV.extend(WV.StyleMap, {
             styles: {
                 borderColor: '#4D78A4',
                 borderWidth: '2px',
-                borderRadius: '2px',
+                cornerRadius: '2px',
                 borderStyle: 'solid' }
         }]
     },
@@ -447,7 +342,7 @@ WV.style.CheckBox = WV.extend(WV.StyleMap, {
         defaults: {
             borderBottomColor: '#7E7E7E',
             borderLeftColor: '#939393',
-            borderRadius: '2px',
+            cornerRadius: '2px',
             borderRightColor: '#939393',
             borderStyle: 'solid',
             borderTopColor: '#ABABAB',
@@ -466,7 +361,7 @@ WV.style.CheckBox = WV.extend(WV.StyleMap, {
         },{
             name: 'focus',
             styles: {
-                borderRadius: '0px' }
+                cornerRadius: '0px' }
         }]
     },
     innerborder: {
@@ -474,7 +369,7 @@ WV.style.CheckBox = WV.extend(WV.StyleMap, {
             backgroundColor: '#F9F9F9',
             borderBottomColor: '#D1D1D1',
             borderLeftColor: '#EDEDED',
-            borderRadius: '2px',
+            cornerRadius: '2px',
             borderRightColor: '#EDEDED',
             borderStyle: 'solid',
             borderTopColor: '#FAFAFA',
@@ -493,7 +388,7 @@ WV.style.CheckBox = WV.extend(WV.StyleMap, {
         },{
             name: 'focus',
             styles: {
-                borderRadius: '0px' }
+                cornerRadius: '0px' }
         }]
     },
     checkImage: {
@@ -582,7 +477,7 @@ WV.style.RadioButton = WV.extend(WV.StyleMap, {
             name: 'focus',
             styles: {
                 borderColor: '#4D78A4',
-                borderRadius: '10px',
+                cornerRadius: '10px',
                 borderStyle: 'solid',
                 borderWidth: '2px'
             }
@@ -791,7 +686,7 @@ WV.style.ListViewItem = WV.extend(WV.StyleMap, {
     defaults: {
         borderBottomColor: '#E7E7E7',
         borderLeftColor: '#C8C8C8',
-        borderRadius: '2px',
+        cornerRadius: '2px',
         borderRightColor: '#E7E7E7',
         borderStyle: 'solid',
         borderTopColor: '#C8C8C8',
@@ -808,7 +703,7 @@ WV.style.ListViewItem = WV.extend(WV.StyleMap, {
     }],
     innerborder: {
         defaults: {
-            borderRadius: '2px',
+            cornerRadius: '2px',
             borderStyle: 'solid',
             borderWidth: '1px'
         },
@@ -825,13 +720,13 @@ WV.style.ListViewItem = WV.extend(WV.StyleMap, {
                 backgroundRepeat: 'repeat-y',
                 borderBottomColor: '#A7A9AB',
                 borderLeftColor: '#666',
-                borderRadius: '0px',
+                cornerRadius: '0px',
                 borderRightColor: 'transparent',
                 borderTopColor: '#777' }
         },{
             name: 'focus',
             styles: {
-                borderRadius: '0px' }
+                cornerRadius: '0px' }
         }]
     },
     label: {
@@ -1011,13 +906,13 @@ WV.ListView = WV.extend(WV.Matrix, {
 WV.style.TextComponent = WV.extend(WV.StyleMap, {
     defaults: {
         backgroundImage: 'url(resources/images/form/inset.png)',
-        borderRadius: '2px'
+        cornerRadius: '2px'
     },
     border: {
         defaults: {
             backgroundColor: '#F9F9F9',
             borderColor: '#999',
-            borderRadius: '2px',
+            cornerRadius: '2px',
             borderStyle: 'solid',
             borderWidth: '1px'
         },
@@ -1047,102 +942,315 @@ WV.style.TextComponent = WV.extend(WV.StyleMap, {
     }
 });
 
+WV.style.TextField = WV.extend(WV.StyleMap, {
+  defaults: {
+    color: 'white',
+    font: '12pt Helvetica',
+    cornerRadius: 5,
+    cursor: 'text'
+  },
+  states: [{
+    name: 'focus',
+    styles: {
+      borderColor: '#4D78A4',
+      borderWidth: 2 }
+  }]
+});
+
+
 WV.TextField = WV.extend(WV.Control, {
-    vtype: 'textfield',
-    h: 22,
-    w: 150,
-    cls: 'wv-text-field',
-    inputType: 'text',
-    valuePropName: 'text',
-    styleMap: new WV.style.TextComponent(),
-    subviews: [{
-        vtag: 'border',
-        x: 2,
-        y: 2,
-        w: 'w',
-        h: 'h',
-        stateful: true,
-        autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX
-    }],
-    constructor: function(config)
-    {
-        WV.TextField.superclass.constructor.call(this, config);
-        var input = this.subviews.input;
-        input.setFrame({ x: 2, y: 2, w: this.w, h: this.h});
-        // Only initialize the state if we have to. It would otherwise already have been done in addSubview
-        if (input.stateful === false)
-        {
-            input.stateful = true;
-            input.setState(this.state);
-        }
-        input.autoResizeMask = WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX;
-        if (this.readOnly)
-        {
-            input.value = this[this.valuePropName]; // 'text'
-        }
-        return this;
-    },
-    setReadOnly: function(ro)
-    {
-        WV.TextField.superclass.setReadOnly.call(this, ro);
-        var input = this.subviews.input;
+  vtype: 'textfield',
+  tpl: WV.createTemplate('<textarea id="{id}" rows="1" wrap="off" style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; display:none; overflow-x:{overflowX}; overflow-y:hidden; clip:rect(0px auto {clipHeight}px 0px); white-space:nowrap; opacity: 0.0; background-color:transparent; color:transparent; margin-left:{leftMargin}px; border-style:none; resize:none; font:{font}">{text}</textarea>'),
+  h: 30,
+  w: 100,
+  clipToBounds: true,
+  styleMap: new WV.style.TextField(),
+  horizontalInsets: 5,
+  constructor: function(config)
+  {
+    config = config || {};
 
-        if (input && this.enabled)
-        {
-            input.setStyle('cursor', this.readOnly ? 'default' : 'text');
-            if (input.rendered)
-            {
-                input.dom.setAttribute('autocomplete', this.readOnly ? 'off' : null);
-            }
-        }
-        return this;
-    },
-    select: function()
-    {
-        this.becomeFirstResponder();
-        return this;
-    },
-    mouseDown: function(e)
-    {
-        if (!this.enabled || this.readOnly)
-        {
-            e.cancel();
-        }
-        else
-        {
-            this.becomeFirstResponder(true);
-        }
+    WV.Text.superclass.constructor.call(this, config);
 
-        return WV.TextField.superclass.mouseDown.call(this, e);
-    },
-    becomeFirstResponder: function(preventSelect)
-    {
-        var result = WV.TextField.superclass.becomeFirstResponder.call(this),
-            input = this.subviews.input;
+    this.setText(this.text || '');
+    this.initDom();
 
-        if (result === true)
-        {
-            if (this.rendered && !input.isHiddenOrHasHiddenAncestor())
-            {
-                preventSelect ? input.dom.focus() : input.dom.select();
-            }
-        }
-        return result;
-    },
-    resignFirstResponder: function()
+    return this;
+  },
+  initDom: function()
+  {
+    if (!this.dom && document)
     {
-        var result = WV.TextField.superclass.resignFirstResponder.call(this),
-            input = this.subviews.input;
+      var data = Object.create(this),
+          domFrame = this.computeDomFrame(),
+          self = this;
 
-        if (result === true)
-        {
-            if (this.rendered && !input.isHiddenOrHasHiddenAncestor())
-            {
-                input.dom.blur();
-            }
+      WV.apply(data, domFrame);
+      data.font = this.style.font;
+      data.clipHeight = domFrame.h - 20; // Clip out the scrollbar
+      data.overflowX = Ext.isGecko ? 'scroll' : 'hidden';
+      data.leftMargin = WV.isiOS ? -3 : 0;
+      this.dom = this.tpl.append(Ext.getBody(), data, true).dom;
+      this.dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
+      this.dom.oninput = function() {
+        self.setText(self.dom.value);
+        self.updateInsertion(true);
+      };
+      this.dom.onscroll = function() {
+        self.setNeedsDisplay();
+      };
+      this.dom.onfocus = function() {
+        if (self.window.isFullScreen) {
+          window.scrollTo(0,0); // Prevent the browser from scrolling the document to the text field
         }
-        return result;
+      };
     }
+  },
+  computeDomFrame: function()
+  {
+    var domFrame = this.convertRectToView(this.getFrame(), null),
+        canvasRect;
+
+    if (true || this.window)
+    {
+      var textHeight = this._textMetrics.h;
+
+      // TODO: Compute canvas offset
+      // Must compensate for the canvas' offset, horizontal inset etc
+//        canvasRect = this.window.canvas.getBoundingClientRect();
+      canvasRect = { left: 0, top: 0};
+      domFrame.x = domFrame.x + this.horizontalInsets + canvasRect.left;
+      domFrame.y = domFrame.y + domFrame.h / 2 - textHeight/ 2 + canvasRect.top;
+      domFrame.h = textHeight + 20; // Add 20px for the scrollbars, which will be clipped out
+      domFrame.w = domFrame.w - this.horizontalInsets * 2;
+    }
+    return domFrame;
+  },
+  setFrame: function(frame)
+  {
+    WV.Text.superclass.setFrame.call(this, frame);
+    if (this.dom)
+    {
+      var domFrame = this.computeDomFrame(),
+          st = this.dom.style;
+
+      st.left = domFrame.x + 'px';
+      st.top = domFrame.y + 'px';
+      st.width = domFrame.w + 'px';
+      st.height = domFrame.h + 'px';
+
+      // We need to adjust the the clipping region of the textarea overlay to hide the scrollbars. FF forces us to do this
+      // because it will not scroll a single-line textarea with overflow:hidden like the other browsers do.
+      this.dom.style.clip = 'rect(0px auto ' + (domFrame.h - 20)  + 'px 0px)';
+    }
+    return this;
+  },
+  draw: function(ctx, rect)
+  {
+    var font = this.style.font,
+        height = this._textMetrics.h,
+        startX = this.horizontalInsets;
+
+    ctx.font = font;
+    ctx.fillStyle = this.style.textColor || 'black';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'start';
+
+    if (this.dom)
+    {
+      // Compensate for any horizontal scrolling that may be present in the overlay
+      startX -= this.dom.scrollLeft;
+    }
+
+    // Clip to the horizontal insets
+    ctx.beginPath();
+    ctx.rect(this.horizontalInsets, 0, this.w - this.horizontalInsets * 2, this.h);
+    ctx.clip();
+
+    ctx.fillText(this.text || '', startX, (this.h / 2) - (height / 2)); // Draw the text vertically centered in the view
+  },
+  setStyle: function(name, value)
+  {
+    WV.Text.superclass.setStyle.call(this, name, value);
+    if (this.dom)
+    {
+      if (name === 'font')
+      {
+        this.dom.style.font = value;
+        // TODO: Need to reposition overlay due to potential change in text size
+      }
+    }
+    return this;
+  },
+  setText: function(text)
+  {
+    text = text || '';
+    this.text = text.replace(/\n|\t/g, '');
+    this._textMetrics = WV.Text.measure(this.style.font, this.text);
+
+    if (this.dom)
+    {
+      this.dom.value = this.text;
+    }
+    this.setNeedsDisplay();
+  },
+  selectedText: function()
+  {
+    if (this.dom)
+    {
+      return this.dom.value.substring(this.dom.selectionStart, this.dom.selectionEnd);
+    }
+    else
+    {
+      return '';
+    }
+  },
+  updateInsertion: function(show)
+  {
+    if (WV.isMobile) { return; } // Mobile browsers add their own cursors
+
+    if (!this._insertion)
+    {
+      this._insertion = new WV.View({
+          w: 1,
+          h: this._textMetrics.h * 1.15,
+          style: { color: this.style.textColor || 'black' }
+      });
+      this.addSubview(this._insertion);
+    }
+    if (this.dom)
+    {
+      if (!show || this.selectedText().length)
+      {
+        clearTimeout(this._blinkRef); // Cancel blinking
+        this._insertion.setHidden(true);
+      }
+      else
+      {
+        var self = this;
+        // Do this on the next pass through the event loop so that the selectionStart is correct
+        window.requestAnimationFrame(function() {
+          var textToMeasure = self.text.substring(0, self.dom.selectionStart).replace(/ /g, '&nbsp;'), // We need to measure leading and trailing whitespace
+              textWidth = WV.Text.measure(self.style.font, textToMeasure).w;
+
+          self._insertion.setOrigin(textWidth + self.horizontalInsets -self.dom.scrollLeft,
+                                    self.h / 2 - self._insertion.h / 2);
+          self._insertion.setHidden(false);
+          self._insertion.setNeedsDisplay();
+          self.blinkInsertion(false, 100);
+        }, this.window.canvas);
+      }
+    }
+  },
+  blinkInsertion: function(on, wait)
+  {
+    var self = this;
+
+    clearTimeout(this._blinkRef);
+    this._blinkRef = setTimeout(function() {
+      self._insertion.setHidden(on);
+      self.blinkInsertion(!on);
+    }, wait || 500);
+  },
+  setReadOnly: function(ro)
+  {
+    WV.TextField.superclass.setReadOnly.call(this, ro);
+
+    if (this.dom && this.enabled)
+    {
+      this.dom.setStyle('cursor', this.readOnly ? 'default' : 'text');
+      this.dom.setAttribute('autocomplete', this.readOnly ? 'off' : null);
+    }
+    return this;
+  },
+  select: function()
+  {
+    this.becomeFirstResponder();
+    return this;
+  },
+  touchesBegan:function(touches, e)
+  {
+    if (this.enabled && !this.readOnly && !this.isFirstResponder)
+    {
+      this.becomeFirstResponder(true);
+    }
+    return WV.TextField.superclass.touchesBegan.call(this, touches, e);
+  },
+  mouseDown: function(e)
+  {
+    if (this.enabled && !this.readOnly)
+    {
+      if (this.isFirstResponder)
+      {
+        this.updateInsertion(!this.selectedText().length);
+      }
+      else
+      {
+        this.becomeFirstResponder(true);
+      }
+    }
+    return WV.TextField.superclass.mouseDown.call(this, e);
+  },
+  mouseMove: function(e)
+  {
+    if (this.enabled && !this.readOnly)
+    {
+      if (this.dom)
+      {
+        this.dom.style.display = null;
+      }
+    }
+    return WV.TextField.superclass.mouseMove.call(this, e);
+  },
+  mouseOut: function(e)
+  {
+    if (!this.isFirstResponder && this.dom)
+    {
+      this.dom.style.display = 'none';
+    }
+    return WV.TextField.superclass.mouseOut.call(this, e);
+  },
+  mouseDragged: function(e)
+  {
+    this.updateInsertion(false);
+    return WV.TextField.superclass.mouseDragged.call(this, e);
+  },
+  keyUp: function(e)
+  {
+    this.updateInsertion(true);
+
+    return WV.TextField.superclass.keyUp.call(this, e);
+  },
+  becomeFirstResponder: function(preventSelect)
+  {
+    var result = WV.TextField.superclass.becomeFirstResponder.call(this);
+
+    if (result === true)
+    {
+      if (this.dom && !this.isHiddenOrHasHiddenAncestor())
+      {
+        this.dom.style.display = null;
+        preventSelect ? this.dom.focus() : this.dom.select();
+        this.updateInsertion(preventSelect);
+      }
+    }
+    return result;
+  },
+  resignFirstResponder: function()
+  {
+    var result = WV.TextField.superclass.resignFirstResponder.call(this);
+
+    if (result === true)
+    {
+      if (this.dom && !this.isHiddenOrHasHiddenAncestor())
+      {
+        this.dom.blur();
+        this.dom.style.display = 'none';
+        this.updateInsertion(false);
+      }
+    }
+    return result;
+  }
 });
 
 WV.PasswordField = WV.extend(WV.TextField, {

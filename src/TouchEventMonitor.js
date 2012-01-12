@@ -60,6 +60,8 @@
             touchesMoved: {
                 before: function(ev)
                 {
+                    ev.preventDefault();
+
                   return true;
                 }
             },
@@ -296,9 +298,6 @@
 
               var targets, rect, canvasRect, proceed,
                   isKeyEvent = ename.indexOf('key') === 0;
-
-              e.preventDefault();
-
 
               proceed = monitors[ename].before ? monitors[ename].before(e) : true;
 

@@ -4,7 +4,7 @@
 <head>
   <title>Hello World</title>
 
-    <meta name="viewport" content="width=device-width, user-scalable=0" />
+    <meta name="viewport" content="width=device-width, user-scalable=1" />
     <link rel="stylesheet" type="text/css" href="resources/css/webviews.css" />
 
     <script src="../webviews-debug.js"></script>
@@ -85,13 +85,12 @@
             win.addSubview({
                 id: 'textview',
                 vtype: 'text',
-                text: 'Dude!\n\n\n\n\n Where\'s\n my\n car?',
-                wrap: true,
+                text: 'Dude!\n    Where\'s   \nmy\n  car?',
                 align: 'left',
                 x: 900,
                 y: 300,
                 w: 300,
-                h: 300,
+                h: 200,
                 autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_LEFT_FLEX,
                 style: {
                     color: 'white',

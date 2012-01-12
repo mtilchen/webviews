@@ -32,10 +32,13 @@
                 }
             },
             mouseMove: {
-                before: function()
+                before: function(win)
                 {
                     var prevOver = mouseOverOwners[touchId];
                     mouseOverOwners[touchId] = targetV;
+
+                    // Respect the cursor style of the view we are over
+                    win.canvas.style.cursor = targetV.style.cursor || 'auto';
 
                     // Mouse entered/exited
                     if (prevOver !== mouseOverOwners[touchId])
@@ -387,7 +390,7 @@
                 {
                     touchId = be.pointerId || 1;
 
-                    proceed = monitors[ename].before ? monitors[ename].before() : true;
+                    proceed = monitors[ename].before ? monitors[ename].before(win) : true;
 
                     if (proceed !== false && targetV[ename])
                     {

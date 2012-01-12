@@ -57,7 +57,8 @@ WV = (function() {
 
         style: {}, // Namespace for styles
 
-        isIPhone: /iphone/.test(userAgent),
+        isiOS: /iphone|ipad/.test(userAgent),
+        isMobile: /iphone|ipad|android|iemobile/.test(userAgent),
 
         id: function()
         {

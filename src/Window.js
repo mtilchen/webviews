@@ -25,8 +25,10 @@ WV.Window = WV.extend(WV.View, {
             this.w = this.previousW = this.canvas.width;
             this.h = this.previousH = this.canvas.height;
         }
-        if (!this.canvas)
+        if (!this.canvas) // Full-screen app
         {
+            this.isFullScreen = true;
+
             var body = document.body || document.documentElement;
 
             Ext.select('html').setStyle('overflow', 'hidden');
@@ -43,9 +45,12 @@ WV.Window = WV.extend(WV.View, {
             this.w = this.previousW = this.canvas.width = Ext.lib.Dom.getViewportWidth();
             this.h = this.previousH = this.canvas.height = Ext.lib.Dom.getViewportHeight();
 
-            Ext.EventManager.addListener(window, 'resize', function() {
+            if (!WV.isiOS)
+            {
+              Ext.EventManager.addListener(window, 'resize', function() {
                 this.setSize();
-            }, this, { buffer: 1 });
+              }, this, { buffer: 1 });
+            }
         }
 
         // TODO: Create a way to set this in wib loading and declaratively

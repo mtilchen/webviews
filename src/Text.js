@@ -1,10 +1,10 @@
 
 WV.Text = WV.extend(WV.View, {
     vtype: 'text',
-    tpl: WV.createTemplate('<div id="{id}" style="position: absolute; left: {x}px; top: {y}px; width: {w}px; height: {h}px; opacity: 0.0; overflow: visible; font: {_font}">{text}</div>'),
-
+    tpl: WV.createTemplate('<div id="{id}" style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; overflow:visible; color:transparent; font:{_font}">{text}</div>'),
     wrap: false,
     align: 'left',
+    style: { font: '12pt sans-serif'},
 
     constructor: function(config)
     {
@@ -13,27 +13,21 @@ WV.Text = WV.extend(WV.View, {
         WV.Text.superclass.constructor.call(this, config);
 
         this.setText(this.text || '');
-        this.text = this.lines.join('<br/>');
         this.initDom();
-        delete this.text; // Must use getText()
+
         this.setAlign(this.align);
-        this.selection = {
-            start: 0,
-            end: 0
-        };
 
         return this;
     },
     initDom: function()
     {
-        //TODO: Re-enable transparent text overlay for supporting selection
-//        if (!this.dom && document)
-//        {
-//            this._font = this.style.font || '';
-//            this.dom = this.tpl.append(Ext.getBody(), this, true).dom;
-//            this.dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
-//            delete this._font;
-//        }
+        if (!this.dom && document)
+        {
+            this._font = this.style.font || '';
+            this.dom = this.tpl.append(Ext.getBody(), this, true).dom;
+            this.dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
+            delete this._font;
+        }
         return this.setWrap(this.wrap);
     },
     setFrame: function(frame)
@@ -67,13 +61,9 @@ WV.Text = WV.extend(WV.View, {
 
         if (this.dom)
         {
-            this.dom.innerText = text;
+            this.dom.innerText = text.replace(/ /g, '&nbsp;');
         }
         this.setNeedsDisplay();
-    },
-    getText: function()
-    {
-        return this.lines.join('\n');
     },
 
     setWrap: function(wrap)
@@ -81,7 +71,7 @@ WV.Text = WV.extend(WV.View, {
         this.wrap = wrap === true;
         if (this.dom)
         {
-            this.dom.style.whiteSpace = this.wrap ? 'normal' : 'nowrap';
+            this.dom.style.whiteSpace = this.wrap ? 'pre-wrap' : 'pre';
         }
         this.setNeedsDisplay();
         return this;
@@ -126,51 +116,23 @@ WV.Text = WV.extend(WV.View, {
         }
 
         //TODO: Support wrapping
-        // If we have selected regions then we need to paint them separately
         this.lines.forEach(function(line, i) {
-            ctx.fillText(line.trim() || '', startX, i * height);
+            ctx.fillText(line.replace(/&nbsp;/g, ' ') || '', startX, i * height);
         });
     },
 
     selectedText: function()
     {
-        return this.text.substring(this.selection.start, this.selection.end);
-    },
+      var selection = window.getSelection();
 
-    mouseDown: function(e)
-    {
-        WV.log('**** Mouse Down ****');
-        // Clear selection
-        this.beginSelection(this.convertPointFromView(e.windowPoint));
-        return WV.Text.superclass.mouseDown.call(this, e);
-    },
-    mouseDragged: function(e)
-    {
-        WV.log('Selection: ' + window.getSelection().toString());
-        // Clear selection in all other Text instances
-        // Calculate selected characters starting from original insertion point
-        // Redraw
-        return WV.Text.superclass.mouseDragged.call(this, e);
-    },
-
-    beginSelection: function(p /* Point in view coordinates */)
-    {
-        var line = Math.floor(p.y / WV.Text.measure(this.style.font, this.lines[0]).h),
-            i, l,
-            offset = this.lines[line].length;
-
-        for (i = 0, l = this.lines[line].length; i < l; i++)
-        {
-            //TODO: Support center and right align
-            if (p.x < WV.Text.measure(this.style.font, this.lines[line].substring(0, i)).w)
-            {
-                offset = i;
-                break;
-            }
-        }
-
-        WV.log('Selection start line: ' + line);
-        WV.log('Selection start offset: ' + offset);
+      if (selection.anchorNode && (selection.anchorNode.compareDocumentPosition(this.dom) & 8)) // Does our dom element contains the anchorNode?
+      {
+        return selection.toString();
+      }
+      else
+      {
+        return '';
+      }
     }
 });
 
@@ -183,3 +145,4 @@ WV.Text.measure = function(font, text)
 
     return { w: el.clientWidth, h: el.clientHeight };
 }
+
