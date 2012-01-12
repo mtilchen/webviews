@@ -960,7 +960,7 @@ WV.style.TextField = WV.extend(WV.StyleMap, {
 
 WV.TextField = WV.extend(WV.Control, {
   vtype: 'textfield',
-  tpl: WV.createTemplate('<textarea id="{id}" rows="1" wrap="off" style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; display:none; overflow-x:{overflowX}; overflow-y:hidden; clip:rect(0px auto {clipHeight}px 0px); white-space:nowrap; opacity: 0.0; background-color:transparent; color:transparent; margin-left:{leftMargin}px; border-style:none; resize:none; font:{font}">{text}</textarea>'),
+  tpl: WV.createTemplate('<textarea id="{id}" rows="1" wrap="off" style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; display:none; overflow-x:{overflowX}; overflow-y:hidden; clip:rect(0px auto {clipHeight}px 0px); white-space:nowrap; background-color:transparent; color:transparent; margin-left:{leftMargin}px; border-style:none; resize:none; font:{font}">{text}</textarea>'),
   h: 30,
   w: 100,
   clipToBounds: true,
