@@ -1008,7 +1008,7 @@ WV.TextField = WV.extend(WV.Control, {
   },
   computeDomFrame: function()
   {
-    var domFrame = this.convertRectToView(this.getFrame(), null),
+    var domFrame = this.convertRectToView(),
         canvasRect;
 
     if (true || this.window)
