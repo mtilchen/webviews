@@ -57,7 +57,7 @@ WV.Responder = {
     noResponderFor: function(eName, e, misc)
     {
         // Play sound for keyDown?
-        if (WV.debugMode && false)
+        if (WV.debugMode)
         {
             if (eName.indexOf('key') === 0)
             {
