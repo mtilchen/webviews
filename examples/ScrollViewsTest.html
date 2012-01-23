@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-        
+
 <html>
 <head>
   <title>ScrollViews Test Page</title>
@@ -8,32 +8,35 @@
 
     <script src="../webviews-debug.js"></script>
     <script>
-        
 
-        WV.init(function() {
 
-            var e1 = new WV.ScrollView({
-                superView: this,
+        WV.init(function(win) {
+
+//            WV.debugMode = true;
+            win.addSubview({
                 id: 'e1',
+                vtype: 'scrollview',
                 autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX,
                 x: 0,
                 y: 0,
-                h: this.h,
-                w: this.w,
+                h: '100%',
+                w: '100%',
+                contentSize: { w: 2000, h: 1200 },
                 style: {
-                    backgroundColor: 'red'
+                    color: 'lightgray'
                 },
-                subViews: [{
+                subviews: [{
                     id: 'e2',
                     vtype: 'scrollview',
                     x: 300,
                     y: 500,
                     h: 500,
                     w: 500,
+                    contentSize: { w: 800, h: 800 },
                     style: {
-                        backgroundColor: 'green'
+                        color: 'green'
                     },
-                    subViews: [
+                    subviews: [
                     {
                         id: 'e3',
                         vtype: 'scrollview',
@@ -41,35 +44,37 @@
                         y: 200,
                         h: 300,
                         w: 400,
+                        contentSize: { w: 800, h: 800 },
                         style: {
-                            backgroundColor: 'blue'
+                            color: 'blue'
                         },
-                        subViews: [{
+                        subviews: [{
                             id: 'e4',
                             x: 200,
                             y: 150,
                             w: 400,
                             h: 200,
                             style: {
-                                backgroundColor: 'yellow',
-                                borderRadius: '20px'
+                                color: 'yellow',
+                                cornerRadius: 20,
+                                borderColor: 'black'
                             },
                             mouseDown: function(e)
                             {
-                                this.setStyle('backgroundColor', 'grey');
+                                this.setStyle('color', 'grey');
                             },
                             mouseUp: function(e)
                             {
-                                this.setStyle('backgroundColor', 'yellow');
+                                this.setStyle('color', 'yellow');
                             },
                             mouseEntered: function(e)
                             {
-                                this.setStyle('border', '5px solid black');
+                                this.setStyle('borderWidth', 5);
                             },
                             mouseExited: function(e)
                             {
-                                this.setStyle('border', '');
-                                this.setStyle('backgroundColor', 'yellow');
+                                this.setStyle('borderWidth', 0);
+                                this.setStyle('color', 'yellow');
                             }
                         }]
                     }]

@@ -6,6 +6,8 @@
         mouseOverOwners = {},
         downX = 0,
         downY = 0,
+        wheelDeltaX = 0,
+        wheelDeltaY = 0,
         wheelDelta = 0,
         clickCount = 0,
         wasDragged,
@@ -26,8 +28,8 @@
                 {
                     clickCount++;
                     clickReset.delay(500);
-                    downX = be.clientX;
-                    downY = be.clientY;
+                    downX = ev.clientX;
+                    downY = ev.clientY;
                     mouseDownOwners[touchId] = targetV;
                 }
             },
@@ -43,21 +45,24 @@
                     // Mouse entered/exited
                     if (prevOver !== mouseOverOwners[touchId])
                     {
-                        createMouseEvent();
-                        if (prevOver && !mouseOverOwners[touchId].isDescendantOf(prevOver))
+                        if (prevOver && !WV.rectContainsRect(prevOver.convertRectToView(), targetV.convertRectToView()))
                         {
+                            targetV = prevOver;
+                            createMouseEvent();
                             prevOver.mouseExited(sharedMouseEvent);
+                            targetV = mouseOverOwners[touchId];
                         }
 
-                        if (prevOver && !prevOver.isDescendantOf(mouseOverOwners[touchId]))
+                        if (prevOver && !WV.rectContainsRect(targetV.convertRectToView(), prevOver.convertRectToView()))
                         {
+                            createMouseEvent();
                             mouseOverOwners[touchId].mouseEntered(sharedMouseEvent);
                         }
                     }
 
                     if (mouseDownOwners[touchId] /*=== targetV */)
                     {
-                        // 'draggable' here refers to drag and drop functionality
+                        // 'draggable' here refers to native drag and drop functionality
                         if (targetV.draggable === false)
                         {
                             wasDragged = true;
@@ -91,19 +96,19 @@
                 before: function()
                 {
                     // Make sure we do not get stuck in a drag if the mouse leaves the page while down
-                    if (ev.xy[0] < 0 || ev.xy[1] < 0 ||
-                        ev.xy[0] >= Ext.lib.Dom.getViewportWidth() || ev.xy[1] >= Ext.lib.Dom.getViewportHeight())
-                    {
-                        mouseDownOwners[touchId] = null;
-                        wasDragged = false;
-
-                        if (mouseOverOwners[touchId])
-                        {
-                            createMouseEvent();
-                            mouseOverOwners[touchId].mouseExited(sharedMouseEvent);
-                            mouseOverOwners[touchId] = null;
-                        }
-                    }
+//                    if (ev.xy[0] < 0 || ev.xy[1] < 0 ||
+//                        ev.xy[0] >= Ext.lib.Dom.getViewportWidth() || ev.xy[1] >= Ext.lib.Dom.getViewportHeight())
+//                    {
+//                        //mouseDownOwners[touchId] = null;
+////                        wasDragged = false;
+//
+//                        if (mouseOverOwners[touchId])
+//                        {
+//                            createMouseEvent();
+//                            mouseOverOwners[touchId].mouseExited(sharedMouseEvent);
+//                            mouseOverOwners[touchId] = null;
+//                        }
+//                    }
                     return false;
                 }
             },
@@ -116,18 +121,36 @@
             mouseWheel: {
                 before: function()
                 {
-                    if (be.wheelDelta)
+                    ev.preventDefault();
+                    if (ev.wheelDeltaY)
                     {
-                        wheelDelta = be.wheelDelta / -120;
+                        wheelDeltaY = ev.wheelDeltaY / 4;
                     }
-                    else if (be.detail)
+                    if (ev.wheelDelta)
                     {
-                        wheelDelta = be.detail;
+                        wheelDelta = ev.wheelDelta / 4;
+                    }
+                    if (ev.wheelDeltaX)
+                    {
+                      wheelDeltaX = ev.wheelDeltaX / 4;
+                    }
+                    if (ev.detail)
+                    {
+                      //TODO: Buffer these so that we can send X/Y deltas together instead of one at a time in alternation (smoother drawing)
+                      if (ev.axis === ev.HORIZONTAL_AXIS)
+                      {
+                        wheelDeltaX = -ev.detail;
+                      }
+                      else
+                      {
+                        wheelDeltaY = -ev.detail;
+                      }
                     }
                 },
                 after: function()
                 {
-                    wheelDelta = 0;
+                    wheelDeltaY = 0;
+                    wheelDeltaX = 0;
                 }
             },
             click: {
@@ -145,7 +168,7 @@
                 {
                     if (targetV.draggable === false)
                     {
-                        var domTarget = be.target;
+                        var domTarget = ev.target;
 
                         if (domTarget && domTarget.nodeType === 1)
                         {
@@ -188,7 +211,7 @@
                 {
                     // If the ctrl AND alt keys are down and this is a Tab or Tab-shift then change the key view.
                     // This will allow tabbing out of views that would otherwise consume the Tab key (TextArea)
-                    if (ev.getCharCode() === 9 && ev.ctrlKey && ev.altKey)
+                    if (ev.keyCode === 9 && ev.ctrlKey && ev.altKey)
                     {
                         cancel();
                         if (ev.shiftKey)
@@ -217,17 +240,17 @@
 
     function cancel()
     {
-        if (be.preventDefault)
+        if (ev.preventDefault)
         {
-            be.preventDefault();
+            ev.preventDefault();
         }
-        if (be.stopPropagation)
+        if (ev.stopPropagation)
         {
-            be.stopPropagation();
+            ev.stopPropagation();
         }
         else
         {
-            be.returnValue = false;
+            ev.returnValue = false;
         }
 
         wasCancelled = true;
@@ -240,23 +263,23 @@
 
 //        sme.x = x < 0 ? 0 : Math.min(x, target.w);
 //        sme.y = y < 0 ? 0 : Math.min(y, target.h);
-//        sme.windowPoint =  { x: be.clientX,   y: be.clientY };
-        sme.displayPoint = { x: be.screenX,   y: be.screenY };
-        sme.windowPoint = { x: be.canvasX, y: be.canvasY }; // Our WV.Window, not the browser window
-        sme.timestamp = be.timeStamp;
+//        sme.windowPoint =  { x: ev.clientX,   y: ev.clientY };
+        sme.displayPoint = { x: ev.screenX - pointerOffset,   y: ev.screenY - 2 * pointerOffset};
+        sme.windowPoint = { x: ev.canvasX - pointerOffset, y: ev.canvasY - 2 * pointerOffset }; // Our WV.Window, not the browser window
+        sme.timestamp = ev.timeStamp;
         sme.target = targetV;
         sme.touchId = touchId;
-        sme.targetElement = be.target;
+        sme.targetElement = ev.target;
         sme.mouseDownOwner = mouseDownOwners[touchId];
-        sme.clickCount = be.type === 'click' ? be.detail : clickCount;
+        sme.clickCount = ev.type === 'click' ? ev.detail : clickCount;
         sme.leftButton = clickCount > 0 && (ev.button === 0);
         sme.middleButton = clickCount > 0 && (ev.button === 1);
         sme.rightButton = clickCount > 0 && (ev.button === 2);
 
         if (wasDragged === true)
         {
-            sme.deltaX = be.clientX - downX;
-            sme.deltaY = be.clientY - downY;
+            sme.deltaX = ev.clientX - downX;
+            sme.deltaY = ev.clientY - downY;
         }
         else
         {
@@ -264,38 +287,48 @@
             delete sme.deltaY;
         }
 
-        if (wheelDelta)
+        if (wheelDeltaX)
         {
-            sme.wheelDelta = wheelDelta;
+            sme.wheelDeltaX = wheelDeltaX;
         }
         else
         {
-            delete sme.wheelDelta;
+            delete sme.wheelDeltaX;
+        }
+
+        if (wheelDeltaY)
+        {
+          sme.wheelDeltaY = wheelDeltaY;
+        }
+        else
+        {
+          delete sme.wheelDeltaY;
+        }
+
+        if (wheelDelta)
+        {
+          sme.wheelDelta = wheelDelta;
+        }
+        else
+        {
+          delete sme.wheelDelta;
         }
     }
 
     function createKeyEvent()
     {
-        var ske = sharedKeyEvent;
+        sharedKeyEvent = Object.create(ev);
 
-        ske.keyCode = ev.getKey();
-        ske.charCode = ev.getCharCode();
-        ske.shiftKey = ev.shiftKey;
-        ske.altKey = ev.altKey;
-        ske.ctrlKey = be.ctrlKey;
         if (Ext.isMac)
         {
-            ske.commandKey = be.metaKey;
+            sharedKeyEvent.commandKey = ev.metaKey;
         }
-        else
-        {
-            ske.metaKey = be.metaKey;
-        }
-        ske.target = targetV;
-        ske.targetElement = be.target;
 
-        ske.character = ske.shiftKey ? String.fromCharCode(ske.charCode)
-                                     : String.fromCharCode(ske.charCode).toLowerCase();
+        sharedKeyEvent.targetElement = ev.target;
+        sharedKeyEvent.target = targetV;
+
+        sharedKeyEvent.character = ev.shiftKey ? String.fromCharCode(ev.charCode)
+                                               : String.fromCharCode(ev.charCode).toLowerCase();
     }
 
     WV.EventMonitor = WV.extend(Object, {
@@ -316,13 +349,13 @@
               this.monitorEvent('mouseUp');
               this.monitorEvent('mouseMove');
               this.monitorEvent('mouseOut');
-              this.monitorEvent('mouseWheel');
             }
+            this.monitorEvent('mouseWheel');
             this.monitorEvent('click');
             this.monitorEvent('contextMenu');
-            this.monitorEvent('dragStart');
-            this.monitorEvent('drag');
-            this.monitorEvent('dragEnd');
+//            this.monitorEvent('dragStart');
+//            this.monitorEvent('drag');
+//            this.monitorEvent('dragEnd');
             this.monitorEvent('keyDown');
             this.monitorEvent('keyUp');
         },
@@ -332,11 +365,15 @@
                 registerName = preserveCase ? name : name.toLocaleLowerCase(),  // Listen for events using this name/type
                 ename = name.replace('MSPointer', 'mouse');  // ename represents the name of the function we will invoke on firstResponder
 
-            Ext.EventManager.addListener(Ext.getBody().dom, registerName, function(e) {
+            if (Ext.isGecko && registerName === 'mousewheel')
+            {
+              registerName = 'MozMousePixelScroll';
+            }
 
-                // Set these four shared objects before processing the event
+            document.documentElement.addEventListener(registerName, function(e) {
+
+                // Set these shared objects before processing the event
                 ev = e;
-                be = e.browserEvent;
                 wasCancelled = false;
                 targetV = null;
 
@@ -370,25 +407,25 @@
                         {
                             rect = el.getBoundingClientRect();
                             canvasRect = win.canvas.getBoundingClientRect();
-                            be.canvasX = rect.left + be[posPropX] - canvasRect.left;
-                            be.canvasY = rect.top + be[posPropY] - canvasRect.top;
+                            ev.canvasX = rect.left + ev[posPropX] - canvasRect.left;
+                            ev.canvasY = rect.top + ev[posPropY] - canvasRect.top;
                         }
                         // Not one of our text overlays so do not set targetV, event ignored
                     }
                     else
                     {
                        // No adjustment needed, the target is our canvas
-                       be.canvasX = be[posPropX];
-                       be.canvasY = be[posPropY];
+                       ev.canvasX = ev[posPropX];
+                       ev.canvasY = ev[posPropY];
                     }
 
-                    targetV = win.hitTest({ x: be.canvasX - pointerOffset,
-                                            y: be.canvasY - 2 * pointerOffset });
+                    targetV = win.hitTest({ x: ev.canvasX - pointerOffset,
+                                            y: ev.canvasY - 2 * pointerOffset });
                 }
 
                 if (targetV)
                 {
-                    touchId = be.pointerId || 1;
+                    touchId = ev.pointerId || 1;
 
                     proceed = monitors[ename].before ? monitors[ename].before(win) : true;
 
@@ -402,12 +439,14 @@
                         else
                         {
                             createMouseEvent();
+
+                           //console.log(sharedMouseEvent.wheelDeltaX + ', ' + sharedMouseEvent.wheelDeltaY);
                             targetV[ename](sharedMouseEvent);
 
                             // Prevent our handler from being called twice in MSPointer environments
-                            if (be.preventMouseEvent)
+                            if (ev.preventMouseEvent)
                             {
-                              be.preventMouseEvent();
+                              ev.preventMouseEvent();
                             }
                         }
                     }
@@ -423,7 +462,7 @@
                 }
 
                 return wasCancelled;
-            });
+            }, false);
         },
         startIgnoringEvents: function()
         {

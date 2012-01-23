@@ -101,33 +101,3 @@ WV.Image = WV.extend(WV.View, {
         return this;
     }
 });
-
-WV.ScrollView = WV.extend(WV.View, {
-    vtype: 'scrollview',
-    showVerticalScroll: 'auto',
-    showHorizontalScroll: 'auto',
-
-    constructor: function(config)
-    {
-        WV.ScrollView.superclass.constructor.call(this, config);
-
-        this.setShowHorizontalScroll(this.showHorizontalScroll);
-        this.setShowVerticalScroll(this.showVerticalScroll);
-        return this;
-    },
-
-    setClipToBounds: function(clip)
-    {
-        return this;
-    },
-
-    setShowVerticalScroll: function(mode)
-    {
-        this.showVerticalScroll = mode;
-    },
-
-    setShowHorizontalScroll: function(mode)
-    {
-        this.showHorizontalScroll = mode;
-    }
-});

@@ -60,7 +60,7 @@ WV.Window = WV.extend(WV.View, {
 
         this.eventMonitor = new WV.EventMonitor(this);
 
-        if (window.TouchEvent)
+        if (window.TouchEvent && WV.isiOS)
         {
           this.touchEventMonitor = new WV.TouchEventMonitor(this);
         }
@@ -91,6 +91,7 @@ WV.Window = WV.extend(WV.View, {
               queue.shift();
             }
             WV.debug('**** Finish Drawing Window ****');
+//           console.log('**** Finish Drawing Window ****');
           }, this.canvas);
           WV.debug('**** Start Drawing Window ****');
         }
@@ -153,9 +154,9 @@ WV.Window = WV.extend(WV.View, {
     },
     keyDown: function(e)
     {
-        if (e.charCode === 9) // Tab
+        if (e.keyCode === 9) // Tab
         {
-            e.cancel();  // Prevent browser default tab behavior
+            e.preventDefault();  // Prevent browser default tab behavior
             e.shiftKey ? this.selectPreviousKeyView(this) : this.selectNextKeyView(this);
         }
         else
