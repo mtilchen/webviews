@@ -231,7 +231,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     bringSubviewToFront: function(view)
     {
-      return this.addSubview(view);
+      return this.insertSubview(view, this.subviews.length);
     },
 
     sendSubviewToBack: function(view)
@@ -293,20 +293,31 @@ WV.View = WV.extend(Ext.util.Observable, {
         if (this.w !== this.previousW) { needsLayout = true; }
         if (this.h !== this.previousH) { needsLayout = true; }
 
-        if (this.window && (needsDisplay || needsLayout) && !this.window.inLayout)
+      if (this.window && (needsDisplay || needsLayout) && !this.window.inLayout)
+      {
+        if (needsLayout)
         {
-            if (needsLayout)
-            {
-                // Prevent drawing while geometry is recalculated
-                this.window.inLayout = true;
-                this.layoutSubviews();
-                this.window.inLayout = false;
-            }
-
-            this.setNeedsDisplay(WV.rectUnion({ x: previousX, y: previousY, w: this.previousW, h: this.previousH },
-                                              { x: this.x,    y: this.y,    w: this.w,         h: this.h }));
+          // Prevent drawing while geometry is recalculated
+          this.window.inLayout = true;
+          this.layoutSubviews();
+          this.window.inLayout = false;
         }
-        else if (needsLayout)
+
+        var previousRect = { x: previousX, y: previousY, w: this.previousW, h: this.previousH },
+            newRect = { x: this.x, y: this.y, w: this.w, h: this.h },
+            union = WV.rectUnion(previousRect, newRect);
+
+        if (WV.rectContainsRect(newRect, union))
+        {
+          this.setNeedsDisplay();
+        }
+        else if (this.superView)
+        {
+          this.superView.setNeedsDisplay();
+        }
+      }
+
+      else if (needsLayout)
         {
             this.layoutSubviews();
         }
@@ -343,49 +354,62 @@ WV.View = WV.extend(Ext.util.Observable, {
     // rect must be in coordinate system of "this"
     setNeedsDisplay: function(rect)
     {
-        var frame = { x: this.x, y: this.y, w: this.w, h: this.h },
-            invalid = rect || frame,
-            sv = this.superView;
+        var bounds = { x: 0, y: 0, w: this.w, h: this.h },
+            invalid = rect || bounds,
+            clipsv,
+            sv = clipsv = this.superView;
 
-        // Find the first non-transparent view to start with
-        if (sv && !this.isOpaque())
+        // Find the first non-transparent view or view that contains the invalid rect to start with
+        if (sv && (!this.isOpaque() || (!this.clipToBounds && !WV.rectContainsRect(bounds, invalid))))
         {
-            sv.setNeedsDisplay(this.convertRectToView(invalid, sv));
+            return sv.setNeedsDisplay(this.convertRectToView(invalid, sv));
         }
 
-        // If our current frame completely contains the invalid rect then we are done, just draw ourself on top
-        else if (sv && !WV.rectContainsRect(frame, invalid))
+        // We are opaque, so find out if we have an ancestor who might be clipping us
+        else
         {
-            // Otherwise find our first ancestor that completely contains the invalid rect
-            sv.setNeedsDisplay(this.convertRectToView(invalid, sv));
-        }
-
-        else if (this.window)
-        {
-            this.window.setViewsNeedDisplay(this);
-            // Now make sure to draw all the views that could potentially be drawn beneath the current one
-            // because they are further right on the tree
-            // TODO: optimize this by looking at the frames for all the views to the right to see if they intersect with the invalid rect
-            while (sv)
+          while (clipsv)
+          {
+            if (clipsv.clipToBounds && !WV.rectContainsRect({ x: 0, y: 0, w: clipsv.w, h: clipsv.h }, this.convertRectToView(invalid, clipsv)))
             {
-              for (var i = this.subviewIndex + 1; i < sv.subviews.length; i++)
-              {
-                this.window.setViewsNeedDisplay(sv.subviews[i]);
-              }
-              sv = sv.superView;
+              return clipsv.setNeedsDisplay();
             }
+            clipsv = clipsv.superView;
+          }
         }
-        return this;
+
+      // We are opaque with no clipping ancestor or we are the root view, so just draw ourself and look for anything that could be positioned on top of us
+      if (this.window)
+      {
+          this.window.setViewsNeedDisplay(this);
+          // Now make sure to draw all the views that could potentially be drawn over the current one
+          // because they are further right on the tree
+          // TODO: optimize this by looking at the frames for all the views to the right to see if they intersect with the invalid rect
+          while (sv)
+          {
+            for (var i = this.subviewIndex + 1; i < sv.subviews.length; i++)
+            {
+              if (WV.rectIntersectsRect(this.convertRectToView(invalid, sv), sv.subviews[i].getFrame()))
+              {
+                  this.window.setViewsNeedDisplay(sv.subviews[i]);
+//                sv.subviews[i].setNeedsDisplay();
+              }
+            }
+            sv = sv.superView;
+          }
+      }
+      return this;
     },
 
     redrawIfNeeded: function(top)
     {
-        //console.log('Redrawing: %s', this.id);
+//        console.log('Redrawing: %s', this.id);
         if (this.window && !this.hidden)
         {
-            WV.debug('Drawing: ', this.id);
+//            WV.debug('Drawing: ', this.id);
+//            console.log('Drawing: ' + this.id);
             var ctx = this.window.context2d,
-                frame = this.getFrame(),
+                bounds = { x: 0, y: 0, w: this.w, h: this.h },
                 origin,
                 i, l = this.subviews.length;
 
@@ -394,23 +418,23 @@ WV.View = WV.extend(Ext.util.Observable, {
             if (top !== false)
             {
                 // Start with the first view in window coordinates
-                origin = this.convertPointToView(frame);
+                origin = this.convertPointToView(bounds);
             }
             else
             {
-                origin = { x: frame.x, y: frame.y };
+                origin = { x: this.x, y: this.y };
             }
 
             ctx.translate(origin.x, origin.y);
 
-            this.baseDraw(frame, ctx);
-            this.drawBorder(frame, ctx);
+            this.baseDraw(bounds, ctx);
+            this.drawBorder(bounds, ctx);
 
             if (l)
             {
                 if (this.clipToBounds)
                 {
-                    this.roundedRect(ctx, frame.w, frame.h, this.style.cornerRadius || 0, 0, true);
+                    this.roundedRect(ctx, bounds.w, bounds.h, this.style.cornerRadius || 0, 0, true);
                 }
                 for (i = 0; i < l; i++)
                 {
@@ -501,7 +525,9 @@ WV.View = WV.extend(Ext.util.Observable, {
             if (clip)
             {
               ctx.save();
+              ctx.beginPath();
               ctx.rect(0, 0, this.w, this.h);
+              ctx.closePath();
               ctx.clip();
             }
             if (fill !== 'transparent')
@@ -955,7 +981,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         // TODO: Deal with rotated/scaled views. Use layer coords or use larger bounds?
 
-        if (sv && !sv.isPointInRect(point, this.getFrame()))
+        if (sv && !WV.isPointInRect(point, this.getFrame()))
         {
             return null;
         }
@@ -973,12 +999,6 @@ WV.View = WV.extend(Ext.util.Observable, {
 
         // We are either in the hit subview our ourself
         return hit ? hit : this;
-    },
-
-    isPointInRect: function(point, rect)
-    {
-        return point.x >= rect.x && point.x < (rect.x + rect.w) &&
-               point.y >= rect.y && point.y < (rect.y + rect.h);
     },
 
     // view passed in must be an ancestor for now, if no ancestor passed, assumes Window
@@ -1006,7 +1026,7 @@ WV.View = WV.extend(Ext.util.Observable, {
     {
         var convX = point.x,
             convY = point.y,
-            v = this.superView;
+            v = this;
 
 //            ancestor = ancestor || WV.Window;
 
@@ -1023,22 +1043,22 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     convertRectToView: function(rect, ancestor)
     {
-      var r = rect || { x: this.x, y: this.y };
+      var r = rect || { x: 0, y: 0 };
 
       r = this.convertPointToView(r, ancestor);
-      r.w = this.w;
-      r.h = this.h;
+      r.w = rect ? rect.w : this.w;
+      r.h = rect ? rect.h : this.h;
 
       return r;
     },
 
     convertRectFromView: function(rect, ancestor)
     {
-      var r = rect || { x: this.x, y: this.y };
+      var r = rect || { x: 0, y: 0 };
 
       r = this.convertPointFromView(r, ancestor);
-      r.w = this.w;
-      r.h = this.h;
+      r.w = rect ? rect.w : ancestor.w;
+      r.h = rect ? rect.h : ancestor.h;
 
       return r;
     },
