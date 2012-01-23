@@ -226,6 +226,29 @@ WV = (function() {
             return r.x === outer.x && r.y === outer.y && r.w === outer.w && r.h === outer.h;
         },
 
+        isPointInRect: function(point, rect)
+        {
+            return point.x >= rect.x && point.x < (rect.x + rect.w) &&
+                   point.y >= rect.y && point.y < (rect.y + rect.h);
+        },
+
+        rectIntersection: function(r1, r2)
+        {
+           var intersection = { x: Math.max(r1.x, r2.x), y: Math.max(r1.y, r2.y) };
+
+           intersection.w = Math.min(r1.x + r1.w, r2.x + r2.w) - intersection.x;
+           intersection.h = Math.min(r1.y + r1.h, r2.y + r2.h) - intersection.y;
+
+           return intersection;
+        },
+
+        rectIntersectsRect: function(r1, r2)
+        {
+          var intersection = WV.rectIntersection(r1, r2);
+
+          return (intersection.w > 0) && (intersection.h > 0);
+        },
+
         apply: Ext.apply,
         applyIf: Ext.applyIf,
         isArray: Ext.isArray,
