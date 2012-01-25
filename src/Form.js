@@ -992,10 +992,7 @@ WV.TextField = WV.extend(WV.Control, {
       data.leftMargin = WV.isiOS ? -3 : 0;
       this.dom = this.tpl.append(Ext.getBody(), data, true).dom;
       this.dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
-      this.dom.oninput = function() {
-        self.setText(self.dom.value);
-        self.updateInsertion(true);
-      };
+      // TODO: Handle paste
       this.dom.onscroll = function() {
         self.setNeedsDisplay();
       };
@@ -1088,7 +1085,7 @@ WV.TextField = WV.extend(WV.Control, {
     this.text = text.replace(/\n|\t/g, '');
     this._textMetrics = WV.Text.measure(this.style.font, this.text);
 
-    if (this.dom)
+    if (this.dom && (this.dom.value !== text))
     {
       this.dom.value = this.text;
     }
@@ -1114,7 +1111,7 @@ WV.TextField = WV.extend(WV.Control, {
       this._insertion = new WV.View({
           w: 1,
           h: this._textMetrics.h * 1.15,
-          style: { color: this.style.textColor || 'black' }
+          style: { color: Ext.isIE ? 'transparent' : this.style.textColor || 'black' } // Cursor always shows on IE so use it and make ours transparent
       });
       this.addSubview(this._insertion);
     }
@@ -1197,7 +1194,7 @@ WV.TextField = WV.extend(WV.Control, {
     {
       if (this.dom)
       {
-        this.dom.style.display = null;
+        this.dom.style.display = '';
       }
     }
     return WV.TextField.superclass.mouseMove.call(this, e);
@@ -1215,11 +1212,19 @@ WV.TextField = WV.extend(WV.Control, {
     this.updateInsertion(false);
     return WV.TextField.superclass.mouseDragged.call(this, e);
   },
-  keyUp: function(e)
+  keyDown: function(e)
   {
-    this.updateInsertion(true);
+    var self = this;
 
-    return WV.TextField.superclass.keyUp.call(this, e);
+    if (e.keyCode !== 9) // Skip tab keys, responder chain will handle it
+    {
+      setTimeout(function() {  // Dom value will change on next trip through event loop
+        self.setText(self.dom.value);
+        self.updateInsertion(true);
+      }, 0);
+    }
+
+    return WV.TextField.superclass.keyDown.call(this, e);
   },
   becomeFirstResponder: function(preventSelect)
   {
@@ -1229,7 +1234,7 @@ WV.TextField = WV.extend(WV.Control, {
     {
       if (this.dom && !this.isHiddenOrHasHiddenAncestor())
       {
-        this.dom.style.display = null;
+        this.dom.style.display = '';
         preventSelect ? this.dom.focus() : this.dom.select();
         this.updateInsertion(preventSelect);
       }

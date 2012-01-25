@@ -317,7 +317,8 @@
 
     function createKeyEvent()
     {
-        sharedKeyEvent = Object.create(ev);
+//        sharedKeyEvent = Object.create(ev);
+        sharedKeyEvent = ev;
 
         if (Ext.isMac)
         {
