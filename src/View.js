@@ -10,7 +10,7 @@ WV.RESIZE_ALL = 63;
 
 WV.View = WV.extend(Ext.util.Observable, {
     vtype: 'view',
-    mixins: [WV.Responder, WV.style.Stylable],
+    mixins: [WV.Responder, WV.Stylable],
     x: 0,
     y: 0,
     h: 0,
@@ -428,14 +428,9 @@ WV.View = WV.extend(Ext.util.Observable, {
             ctx.translate(origin.x, origin.y);
 
             this.baseDraw(bounds, ctx);
-            this.drawBorder(bounds, ctx);
 
             if (l)
             {
-                if (this.clipToBounds)
-                {
-                    this.roundedRect(ctx, bounds.w, bounds.h, this.style.cornerRadius || 0, 0, true);
-                }
                 for (i = 0; i < l; i++)
                 {
                     this.subviews[i].window = this.window; // TODO: Do this somewhere else?
@@ -443,7 +438,6 @@ WV.View = WV.extend(Ext.util.Observable, {
                 }
             }
             ctx.restore();
-            this.needsDisplay = false;
         }
     },
 
@@ -452,7 +446,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         var st = this.style,
             bw = st.borderWidth || 0,
             cr = st.cornerRadius,
-            clip = this.clipToBounds,
+            clip = this.clipToBounds || bw,
             linearGradient = st.linearGradient ? st.linearGradient.toCanvasGradient(ctx, rect) : null,
             fill = linearGradient || st.color || 'transparent',
             shadow = st.shadow,
@@ -498,122 +492,82 @@ WV.View = WV.extend(Ext.util.Observable, {
             ctx.scale(st.scaleX || 1, st.scaleY || 1);
         }
 
-        ctx.fillStyle = fill;
-
-        // TODO: Handle shadow in case where image/fill overlap
-        if (shadow && !clip) { shadow.apply(ctx); }
-        // Draw the elements of views with a corner radius in a particular order
-        if (cr)
+        if (!this.clipToBounds)
         {
-            if (clip)
-            {
-                ctx.save();
-            }
-
-            // Draw the background up to the border, clipping if needed
-            this.roundedRect(ctx, this.w, this.h, cr, 0, clip);
-
-            if (fill !== 'transparent')
-            {
-              ctx.fill();
-            }
-
-            this.drawImage(ctx, rect);
-        }
-        else
-        {
-            if (clip)
-            {
-              ctx.save();
-              ctx.beginPath();
-              ctx.rect(0, 0, this.w, this.h);
-              ctx.closePath();
-              ctx.clip();
-            }
-            if (fill !== 'transparent')
-            {
-              if (bw)
-              {
-                ctx.fillRect(bw, bw, this.w - 2 * bw, this.h - 2 * bw);
-              }
-              else
-              {
-                ctx.fillRect(0, 0, this.w, this.h);
-              }
-            }
-
-            this.drawImage(ctx, rect);
+            ctx.save();
         }
 
-        if (shadow && !clip) {
+        if (shadow) { shadow.apply(ctx); }
+        this.roundedRect(ctx, this.w, this.h, cr);
+
+        if (fill !== 'transparent')
+        {
+          ctx.fillStyle = fill;
+          ctx.fill();
+        }
+
+        if (clip)
+        {
+          if (this.clipToBounds)
+          {
+            ctx.clip();
+            this.drawImage(ctx, rect);
+          }
+          else
+          {
+            this.drawImage(ctx, rect);
+            ctx.clip();
+          }
+        }
+        else { this.drawImage(ctx, rect); }
+
+       if (shadow)
+       {
           ctx.shadowBlur = 0;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 0;
           ctx.shadowColor = 'transparent';
         }
+        if (bw)
+        {
+          ctx.strokeStyle = st.borderColor;
+          ctx.lineWidth = 2 * bw;
+          ctx.stroke();
+        }
 
         this.draw(ctx, rect);
 
-        if (clip)
+        if (!this.clipToBounds)
         {
-            ctx.restore();
+          ctx.restore();
         }
     },
 
     // TODO: Move this to a function added to the Canvas2DContext prototoype
-   // TODO: Handle situation where t > cr
-    roundedRect: function(ctx, w, h, cr, t, clip)
+    roundedRect: function(ctx, w, h, cr)
     {
-        ctx.beginPath();
+      ctx.beginPath();
 
-        if (cr)
-        {
-            ctx.moveTo(t, t + cr);
-            ctx.arcTo(t, t, t + cr, t, cr - t);
-            ctx.lineTo(w - cr, t);
-            ctx.arcTo(w, t, w, t + cr, cr - t);
-            ctx.lineTo(w, h - cr);
-            ctx.arcTo(w, h, w - cr, h, cr - t);
-            ctx.lineTo(t + cr, h);
-            ctx.arcTo(t, h, t, h - cr, cr - t);
-        }
-        else
-        {
-            ctx.rect(0, 0, w, h);
-        }
-        // "rect" needs begin/close path too or clipping problems result
-        ctx.closePath();
-        if (clip) { ctx.clip(); }
+      if (cr)
+      {
+        ctx.moveTo(w/2, 0);
+        ctx.arc(w - cr, cr, cr, (3 * Math.PI)/2, 0, false);
+        ctx.lineTo(w, h/2);
+        ctx.arc(w - cr, h - cr, cr, 0, Math.PI/2, false);
+        ctx.lineTo(w/2, h);
+        ctx.arc(cr, h - cr, cr, Math.PI/2, Math.PI, false);
+        ctx.lineTo(0, h/2);
+        ctx.arc(cr, cr, cr, Math.PI, (3 * Math.PI)/2, false);
+        ctx.lineTo(w/2, 0);
+      }
+      else
+      {
+          ctx.rect(0, 0, w, h);
+      }
 
-        return this;
-    },
+      ctx.closePath();
 
-    drawBorder: function(rect, ctx)
-    {
-        var st = this.style,
-            bw = st.borderWidth || 0,
-            cr = st.cornerRadius,
-            w = this.w - bw/2,
-            h = this.h - bw/2,
-            t = bw/2;
-
-        if (bw && st.borderColor)
-        {
-            ctx.strokeStyle = st.borderColor;
-            ctx.lineWidth = bw;
-
-            if (cr)
-            {
-                this.roundedRect(ctx, w, h, cr, t, false);
-                ctx.stroke();
-            }
-            else
-            {
-                w = this.w - bw,
-                h = this.h - bw,
-                ctx.strokeRect(t, t, w, h);
-            }
-        }
+      return this;
     },
 
     draw: function(rect, ctx) { },
@@ -636,7 +590,7 @@ WV.View = WV.extend(Ext.util.Observable, {
     {
       if (image.useNaturalSize)
       {
-        var w = h = image.naturalWidth,
+        var w = image.naturalWidth,
             h = image.naturalHeight;
 
         if (this.h != h || this.w != w)

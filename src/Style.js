@@ -1,7 +1,5 @@
 
-WV.style = {};
-
-WV.style.Stylable = {
+WV.Stylable = {
 
     // TODO: Support paths like: shadow.color
     // name can be an object and value === true specifies that the "set" is additive, it will not remove styles not present in the new style object
@@ -80,9 +78,20 @@ WV.style.Stylable = {
     },
 
   //TODO: Need setImage
+    setImage: function(image)
+    {
+      if (this.style.image instanceof WV.Image)
+      {
+        WV.apply(this.style.image, image);
+      }
+      else
+      {
+        this.style.image = image;
+      }
+    },
   //TODO: Need setRadialGradient
  //TODO: Need setCornerRadius to mark superview as needing display if cornerradius shrinks
-
+  //TODO: Need to recalc text metrics on 'setFont' in needed
     setLinearGradient: function(gradient)
     {
         if (gradient && typeof gradient === 'object')
