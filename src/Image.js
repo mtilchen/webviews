@@ -35,8 +35,8 @@ WV.Image = WV.extend(Object, {
 
     draw: function(ctx, rect)
     {
-        var w = this.useNaturalSize ? this.naturalWidth : this.w || rect.w,
-            h = this.useNaturalSize ? this.naturalHeight : this.h || rect.h,
+        var w = (this.useNaturalSize || this.useNaturalWidth) ? this.naturalWidth : this.w || rect.w,
+            h = (this.useNaturalSize || this.useNaturalHeight) ? this.naturalHeight : this.h || rect.h,
             x = this.x || 0,
             y = this.y || 0;
 
