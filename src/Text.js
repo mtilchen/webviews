@@ -1,7 +1,7 @@
 
 WV.Text = WV.extend(WV.View, {
     vtype: 'text',
-    tpl: WV.createTemplate('<div id="{id}" style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; overflow:visible; color:transparent; font:{_font}">{text}</div>'),
+    tpl: WV.createTemplate('<div id="{id}" style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; overflow:visible; color:transparent; font:{font}">{text}</div>'),
     wrap: false,
     align: 'left',
     style: { font: '12pt sans-serif'},
@@ -21,24 +21,31 @@ WV.Text = WV.extend(WV.View, {
     },
     initDom: function()
     {
+      var tplData = Object.create(this),
+          domFrame = this.convertRectToView();
+
         if (!this.dom && document)
         {
-            this._font = this.style.font || '';
-            this.dom = this.tpl.append(Ext.getBody(), this, true).dom;
-            this.dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
-            delete this._font;
+          WV.apply(tplData, domFrame);
+          tplData.font = this.style.font || '';
+          this.dom = this.tpl.append(Ext.getBody(), tplData, true).dom;
+          this.dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
         }
-        return this.setWrap(this.wrap);
+      return this.setWrap(this.wrap);
     },
     setFrame: function(frame)
     {
         WV.Text.superclass.setFrame.call(this, frame);
+
         if (this.dom)
         {
-            this.dom.style.left = this.x + 'px';
-            this.dom.style.top = this.y + 'px';
-            this.dom.style.width = this.w + 'px';
-            this.dom.style.height = this.h + 'px';
+          var domFrame = this.convertRectToView();
+
+          // TODO: Include canvas offset
+            this.dom.style.left = domFrame.x + 'px';
+            this.dom.style.top = domFrame.y + 'px';
+            this.dom.style.width = domFrame.w + 'px';
+            this.dom.style.height = domFrame.h + 'px';
         }
         return this;
     },
@@ -136,13 +143,19 @@ WV.Text = WV.extend(WV.View, {
     }
 });
 
-WV.Text.measure = function(font, text)
-{
-    var el = WV.Text._sharedEl || (WV.Text._sharedEl = Ext.DomHelper.append(Ext.getBody(), { id: 'shared-metrics', style: 'position: absolute; top: -1000px; left: -1000px;'}, true).dom);
+(function() {
 
-    el.style.font = font;
-    el.innerHTML = text.replace(/\n/g, '');
+  var el;
 
-    return { w: el.clientWidth, h: el.clientHeight };
-}
+  WV.Text.measure = function(font, text)
+  {
+      el = el || Ext.DomHelper.append(Ext.getBody(), { id: 'wv-shared-text-metrics', style: 'position: absolute; top: -1000px; left: -1000px;'}, true).dom;
+
+      el.style.font = font;
+      el.innerHTML = text.replace(/\n/g, '');
+
+      return { w: el.clientWidth, h: el.clientHeight };
+  };
+})();
+
 
