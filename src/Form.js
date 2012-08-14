@@ -87,91 +87,31 @@ WV.Control = WV.extend(WV.View, {
 });
 
 WV.style.Button = WV.extend(WV.StyleMap, {
-    defaults: {
-        borderBottomColor: 'E7E7E7',
-        borderLeftColor: 'C8C8C8',
-        cornerRadius: 2,
-        borderRightColor: 'E7E7E7',
-        borderTopColor: 'C8C8C8',
-        borderColor: 'C8C8C8',
-        borderWidth: 1 },
-    states: [{
-        name: 'focus',
-        styles: {
-            borderBottomColor: '4D78A4',
-            borderLeftColor: '4D78A4',
-            borderRightColor: '4D78A4',
-            borderTopColor: '4D78A4',
-            borderColor: '4D78A4',
-            borderWidth: 2  }
-    }],
-    outerborder: {
-        defaults: {
-            cornerRadius: 2,
-            borderWidth: 1 },
-        states: [{
-            name: 'normal',
-            styles: {
-                borderBottomColor: '7E7E7E',
-                borderLeftColor: '939393',
-                borderRightColor: '939393',
-                borderColor: '939393',
-                borderTopColor: 'ABABAB' }
-        },{
-            name: 'active',
-            styles: {
-                color: 'D2D4D7',
-                image: 'resources/images/form/shadow-x.png',
-                cornerRadius: 0,
-                borderBottomColor: '4D4D4D',
-                borderLeftColor: '3D3D3D',
-                borderRightColor: '5C5C5C',
-                borderColor: '5C5C5C',
-                borderTopColor: '515151' }
-        },{
-            name: 'focus',
-            styles: {
-                cornerRadius: 0 }
-        }]
-    },
-    innerborder: {
-        defaults: {
-            cornerRadius: 2,
-            borderWidth: 1
-        },
-        states: [{
-            name: 'normal',
-            styles: {
-                backgroundColor: 'F9F9F9',
-                borderBottomColor: 'D1D1D1',
-                borderLeftColor: 'EDEDED',
-                borderRightColor: 'EDEDED',
-                borderColor: 'FAFAFA' }
-        },{
-            name: 'active',
-            styles: {
-                color: 'transparent',
-                image: 'resources/images/form/shadow-y.png',
-                cornerRadius: 0,
-                borderColor: '777' }
-        },{
-            name: 'focus',
-            styles: {
-                cornerRadius: 0 }
-        }]
-    },
-    label: {
-        defaults: {
-            fontFamily: 'Verdana',
-            fontSize: '11px',
-            fontWeight: 'normal',
-            textAlign: 'center'
-        },
-        states: [{
-            name: 'normal',
-            styles: {}
-        }]
-    }
+  defaults: {
+    font: '11px verdana',
+    cornerRadius: 2,
+    color: '#D8D8D8',
+    borderColor: '#C8C8C8',
+    borderWidth: 1 },
+  states: [{
+    name: 'normal',
+    styles: {
+      borderColor: '#939393' }
+  },{
+    name: 'active',
+    styles: {
+      color: '#D2D4D7',
+      image: {
+        src: 'resources/images/form/shadow-x.png',
+        useNaturalHeight: true
+      },
+      cornerRadius: 0,
+      borderColor: '#5C5C5C' }
+  },{
+    name: 'focus',
+    styles: {
+      cornerRadius: 5 }
+  }]
 });
 
 WV.Button = WV.extend(WV.Control, {
@@ -181,42 +121,30 @@ WV.Button = WV.extend(WV.Control, {
     text: '',
     clipToBounds: true,
     styleMap: new WV.style.Button(),
-    subviews: [{
-        vtag: 'outerborder',
-        x: 1,
-        y: 1,
-        h: 'h - 2',
-        w: 'w - 2',
-        stateful: true,
-        autoResizeMask: WV.RESIZE_WIDTH_FLEX
-    },{
-        vtag: 'innerborder',
-        x: 2,
-        y: 2,
-        h: 'h - 4',
-        w: 'w - 4',
-        stateful: true,
-        autoResizeMask: WV.RESIZE_WIDTH_FLEX
-    },{
-        vtag: 'label',
-        vtype: 'label',
-        draggable: false,
-        x: 3,
-        y: 'center',
-        h: 13,
-        w: 'w - 6',
-        stateful: true,
-        autoResizeMask: WV.RESIZE_WIDTH_FLEX
-    }],
     constructor: function(config)
     {
-        WV.Button.superclass.constructor.call(this, config);
+      WV.Button.superclass.constructor.call(this, config);
 
-        if (this.subviews.label)
-        {
-            this.subviews.label.text = this.text;
-        }
-        return this;
+      this.setText(this.text || '');
+
+      return this;
+    },
+    draw: function(ctx, rect)
+    {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = this.style.font;
+      ctx.fillStyle = this.style.textColor || 'black';
+
+      ctx.fillText(this.text, this.w/2, this.h/2);
+    },
+    setText: function(text)
+    {
+      text = text || '';
+      this.text = text.replace(/\n|\t/g, '');
+      this._textMetrics = WV.Text.measure(this.style.font, this.text);
+
+      this.setNeedsDisplay();
     },
     mouseDown: function(e)
     {
@@ -945,22 +873,22 @@ WV.style.TextComponent = WV.extend(WV.StyleMap, {
 WV.style.TextField = WV.extend(WV.StyleMap, {
   defaults: {
     color: 'white',
-    font: '12pt Helvetica',
-    cornerRadius: 5,
+    font: '14px Helvetica',
+    cornerRadius: 2,
     cursor: 'text'
   },
   states: [{
     name: 'focus',
     styles: {
       borderColor: '#4D78A4',
-      borderWidth: 2 }
+      borderWidth: 1 }
   }]
 });
 
 
 WV.TextField = WV.extend(WV.Control, {
   vtype: 'textfield',
-  tpl: WV.createTemplate('<textarea id="{id}" rows="1" wrap="off" style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; display:none; overflow-x:{overflowX}; overflow-y:hidden; clip:rect(0px auto {clipHeight}px 0px); white-space:nowrap; background-color:transparent; color:transparent; margin-left:{leftMargin}px; border-style:none; resize:none; font:{font}">{text}</textarea>'),
+  tpl: WV.createTemplate('<textarea id="{id}" rows="1" wrap="off" style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; display:none; overflow-x:{overflowX}; overflow-y:hidden; clip:rect(0px auto {clipHeight}px 0px); white-space:nowrap; background-color:transparent; color:transparent; margin-left:{leftMargin}px; padding-left:{horizontalInsets}px; padding-right:{horizontalInsets}px; border-style:none; resize:none; font:{font}">{text}</textarea>'),
   h: 30,
   w: 100,
   clipToBounds: true,
@@ -982,6 +910,7 @@ WV.TextField = WV.extend(WV.Control, {
     if (!this.dom && document)
     {
       var data = Object.create(this),
+          dom,
           domFrame = this.computeDomFrame(),
           self = this;
 
@@ -990,13 +919,21 @@ WV.TextField = WV.extend(WV.Control, {
       data.clipHeight = domFrame.h - 20; // Clip out the scrollbar
       data.overflowX = Ext.isGecko ? 'scroll' : 'hidden';
       data.leftMargin = WV.isiOS ? -3 : 0;
-      this.dom = this.tpl.append(Ext.getBody(), data, true).dom;
-      this.dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
+      dom = this.dom = this.tpl.append(Ext.getBody(), data, true).dom;
+      dom.setAttribute('_textOverlay', 'true'); // Let others know what we are doing with this
       // TODO: Handle paste
-      this.dom.onscroll = function() {
+      dom.onscroll = function() {
         self.setNeedsDisplay();
       };
-      this.dom.onfocus = function() {
+      dom.onblur = function() {
+        if (self.isFirstResponder)
+        {
+          setTimeout(function() {
+            dom.focus(); // The textarea always needs to have the focus while we are firstResponder
+          }, 0);
+        }
+      };
+      dom.onfocus = function() {
         if (self.window.isFullScreen) {
           window.scrollTo(0,0); // Prevent the browser from scrolling the document to the text field
         }
@@ -1006,21 +943,14 @@ WV.TextField = WV.extend(WV.Control, {
   computeDomFrame: function()
   {
     var domFrame = this.convertRectToView(),
-        canvasRect;
+        canvasRect,
+        textHeight = this._textMetrics.h;
 
-    if (true || this.window)
-    {
-      var textHeight = this._textMetrics.h;
-
-      // TODO: Compute canvas offset
-      // Must compensate for the canvas' offset, horizontal inset etc
-//        canvasRect = this.window.canvas.getBoundingClientRect();
-      canvasRect = { left: 0, top: 0};
-      domFrame.x = domFrame.x + this.horizontalInsets + canvasRect.left;
+      canvasRect = this.window ? this.window.canvas.getBoundingClientRect() : { left: 0, top: 0};
       domFrame.y = domFrame.y + domFrame.h / 2 - textHeight/ 2 + canvasRect.top;
       domFrame.h = textHeight + 20; // Add 20px for the scrollbars, which will be clipped out
       domFrame.w = domFrame.w - this.horizontalInsets * 2;
-    }
+
     return domFrame;
   },
   setFrame: function(frame)
@@ -1074,6 +1004,7 @@ WV.TextField = WV.extend(WV.Control, {
       if (name === 'font')
       {
         this.dom.style.font = value;
+        this._textMetrics = WV.Text.measure(value, this.text);
         // TODO: Need to reposition overlay due to potential change in text size
       }
     }
@@ -1199,13 +1130,13 @@ WV.TextField = WV.extend(WV.Control, {
     }
     return WV.TextField.superclass.mouseMove.call(this, e);
   },
-  mouseOut: function(e)
+  mouseExited: function(e)
   {
     if (!this.isFirstResponder && this.dom)
     {
       this.dom.style.display = 'none';
     }
-    return WV.TextField.superclass.mouseOut.call(this, e);
+    return WV.TextField.superclass.mouseExited.call(this, e);
   },
   mouseDragged: function(e)
   {
@@ -1228,14 +1159,19 @@ WV.TextField = WV.extend(WV.Control, {
   },
   becomeFirstResponder: function(preventSelect)
   {
-    var result = WV.TextField.superclass.becomeFirstResponder.call(this);
+    var result = WV.TextField.superclass.becomeFirstResponder.call(this),
+        dom = this.dom;
 
     if (result === true)
     {
-      if (this.dom && !this.isHiddenOrHasHiddenAncestor())
+      if (dom && !this.isHiddenOrHasHiddenAncestor())
       {
-        this.dom.style.display = '';
-        preventSelect ? this.dom.focus() : this.dom.select();
+        dom.style.display = '';
+        // Needs to be deferred to next pass through event loop because we need to wait after clearing 'display=none' to focus
+        setTimeout(function() {
+          preventSelect ? dom.focus() : dom.select();
+        }, 0);
+
         this.updateInsertion(preventSelect);
       }
     }
