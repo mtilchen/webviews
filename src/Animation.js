@@ -13,7 +13,7 @@
     function commitAnimations()
     {
         var anim,
-            startTime = Date.now(), // Start all the new animations together
+            startTime = WV.now(), // Start all the new animations together
             i, l;
 
         for (i = 0, l = uncommittedAnimations.length; i < l; i++)
@@ -48,7 +48,7 @@
           reRun,
           futureAnimTask = null;
 
-      now = now || Date.now();
+      now = now || WV.now();
       for (var viewId in activeViews)
       {
           view = activeViews[viewId];

@@ -60,7 +60,7 @@ WV.Window = WV.extend(WV.View, {
 
         this.eventMonitor = new WV.EventMonitor(this);
 
-        if (window.TouchEvent && WV.isiOS)
+        if (window.TouchEvent)
         {
           this.touchEventMonitor = new WV.TouchEventMonitor(this);
         }

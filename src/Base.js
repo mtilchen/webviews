@@ -39,16 +39,6 @@ WV = (function() {
         }
     }
 
-    // TODO: Move this into BrowserOverride
-    function initIE()
-    {
-        var doc = document,
-            ss;
-
-        // Hide the vertical scrollbar in IE
-        Ext.select('html').setStyle('overflow', 'hidden');
-    }
-
     var pub = {
 
         version: '@VERSION@',
@@ -258,6 +248,11 @@ WV = (function() {
 
         emptyFn: function() {},
 
+        now: function() {
+           return (window.performance && window.performance.now)
+                        ? performance.now() : Date.now();
+        },
+
         log: logAvailable ? function() {
                                var time = (new Date()).toLogString(),
                                    logStrings = [],
@@ -319,8 +314,6 @@ WV = (function() {
     };
 
     Ext.onReady(function() {
-
-        if (Ext.isIE) { initIE(); }
 
         var start = new Date(),
                         end;

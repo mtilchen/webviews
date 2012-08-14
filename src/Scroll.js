@@ -2,6 +2,7 @@ WV.ScrollView = WV.extend(WV.View, {
     vtype: 'scrollview',
     showsVerticalIndicator: true,
     showsHorizontalIndicator: true,
+    dragScrolling: false,
     clipToBounds: true,
     subviews: [{
       vtag: 'content',
@@ -268,40 +269,71 @@ WV.ScrollView = WV.extend(WV.View, {
     },
     mouseDragged: function(e)
     {
-      var dX, dY;
+      var dX, dY,
+          hIndScroll = this._draggingHInd || e.target === this.subviews.hInd,
+          vIndScroll = this._draggingVInd || e.target === this.subviews.vInd;
 
-      if (e.target === this.subviews.hInd || (this._previousX !== undefined))
+      if (this.dragScrolling || hIndScroll || vIndScroll)
       {
         this._previousX = this._previousX === undefined ? e.windowPoint.x - e.deltaX : this._previousX;
-        dX = ((this._previousX - e.windowPoint.x) / this.w) * this.contentWidth;
-        this.scroll(dX, 0);
-        this._previousX = e.windowPoint.x;
-      }
-      else if (e.target === this.subviews.vInd || (this._previousY !== undefined))
-      {
         this._previousY = this._previousY === undefined ? e.windowPoint.y - e.deltaY : this._previousY;
-        dY = ((this._previousY - e.windowPoint.y) / this.h) * this.contentHeight;
-        this.scroll(0, dY);
+
+        if (this.dragScrolling && !(hIndScroll || vIndScroll)) {
+          this.scroll(e.windowPoint.x - this._previousX,
+                      e.windowPoint.y - this._previousY);
+        }
+        else if (hIndScroll) {
+          dX = ((this._previousX - e.windowPoint.x) / this.w) * this.contentWidth;
+          this.scroll(dX, 0);
+
+        }
+        else if (vIndScroll) {
+          dY = ((this._previousY - e.windowPoint.y) / this.h) * this.contentHeight;
+          this.scroll(0, dY);
+        }
+        this._previousX = e.windowPoint.x;
         this._previousY = e.windowPoint.y;
       }
 
-      WV.ScrollView.superclass.mouseDragged.call(this, e);
+      if (!this.dragScrolling && !(hIndScroll || vIndScroll)) {
+        WV.ScrollView.superclass.mouseDragged.call(this, e);
+      }
     },
     mouseDown: function(e)
     {
       var point, dX, dY;
 
-      if (e.target === this.subviews.hHoverInd)
+      if (this.dragScrolling)
       {
+        this._startTimestamp = WV.now();
+        this._startX = e.windowPoint.x;
+        this._startY = e.windowPoint.y;
+      }
+
+      if (e.target === this.subviews.hInd)
+      {
+        this._draggingHInd = true;
+      }
+      else if (e.target === this.subviews.vInd)
+      {
+        this._draggingVInd = true;
+      }
+
+      else if (e.target === this.subviews.hHoverInd)
+      {
+        this._draggingHInd = true;
         point = this.subviews.hHoverInd.convertPointFromView(e.windowPoint);
-        dX = (((this.subviews.hInd.x + this.subviews.hInd.w / 2) - point.x) / this.subviews.hHoverInd.w) * this.contentHeight;
+        dX = (((this.subviews.hInd.x + this.subviews.hInd.w / 2) - point.x) /
+                                       this.subviews.hHoverInd.w) * this.contentHeight;
         this.scroll(dX, 0);
       }
 
       else if (e.target === this.subviews.vHoverInd)
       {
+        this._draggingVInd = true;
         point = this.subviews.vHoverInd.convertPointFromView(e.windowPoint);
-        dY = (((this.subviews.vInd.y + this.subviews.vInd.h / 2) - point.y) / this.subviews.vHoverInd.h) * this.contentHeight;
+        dY = (((this.subviews.vInd.y + this.subviews.vInd.h / 2) - point.y) /
+                                       this.subviews.vHoverInd.h) * this.contentHeight;
         this.scroll(0, dY);
       }
 
@@ -309,18 +341,41 @@ WV.ScrollView = WV.extend(WV.View, {
     },
     mouseUp: function(e)
     {
+      var downOwner  = e.mouseDownOwner,
+          doInertia = this.dragScrolling && downOwner &&
+                      downOwner.vtag !== 'vInd' && downOwner.vtag !== 'hInd';
+
       delete this._previousX;
       delete this._previousY;
+      delete this._draggingHInd;
+      delete this._draggingVInd;
 
-      if (!WV.isPointInRect(e.windowPoint, this.subviews.hHoverInd.convertRectToView()))
+      if (doInertia)
       {
-        this.fadeHoverInd(this.subviews.hHoverInd);
+        this.inertiaScroll(e.windowPoint.x, e.windowPoint.y);
       }
-      if (!WV.isPointInRect(e.windowPoint, this.subviews.vHoverInd.convertRectToView()))
+      else
       {
-        this.fadeHoverInd(this.subviews.vHoverInd);
+        if (!WV.isPointInRect(e.windowPoint, this.subviews.hHoverInd.convertRectToView())) {
+          this.fadeHoverInd(this.subviews.hHoverInd);
+        }
+        if (!WV.isPointInRect(e.windowPoint, this.subviews.vHoverInd.convertRectToView())) {
+          this.fadeHoverInd(this.subviews.vHoverInd);
+        }
+        WV.ScrollView.superclass.mouseUp.call(this, e);
       }
-      WV.ScrollView.superclass.mouseUp.call(this, e);
+    },
+    touchesBegan: function(touches, e) {
+      this._startX = this._startX || touches[0].windowX;
+      this._startY = this._startY || touches[0].windowY;
+      this._startTimestamp = this._startTimestamp || WV.now();
+    },
+    touchesEnded:function (touches, e) {
+      this.inertiaScroll(touches[0].windowX, touches[0].windowY);
+    },
+    touchesMoved:function (touches, e) {
+      this.scroll(touches[0].windowX - touches[0].previousWindowX,
+                  touches[0].windowY - touches[0].previousWindowY);
     },
     scroll: function(dX, dY)
     {
@@ -353,6 +408,49 @@ WV.ScrollView = WV.extend(WV.View, {
 
       content.setOrigin(x, y);
       return this.updateIndicators();
+    },
+    inertiaScroll: function(finalX, finalY) {
+
+      var dt = (WV.now() - this._startTimestamp),
+          initialX = (finalX - this._startX) / dt,
+          initialY = (finalY - this._startY) / dt,
+          scaleFactor = 400,
+          timeConstant = 10,
+          stepX = 0, stepY = 0,
+          deltaX, deltaY,
+          amplitudeX = initialX * scaleFactor,
+          amplitudeY = initialY * scaleFactor,
+          me = this;
+
+      delete this._startX;
+      delete this._startY;
+      delete this._startTimestamp;
+
+//      requestAnimationFrame(function intertiaLoop() {
+//            var elapsed = WV.now() - timestamp,
+//                newX = finalX - amplitude * Math.exp(-elapsed / 325);
+//
+//                me.setContentOrigin(newX, content.y);
+//
+//              if ((elapsed < 6 * 325) && !me._startX) {
+//                requestAnimationFrame(intertiaLoop);
+//              }
+//          });
+
+      requestAnimationFrame(function intertiaLoop() {
+        deltaX = amplitudeX / timeConstant;
+        deltaY = amplitudeY / timeConstant;
+
+        me.scroll(deltaX, deltaY);
+        amplitudeX -= deltaX;
+        amplitudeY -= deltaY;
+        stepX += 1;
+        stepY += 1;
+
+        if (((stepX < 6 * 10) || (stepY < 6 * 10)) && !me._startTimestamp) {
+          requestAnimationFrame(intertiaLoop);
+        }
+      });
     }
 
 });

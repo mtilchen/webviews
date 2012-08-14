@@ -8,9 +8,10 @@
 
     <script src="../webviews-debug.js"></script>
     <script>
-        WV.init(function() {
-            var e1 = new WV.FormView({
-                superView: WV.Window,
+
+        WV.init(function(win) {
+//            var e1 = new WV.View({
+            win.addSubview({
                 id: 'e1',
                 autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
                 x: 30,
@@ -18,180 +19,176 @@
                 h: 'h - 60',
                 w: 'w - 60',
                 style: {
-                    backgroundColor: '#D8D8D8',
-                    border: '1px solid #989898',
-                    borderRadius: '2px'
-                }
-            });
-
-            new WV.Label({
-                superView: e1,
-                autoResizeMask: WV.RESIZE_NONE,
-                x: 17,
-                y: 10,
-                w: 200,
-                text: 'To',
-                style: {
-                    fontWeight: 'bold'
-                }
-            });
-
-            new WV.TextField({
-                superView: e1,
-                id: 'to',
-                text: 'I am read only',
-                autoResizeMask: WV.RESIZE_WIDTH_FLEX,
-                readOnly: true,
-                x: 15,
-                y: 28,
-                w: e1.w - 30
-            });
-
-            new WV.Label({
-                superView: e1,
-                autoResizeMask: WV.RESIZE_NONE,
-                x: 17,
-                y: 58,
-                w: 200,
-                text: 'Subject',
-                style: {
-                    fontWeight: 'bold'
-                }
-            });
-
-            new WV.TextField({
-                superView: e1,
-                id: 'subject',
-                autoResizeMask: WV.RESIZE_WIDTH_FLEX,
-                x: 15,
-                y: 76,
-                w: e1.w - 30
-            });
-
-            new WV.Label({
-                superView: e1,
-                autoResizeMask: WV.RESIZE_NONE,
-                x: 17,
-                y: 105,
-                w: 200,
-                text: 'Labels',
-                style: {
-                    fontWeight: 'bold'
-                }
-            });
-
-            new WV.RadioGroup({
-                superView: e1,
-                autoResizeMask: WV.RESIZE_RIGHT_FLEX,
-                w: 500,
-                h: 60,
-                x: 15,
-                y: 120,
-                name: 'colors',
-                cellData: [
-                    ['Red', 'Green', 'Purple', 'Slate', 'Silver', 'Cream'],
-                    ['Cyan', { text: 'Magenta', selected: true }, 'Maroon', 'Gray', 'Brown', 'Dark Brown'],
-                    ['Orange', { text: 'Violet', selected: true }, 'Black', 'Pink', 'Navy', 'White']]
-            });
-
-            new WV.ListView({
-                superView: e1,
-                id: 'list',
-                autoResizeMask: WV.RESIZE_LEFT_FLEX,
-                x: 550,
-                y: 120,
-                h: 300,
-                w: 300,
-                name: 'metals',
-                itemTextAlign: 'left',
-                items: ['Gold', 'Silver', { text: 'Platinum', selected: true }, 'Mercury', 'Aluminum', 'Iron']
-            });
-
-            new WV.CheckBox({
-                id: 'test_check',
-                superView: e1,
-                name: 'test_check',
-                selected: false,
-                toolTip: 'This is a sweet checkbox',
-                autoResizeMask: WV.RESIZE_LEFT_FLEX,
-                x: 'w - 112',
-                y: 120,
-                w: 75
-            });
-
-            new WV.Label({
-                superView: e1,
-                autoResizeMask: WV.RESIZE_NONE,
-                x: 17,
-                y: 195,
-                w: 200,
-                text: 'Message',
-                style: {
-                    fontWeight: 'bold'
-                }
-            });
-
-            new WV.TextArea({
-                superView: e1,
-                autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
-                x: 15,
-                y: 213,
-                w: e1.w - 30,
-                h: e1.h - 270,
-                nextKeyView: 'test_check'
-            });
-
-            new WV.Button({
-                id: 'send',
-                superView: e1,
-                autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_LEFT_FLEX,
-                x: '{e1}.w - 110',
-                y: '{e1}.h - 40',
-                text: 'Send',
-                action: function() {
-                    WV.get('e1').setStyle('transform', new WV.style.Transform2D());
-                    WV.addAnimations({
-                        'e1': [{
-                            easing: WV.Animation.EASENONE,
-                            path: 'style.transform.skewY',
-                            from: '0deg', to: '90deg',
-                            duration: 3
-                        },{
-                            easing: WV.Animation.EASENONE,
-                            path: 'style.transform.scaleX',
-                            from: 1, to: 0, duration: 3,
-                            onComplete: function(a, v) {
-                                v.addAnimation([{
-                                    easing: WV.Animation.EASENONE,
-                                    path: 'style.transform.skewY',
-                                    from: '90deg', to: '180deg',
-                                    duration: 3
-                                },{
-                                    easing: WV.Animation.EASENONE,
-                                    path: 'style.transform.scaleX',
-                                    from: 0, to: -1, duration: 3}]);
-                            }
-                        },{
-                            easing: WV.Animation.EASENONE,
-                            path: 'style.backgroundColor',
-                            to: '#0000FF',
-                            duration: 1,
-                            autoReverse: true,
-                            repeatCount: 2 }]});
-                }
-            });
-
-            new WV.Button({
-                superView: e1,
-                canBecomeFirstResponder:function()
-                {
-                    return false;
+                    color: '#D8D8D8',
+                    borderColor: '#989898',
+                    borderWidth: 1,
+                    cornerRadius: 2
                 },
-                autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_RIGHT_FLEX,
-                x: 15,
-                y: '{e1}.h - 40',
-                text: 'Cancel'
+                subviews: [{
+                    vtype: 'text',
+                    autoResizeMask: WV.RESIZE_NONE,
+                    x: 17,
+                    y: 10,
+                    w: 200,
+                    text: 'To'
+                },{
+                    vtype: 'textfield',
+                    id: 'to',
+                    text: 'I am read only',
+                    autoResizeMask: WV.RESIZE_WIDTH_FLEX,
+                    readOnly: true,
+                    x: 15,
+                    y: 30,
+                    w: 'w - 30'
+                },{
+                    vtype: 'text',
+                    autoResizeMask: WV.RESIZE_NONE,
+                    x: 17,
+                    y: 72,
+                    w: 200,
+                    text: 'Subject'
+                },{
+                    vtype: 'textfield',
+                    id: 'subject',
+                    autoResizeMask: WV.RESIZE_WIDTH_FLEX,
+                    text: 'subject',
+                    x: 15,
+                    y: 92,
+                    w: 'w - 30'
+                },{
+                    vtype: 'text',
+                    autoResizeMask: WV.RESIZE_NONE,
+                    x: 17,
+                    y: 195,
+                    w: 200,
+                    text: 'Message',
+                    style: {
+                        fontWeight: 'bold'
+                    }
+                },{
+                    vtype: 'textfield',
+                    autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
+                    x: 15,
+                    y: 213,
+                    w: '{e1}.w - 30',
+                    h: '{e1}.h - 270',
+                    text: 'message.....',
+                    nextKeyView: 'test_check'
+                },{
+                    vtype: 'button',
+                    canBecomeFirstResponder:function()
+                    {
+                        return false;
+                    },
+                    autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_RIGHT_FLEX,
+                    x: 15,
+                    y: 'h - 40',
+                    text: 'Cancel'
+                },{
+                    id: 'send',
+                    vtype: 'button',
+                    autoResizeMask: WV.RESIZE_TOP_FLEX | WV.RESIZE_LEFT_FLEX,
+                    x: '{e1}.w - 110',
+                    y: '{e1}.h - 40',
+                    text: 'Send',
+                    action: function() {
+                        WV.addAnimations({
+                            'e1': [{
+                                easing: WV.Animation.EASENONE,
+                                path: 'style.rotate',
+//                                path: 'style.skewY',
+                                from: 0, to: 90,
+                                duration: 3
+                            },{
+                                easing: WV.Animation.EASENONE,
+                                path: 'style.scaleX',
+                                from: 1, to: 0, duration: 3,
+                                onComplete: function(a, v) {
+                                    v.addAnimation([{
+                                        easing: WV.Animation.EASENONE,
+//                                        path: 'style.skewY',
+                                        path: 'style.rotate',
+                                        from: 90, to: 180,
+                                        duration: 3
+                                    },{
+                                        easing: WV.Animation.EASENONE,
+                                        path: 'style.scaleX',
+                                        from: 0, to: -1, duration: 3}]);
+                                }
+                            },{
+                                easing: WV.Animation.EASENONE,
+                                path: 'style.color',
+                                to: '#0000FF',
+                                duration: 1,
+                                autoReverse: true,
+                                repeatCount: 2 }]});
+                    }
+                }]
             });
+
+//            win.addSubview(e1);
+
+//            new WV.Label({
+//                superView: e1,
+//                autoResizeMask: WV.RESIZE_NONE,
+//                x: 17,
+//                y: 105,
+//                w: 200,
+//                text: 'Labels',
+//                style: {
+//                    fontWeight: 'bold'
+//                }
+//            });
+//
+//            new WV.RadioGroup({
+//                superView: e1,
+//                autoResizeMask: WV.RESIZE_RIGHT_FLEX,
+//                w: 500,
+//                h: 60,
+//                x: 15,
+//                y: 120,
+//                name: 'colors',
+//                cellData: [
+//                    ['Red', 'Green', 'Purple', 'Slate', 'Silver', 'Cream'],
+//                    ['Cyan', { text: 'Magenta', selected: true }, 'Maroon', 'Gray', 'Brown', 'Dark Brown'],
+//                    ['Orange', { text: 'Violet', selected: true }, 'Black', 'Pink', 'Navy', 'White']]
+//            });
+//
+//            new WV.ListView({
+//                superView: e1,
+//                id: 'list',
+//                autoResizeMask: WV.RESIZE_LEFT_FLEX,
+//                x: 550,
+//                y: 120,
+//                h: 300,
+//                w: 300,
+//                name: 'metals',
+//                itemTextAlign: 'left',
+//                items: ['Gold', 'Silver', { text: 'Platinum', selected: true }, 'Mercury', 'Aluminum', 'Iron']
+//            });
+//
+//            new WV.CheckBox({
+//                id: 'test_check',
+//                superView: e1,
+//                name: 'test_check',
+//                selected: false,
+//                toolTip: 'This is a sweet checkbox',
+//                autoResizeMask: WV.RESIZE_LEFT_FLEX,
+//                x: 'w - 112',
+//                y: 120,
+//                w: 75
+//            });
+////
+//            new WV.TextArea({
+//                superView: e1,
+//                autoResizeMask: WV.RESIZE_HEIGHT_FLEX | WV.RESIZE_WIDTH_FLEX,
+//                x: 15,
+//                y: 213,
+//                w: e1.w - 30,
+//                h: e1.h - 270,
+//                nextKeyView: 'test_check'
+//            });
+//
         });
   </script>
 </head>
