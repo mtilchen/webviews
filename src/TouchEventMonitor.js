@@ -283,8 +283,8 @@
             this.monitorEvent('touchmove');
             this.monitorEvent('touchend');
             this.monitorEvent('touchcancel');
-            this.monitorEvent('keyup');
-            this.monitorEvent('keydown');
+//            this.monitorEvent('keyup');
+//            this.monitorEvent('keydown');
 //            this.monitorEvent('gesturestart');
 //            this.monitorEvent('gesturechange');
 //            this.monitorEvent('gestureend');
