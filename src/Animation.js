@@ -284,7 +284,7 @@
                 {
                     this.addAnimation(config[i], true);
                 }
-                commitAnimations();
+                requestAnimationFrame(commitAnimations);
             }
             else
             {
@@ -298,7 +298,7 @@
 
                 if (deferCommit !== true)
                 {
-                    commitAnimations();
+                    requestAnimationFrame(commitAnimations);
                 }
             }
             return anim;
