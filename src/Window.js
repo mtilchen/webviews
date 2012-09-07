@@ -76,7 +76,12 @@ WV.Window = WV.extend(WV.View, {
 
         // Prevent views from being re-added to the queue if they are already in line by using a flag.
         // This will prevent recursive death if a view gets setNeedsDisplay called while drawing
-        if (!view || (view._inDrawQueue_)) { return; }
+        // Also, if a view is already in the queue and not at the end, move it to the end of the queue.
+        if (!view || queue[queue.length] === view) { return; }
+
+        if (view._inDrawQueue_) {
+          queue.splice(queue.indexOf(view), 1);
+        }
 
         view._inDrawQueue_ = true;
         queue[queue.length] = view;
@@ -90,10 +95,9 @@ WV.Window = WV.extend(WV.View, {
               delete queue[0]._inDrawQueue_;
               queue.shift();
             }
-            WV.debug('**** Finish Drawing Window ****');
-//           console.log('**** Finish Drawing Window ****');
+            //WV.debug('**** Finish Drawing Window ****');
           }, this.canvas);
-          WV.debug('**** Start Drawing Window ****');
+          //WV.debug('**** Start Drawing Window ****');
         }
     },
 
@@ -101,7 +105,11 @@ WV.Window = WV.extend(WV.View, {
     {
         if (this.style.color)
         {
-            ctx.fillStyle = this.style.color || 'rgba(0,0,0,0)';
+            if (!this.isOpaque())
+            {
+              ctx.clearRect(0, 0, this.w, this.h);
+            }
+            ctx.fillStyle = this.style.color;
             ctx.fillRect(0,0,this.w,this.h);
         }
         else
