@@ -63,6 +63,8 @@ WV.View = WV.extend(Ext.util.Observable, {
             Ext.applyIf(style, this.constructor.prototype.style);
         }
 
+        var configAnimations = config.animations;
+
         Ext.apply(this, config);
 
         // Overwrite what was in the config because it does contain what we applied to 'style'.
@@ -98,6 +100,10 @@ WV.View = WV.extend(Ext.util.Observable, {
             this.addSubview(subviewsToAdd[i]);
         }
 
+        if (configAnimations)
+        {
+          this.addAnimation(configAnimations);
+        }
         return this;
     },
 
@@ -198,6 +204,8 @@ WV.View = WV.extend(Ext.util.Observable, {
                     this.subviews[view.vtag] = [vtag, view];
                 }
             }
+
+            view.viewDidMoveToSuperview(this);
         }
 
         else // View was already a subview of this superView (this === sv), so just move and re-index
@@ -258,10 +266,14 @@ WV.View = WV.extend(Ext.util.Observable, {
         this.subviewIndex = undefined;
         this.window = undefined;
 
+        this.viewDidMoveToSuperview(null);
+
         if (sv) { sv.setNeedsDisplay(); }
 
         return this;
     },
+
+    viewDidMoveToSuperview: function(superview) { /* template */},
 
     getFrame: function()
     {
@@ -360,7 +372,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             sv = clipsv = this.superView;
 
         // Find the first non-transparent view or view that contains the invalid rect to start with
-        if (sv && (!this.isOpaque() || (!this.clipToBounds && !WV.rectContainsRect(bounds, invalid))))
+        if (sv && (!this.isOpaque() || !sv.isOpaque() || (!this.clipToBounds && !WV.rectContainsRect(bounds, invalid))))
         {
             return sv.setNeedsDisplay(this.convertRectToView(invalid, sv));
         }
@@ -406,14 +418,20 @@ WV.View = WV.extend(Ext.util.Observable, {
 //        console.log('Redrawing: %s', this.id);
         if (this.window && !this.hidden)
         {
-//            WV.debug('Drawing: ', this.id);
+            WV.debug('Drawing: ', this.id);
 //            console.log('Drawing: ' + this.id);
             var ctx = this.window.context2d,
                 bounds = { x: 0, y: 0, w: this.w, h: this.h },
                 origin,
+                alpha,
+                st = this.style,
                 i, l = this.subviews.length;
 
+            alpha = ctx.globalAlpha;
+
             ctx.save();
+
+            ctx.globalAlpha = alpha * (st.opacity === 0 ? 0 : st.opacity || 1.0);
 
             if (top !== false)
             {
@@ -437,7 +455,11 @@ WV.View = WV.extend(Ext.util.Observable, {
                     this.subviews[i].redrawIfNeeded(false);
                 }
             }
+
             ctx.restore();
+
+            ctx.globalAlpha = alpha;
+
         }
     },
 
@@ -450,9 +472,11 @@ WV.View = WV.extend(Ext.util.Observable, {
             linearGradient = st.linearGradient ? st.linearGradient.toCanvasGradient(ctx, rect) : null,
             fill = linearGradient || st.color || 'transparent',
             shadow = st.shadow,
-            deg2Rad = Math.PI * 2 / 360;
+            deg2Rad = Math.PI * 2 / 360,
+            orgX = (st.tmOriginX === 0 ? 0 : (st.transformOriginX || 0.5)) * this.w,
+            orgY = -((st.transformOriginY === 0 ? 0 : (st.transformOriginY || 0.5)) * this.h),
+            orgXAdj, orgYAdj;
 
-        ctx.globalAlpha = st.opacity === 0 ? 0 : st.opacity || 1.0;
 
         if (st.translateX || st.translateY)
         {
@@ -466,9 +490,6 @@ WV.View = WV.extend(Ext.util.Observable, {
             var radians = st.rotate * deg2Rad,
                 cosTheta = Math.cos(radians),
                 sinTheta = Math.sin(radians),
-                orgX = (st.transformOriginX || 0.5) * this.w,
-                orgY = -((st.transformOriginY || 0.5) * this.h),
-                orgXAdj, orgYAdj,
                 m11, m12, m21, m22;
 
             // Counter-clockwise
@@ -487,9 +508,16 @@ WV.View = WV.extend(Ext.util.Observable, {
             // Apply the rotation and the shift together
             ctx.transform(m11, m12, m21, m22, orgXAdj, -orgYAdj);
         }
-        if (st.scaleX !== 1 || st.scaleY !== 1)
+        // TODO: DO not scale if values are === 1
+        if (st.scaleX || st.scaleY)
         {
-            ctx.scale(st.scaleX || 1, st.scaleY || 1);
+          var sx = st.scaleX || 1,
+              sy = st.scaleY || 1;
+
+           // TODO: Do all the transformations in one call to transform with a sequence of matrix ops
+           ctx.translate(orgX, -orgY);
+           ctx.scale(sx, sy);
+           ctx.translate(-orgX, orgY);
         }
 
         if (!this.clipToBounds)
@@ -530,6 +558,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         }
         if (bw)
         {
+          // TODO: Draw this on top of subviews?
           ctx.strokeStyle = st.borderColor;
           ctx.lineWidth = 2 * bw;
           ctx.stroke();
@@ -559,13 +588,12 @@ WV.View = WV.extend(Ext.util.Observable, {
         ctx.lineTo(0, h/2);
         ctx.arc(cr, cr, cr, Math.PI, (3 * Math.PI)/2, false);
         ctx.lineTo(w/2, 0);
+        ctx.closePath();
       }
       else
       {
           ctx.rect(0, 0, w, h);
       }
-
-      ctx.closePath();
 
       return this;
     },
@@ -606,7 +634,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         var st = this.style,
             color = st.color || 'transparent',
             borderColor = st.borderColor || 'transparent',
-            opacity = st.opacity || 1,
+            opacity = st.opacity === 0 ? 0 : st.opacity || 1,
             regex = /^transparent$|rgba(.*)(0\.\d)|(,0)\)$/;  // Look for alpha < 1 in rgba() style color strings
 
         return !(opacity < 1 || regex.exec(color) || (st.borderWidth && regex.exec(borderColor)));
