@@ -66,6 +66,7 @@ WV.ScrollView = WV.extend(WV.View, {
     {
       config = config || {};
 
+      // Abstract the "content view" from configuration
       var subviews = config.subviews;
 
       delete config.subviews;
@@ -76,6 +77,7 @@ WV.ScrollView = WV.extend(WV.View, {
       this.setContentSize(this.contentSize);
       delete this.contentSize;
 
+      // Add the configured subviews to the content view
       if (subviews)
       {
         if (Array.isArray(subviews))

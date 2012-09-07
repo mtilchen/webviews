@@ -55,6 +55,9 @@
             text: "Animation.js",
             path: "src/"
         },{
+           text: "Controller.js",
+           path: "src/"
+        },{
             text: "Sound.js",
             path: "src/"
         }]
