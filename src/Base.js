@@ -91,8 +91,12 @@ WV = (function() {
 
         findByVtag: function(vtag)
         {
+          var views = vtagIndex[vtag];
+          if (views) {
             // If there is only one view with the vtag then return it alone, otherwise return the whole array
-            return vtagIndex[vtag].length === 1 ? vtagIndex[vtag][0] : vtagIndex[vtag];
+            return views.length === 1 ? views[0] : views;
+          }
+          return null;
         },
 
         accumulate: function(cls, prop)
@@ -237,6 +241,10 @@ WV = (function() {
           var intersection = WV.rectIntersection(r1, r2);
 
           return (intersection.w > 0) && (intersection.h > 0);
+        },
+
+        randomInt: function(min, max) {
+          return Math.floor(Math.random() * (max - min + 1)) + min;
         },
 
         apply: Ext.apply,
