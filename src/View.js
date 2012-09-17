@@ -132,7 +132,13 @@ WV.View = WV.extend(Ext.util.Observable, {
             }
 
             view.superView = this;
-            view.nextResponder = this;
+
+            if (view.nextResponder instanceof WV.Controller) {
+              view.nextResponder.nextResponder = this;
+            }
+            else {
+              view.nextResponder = this;
+            }
 
             // If the view is stateful then set its state to match that of the new superView if it too is stateful,
             // unless the view has explicitly set its own state
@@ -262,9 +268,15 @@ WV.View = WV.extend(Ext.util.Observable, {
         }
 
         this.superView = undefined;
-        this.nextResponder = undefined;
         this.subviewIndex = undefined;
         this.window = undefined;
+
+        if (this.nextResponder instanceof WV.Controller) {
+          this.nextResponder.nextResponder = undefined;
+        }
+        else {
+          this.nextResponder = undefined;
+        }
 
         this.viewDidMoveToSuperview(null);
 
@@ -415,11 +427,9 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     redrawIfNeeded: function(top)
     {
-//        console.log('Redrawing: %s', this.id);
         if (this.window && !this.hidden)
         {
-            WV.debug('Drawing: ', this.id);
-//            console.log('Drawing: ' + this.id);
+//            WV.debug('Drawing: ', this.id);
             var ctx = this.window.context2d,
                 bounds = { x: 0, y: 0, w: this.w, h: this.h },
                 origin,
