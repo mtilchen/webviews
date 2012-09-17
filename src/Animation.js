@@ -22,7 +22,14 @@
             anim.lastFrame = -1;
             anim.totalFrames = Math.ceil(FPS * anim.duration);
             anim.drawnFrames = 0;
-            anim.startTime =  startTime + ((parseFloat(anim.delay) * SEC_MS) || 0);
+            if (anim.delay) {
+              anim.startTime = startTime + ((parseFloat(anim.delay) * SEC_MS) || 0);
+              delete anim.delay;
+            }
+            else {
+              anim.startTime = startTime;
+            }
+
             anim.running = false;
             anim.cancelled = false;
             activeViews[anim.owner.id] = anim.owner;
@@ -36,19 +43,19 @@
         }
     }
 
-    function runAnimations(now)
+    function runAnimations()
     {
       var anim,
           animId,
           view,
           dirty,
-          shortestDelay = 10^5,
+          shortestDelay = Infinity,
           delay,
           newVal,
           reRun,
+          now = WV.now(),
           futureAnimTask = null;
 
-      now = now || WV.now();
       for (var viewId in activeViews)
       {
           view = activeViews[viewId];
@@ -83,8 +90,11 @@
                           shortestDelay = delay;
                       }
                       clearTimeout(futureAnimTask);
-                      futureAnimTask = setTimeout(runAnimations,
-                                                  shortestDelay);
+                      futureAnimTask = setTimeout(function() {
+                        if (!isAnimating) {
+                          requestAnimationFrame(runAnimations);
+                        }
+                      }, shortestDelay);
                   }
               }
               else
