@@ -256,10 +256,9 @@ WV = (function() {
 
         emptyFn: function() {},
 
-        now: function() {
-           return (window.performance && window.performance.now)
-                        ? performance.now() : Date.now();
-        },
+        now: (window.performance && (window.performance.now || window.performance.webkitNow))
+                   ? (function() { return window.performance.now ? window.performance.now() : window.performance.webkitNow(); })
+                   : Date.now,
 
         log: logAvailable ? function() {
                                var time = (new Date()).toLogString(),
