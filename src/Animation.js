@@ -255,8 +255,8 @@
                 this.to = parseFloat(this.to);
                 if (isNaN(this.to)) { throw new Error('Invalid "to" value'); }
                 // -1 Means Infinity
-                if (this.to === -1) {
-                  this.to = Infinity;
+                if (this.repeatCount === -1) {
+                  this.repeatCount = Infinity;
                 }
             }
 
