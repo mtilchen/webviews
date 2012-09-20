@@ -39,9 +39,29 @@ WV.Controller = WV.extend(Object, {
 
   establishConnections: function(view) {
     var v = view || this.view,
+        me = this,
         i, len;
+
+    // Add refs
     if (typeof v.ref === 'string') {
       this.refs[v.ref] = this.refs[v.ref] || v;  // Use the first ref we find for a name and do not overwrite. Warn?
+    }
+
+    // Add actions
+    if (typeof v.actions === 'string' || Array.isArray(v.actions)) {
+      var actionCfgs = Array.isArray(v.actions) ? v.actions : [v.actions];
+
+      // Actions defined as "eventname" ":" "methodname"
+      actionCfgs.forEach(function(action) {
+        var cfg = action.split(':'),
+            eName =  (cfg[0] || '').trim(),
+            method = (cfg[1] || '').trim();
+
+        if (eName && method && (typeof me[method] === 'function')) {
+          // Run the event handler in the scope of this controller
+          v.addListener(eName, me[method], me);
+        }
+      });
     }
     for (i = 0, len = v.subviews.length; i < len; i++ ) {
       this.establishConnections(v.subviews[i]);

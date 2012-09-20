@@ -125,6 +125,9 @@ WV.Button = WV.extend(WV.Control, {
     {
       WV.Button.superclass.constructor.call(this, config);
 
+      this.addEvents('mouseupinside');
+      this.addEvents('touchupinside');
+
       this.setText(this.text || '');
 
       return this;
@@ -164,7 +167,7 @@ WV.Button = WV.extend(WV.Control, {
 
         if (e.target.isDescendantOf(this))
         {
-            this.doAction();
+            this.fireEvent('mouseupinside', this);
         }
         WV.Button.superclass.mouseUp.call(this, e);
     },

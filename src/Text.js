@@ -4,6 +4,8 @@ WV.Text = WV.extend(WV.View, {
     tpl: WV.createTemplate('<div id="{id}" style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; overflow:visible; color:transparent; font:{font}">{text}</div>'),
     wrap: false,
     align: 'left',
+    vOffset: 0,
+    selectable: false,
     style: { font: '12pt sans-serif'},
 
     constructor: function(config)
@@ -13,7 +15,9 @@ WV.Text = WV.extend(WV.View, {
         WV.Text.superclass.constructor.call(this, config);
 
         this.setText(this.text || '');
-        this.initDom();
+        if (this.selectable) {
+          this.initDom();
+        }
 
         this.setAlign(this.align);
 
@@ -65,6 +69,7 @@ WV.Text = WV.extend(WV.View, {
     {
         text = text || '';
         this.lines = text.split('\n');
+        this._lineHeight = WV.Text.measure(this.style.font, this.lines[0]).h;
 
         if (this.dom)
         {
@@ -94,11 +99,11 @@ WV.Text = WV.extend(WV.View, {
     },
     draw: function(ctx, rect)
     {
-        var font = this.style.font,
-            height = WV.Text.measure(font, this.lines[0]).h,
+        var vOffset = this.vOffset,
+            height = this._lineHeight,
             startX;
 
-        ctx.font = font;
+        ctx.font = this.style.font;
         ctx.fillStyle = this.style.textColor || 'black';
         ctx.textBaseline = 'top';
 
@@ -124,7 +129,7 @@ WV.Text = WV.extend(WV.View, {
 
         //TODO: Support wrapping
         this.lines.forEach(function(line, i) {
-            ctx.fillText(line.replace(/&nbsp;/g, ' ') || '', startX, i * height);
+            ctx.fillText(line.replace(/&nbsp;/g, ' ') || '', startX, i * height + vOffset);
         });
     },
 
@@ -152,7 +157,7 @@ WV.Text = WV.extend(WV.View, {
       el = el || Ext.DomHelper.append(Ext.getBody(), { id: 'wv-shared-text-metrics', style: 'position: absolute; top: -1000px; left: -1000px;'}, true).dom;
 
       el.style.font = font;
-      el.innerHTML = text.replace(/\n/g, '');
+      el.innerHTML = text.replace(/\n/g, '<br>');
 
       return { w: el.clientWidth, h: el.clientHeight };
   };

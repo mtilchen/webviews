@@ -49,7 +49,7 @@
             text: "Text.js",
             path: "src/"
         },{
-            text: "Form.js",
+            text: "Control.js",
             path: "src/"
         },{
             text: "Animation.js",
