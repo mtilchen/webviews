@@ -220,6 +220,16 @@
 
             this.id = this.id || 'anim-' + animIdSeed++;
 
+            // Find easing functions by name
+            if (typeof this.easing === 'string') {
+              if (Ext.lib.Easing[this.easing]) {
+                this.easing = Ext.lib.Easing[this.easing];
+              }
+              else {
+                throw 'Invalid easing function: ' + this.easing;
+              }
+            }
+
             var target = config.owner,
                 key,
                 unitMatches,
@@ -244,6 +254,10 @@
             {
                 this.to = parseFloat(this.to);
                 if (isNaN(this.to)) { throw new Error('Invalid "to" value'); }
+                // -1 Means Infinity
+                if (this.to === -1) {
+                  this.to = Infinity;
+                }
             }
 
             // Check to see if this property is using units
@@ -281,7 +295,6 @@
             this.setterFn = target['set' + key.replace(/([a-z])/, key.charAt(0).toUpperCase())];
             this.target = target;
             this.key = key;
-            this.needsLayout = (key === 'height' || key === 'width');
         }
     });
 
