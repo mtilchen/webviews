@@ -427,7 +427,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     redrawIfNeeded: function(top)
     {
-        if (this.window && !this.hidden)
+        if (this.visible())
         {
 //            WV.debug('Drawing: ', this.id);
             var ctx = this.window.context2d,
@@ -518,12 +518,12 @@ WV.View = WV.extend(Ext.util.Observable, {
             // Apply the rotation and the shift together
             ctx.transform(m11, m12, m21, m22, orgXAdj, -orgYAdj);
         }
-        // TODO: DO not scale if values are === 1
-        if (st.scaleX || st.scaleY)
-        {
-          var sx = st.scaleX || 1,
-              sy = st.scaleY || 1;
 
+        var sx = st.scaleX === 0 ? 0 : st.scaleX || 1,
+            sy = st.scaleY === 0 ? 0 : st.scaleY || 1;
+
+        if (st.scaleX !== 1 || st.scaleY !== 1)
+        {
            // TODO: Do all the transformations in one call to transform with a sequence of matrix ops
            ctx.translate(orgX, -orgY);
            ctx.scale(sx, sy);
@@ -585,18 +585,20 @@ WV.View = WV.extend(Ext.util.Observable, {
     // TODO: Move this to a function added to the Canvas2DContext prototoype
     roundedRect: function(ctx, w, h, cr)
     {
+      var pi = Math.PI;
+
       ctx.beginPath();
 
       if (cr)
       {
         ctx.moveTo(w/2, 0);
-        ctx.arc(w - cr, cr, cr, (3 * Math.PI)/2, 0, false);
+        ctx.arc(w - cr, cr, cr, (3 * pi)/2, 0, false);
         ctx.lineTo(w, h/2);
-        ctx.arc(w - cr, h - cr, cr, 0, Math.PI/2, false);
+        ctx.arc(w - cr, h - cr, cr, 0, pi/2, false);
         ctx.lineTo(w/2, h);
-        ctx.arc(cr, h - cr, cr, Math.PI/2, Math.PI, false);
+        ctx.arc(cr, h - cr, cr, pi/2, pi, false);
         ctx.lineTo(0, h/2);
-        ctx.arc(cr, cr, cr, Math.PI, (3 * Math.PI)/2, false);
+        ctx.arc(cr, cr, cr, pi, (3 * pi)/2, false);
         ctx.lineTo(w/2, 0);
         ctx.closePath();
       }
@@ -802,7 +804,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     setHidden: function(hide)
     {
-        var sv = this.superView;
+        var sv = this.superView;this.style.opacity
 
         if (!this.hidden && hide)
         {
@@ -818,6 +820,11 @@ WV.View = WV.extend(Ext.util.Observable, {
         return this;
     },
 
+    visible: function() {
+      var alpha = this.style.opacity === undefined ? 1 : this.style.opacity;
+
+      return !this.hidden && (alpha > 0) && this.window;
+    },
 
     setClipToBounds: function(clip)
     {
