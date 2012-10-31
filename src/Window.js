@@ -22,8 +22,6 @@ WV.Window = WV.extend(WV.View, {
         {
             this.id = this.canvas;
             this.canvas = document.getElementById(this.id);
-            this.w = this.previousW = this.canvas.width;
-            this.h = this.previousH = this.canvas.height;
         }
         if (!this.canvas) // Full-screen app
         {
@@ -41,14 +39,23 @@ WV.Window = WV.extend(WV.View, {
             this.canvas.style.left = '0px';
 
             body.appendChild(this.canvas);
-
-            this.w = this.previousW = this.canvas.width = Ext.lib.Dom.getViewportWidth();
-            this.h = this.previousH = this.canvas.height = Ext.lib.Dom.getViewportHeight();
-
-            Ext.EventManager.addListener(window, 'resize', function() {
-              this.setSize();
-            }, this, { buffer: 1 });
         }
+
+        this.canvas.style['-ms-touch-action'] = 'none';
+
+        // If there is a width or height property defined on the canvas then the user takes full responsibility for sizing
+        if (!(this.canvas.hasAttribute('height') || this.canvas.hasAttribute('width'))) {
+          var st = getComputedStyle(this.canvas);
+          this.w = this.previousW = this.canvas.width  = this.isFullScreen ? Ext.lib.Dom.getViewportWidth() : parseFloat(st.width);
+          this.h = this.previousH = this.canvas.height = this.isFullScreen ? Ext.lib.Dom.getViewportHeight() : parseFloat(st.height);
+
+          Ext.EventManager.addListener(window, 'resize', function() {
+            this.setSize();
+          }, this, { buffer: 1 });
+        }
+
+        this.w = this.previousW = this.canvas.width;
+        this.h = this.previousH = this.canvas.height;
 
         // TODO: Create a way to set this in wib loading and declaratively
         this.firstResponder = this.initialFirstResponder = this;
@@ -115,10 +122,10 @@ WV.Window = WV.extend(WV.View, {
         }
     },
 
-    setSize: function()
-    {
-      var w = Ext.lib.Dom.getViewportWidth(),
-          h = Ext.lib.Dom.getViewportHeight();
+    setSize: function() {
+      var st = getComputedStyle(this.canvas),
+          w =  this.isFullScreen ? Ext.lib.Dom.getViewportWidth() : parseFloat(st.width),
+          h =  this.isFullScreen ? Ext.lib.Dom.getViewportHeight(): parseFloat(st.height);
 
       this.previousH = this.h;
       this.previousW = this.w;
@@ -129,6 +136,19 @@ WV.Window = WV.extend(WV.View, {
       this.layoutSubviews();
       this.inLayout = false;
       this.redrawIfNeeded();
+    },
+
+    hitTest: function(point) {
+      // We need to scale the point if the canvas is scaled for proper hit testing
+      if (!this.isFullScreen) {
+        var st = getComputedStyle(this.canvas),
+            scaledW = parseFloat(st.width),
+            scaledH = parseFloat(st.height);
+
+        point.x = point.x / (scaledW / this.canvas.width);
+        point.y = point.y / (scaledH / this.canvas.height);
+      }
+      return WV.Window.superclass.hitTest.call(this, point);
     },
 
     makeFirstResponder: function(newResponder)

@@ -48,6 +48,7 @@ WV.Controller = WV.extend(Object, {
     }
 
     // Add actions
+    // TODO: Support 'target' as a key-path into this controller
     if (typeof v.actions === 'string' || Array.isArray(v.actions)) {
       var actionCfgs = Array.isArray(v.actions) ? v.actions : [v.actions];
 
