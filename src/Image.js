@@ -38,7 +38,8 @@ WV.Image = WV.extend(Object, {
         var w = (this.useNaturalSize || this.useNaturalWidth) ? this.naturalWidth : this.w || rect.w,
             h = (this.useNaturalSize || this.useNaturalHeight) ? this.naturalHeight : this.h || rect.h,
             x = this.x || 0,
-            y = this.y || 0;
+            y = this.y || 0,
+            sr = this.srcRect;
 
         if (this.loaded)
         {
@@ -50,6 +51,9 @@ WV.Image = WV.extend(Object, {
             }
             ctx.fillStyle = this.pattern;
             ctx.fillRect(x, y, w, h);
+          }
+          else if (sr) {
+            ctx.drawImage(this._image, sr.x, sr.y, sr.w, sr.h, x, y, w, h);
           }
           else
           {
