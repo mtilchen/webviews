@@ -30,7 +30,7 @@ WV.Stylable = {
             var setFn = this['set' + name.replace(/([a-z])/, name.charAt(0).toUpperCase())];
 
             // Convert config literals into objects
-            if (value.hasOwnProperty('vtype'))
+            if (value && value.hasOwnProperty('vtype'))
             {
                 value = WV.create(value.vtype, value);
             }
@@ -77,17 +77,20 @@ WV.Stylable = {
         return this;
     },
 
-  //TODO: Need setImage
-    setImage: function(image)
-    {
-      if (this.style.image instanceof WV.Image)
-      {
-        WV.apply(this.style.image, image);
+    setImage: function(image) {
+      if (typeof image === 'string') {
+        image = { src: image };
       }
-      else
-      {
-        this.style.image = image;
+      if (image && (typeof image === 'object')) {
+        if (image instanceof WV.Image) {
+          this.style.image = image;
+        }
+        else {
+          this.style.image = new WV.Image(image, this);
+        }
+        return this;
       }
+      throw 'Image must be an instance of WV.Image, a config object or a String specifing the "src" url';
     },
   //TODO: Need setRadialGradient
  //TODO: Need setCornerRadius to mark superview as needing display if cornerradius shrinks
