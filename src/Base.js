@@ -282,41 +282,41 @@ WV = (function() {
         },
         archive: function(root)
         {
-            return JSON.stringify(root, replacer);
+            return JSON.stringify(root);
         },
 
-        // Asynchronously load the view and pass it as an arg to the callback. Add an error if encountered
-        loadView: function(path, cb)
-        {
-            if (typeof cb !== 'function') { return; }
+        // Asynchronously load the view and pass it to the controller constructor.
+        load: function(controllerCfg, viewURL, cb) {
+          if (typeof cb !== 'function') { cb = function(){}; }
 
-            Ext.Ajax.request({
-              method: 'GET',
-              url: path,
-              disableCaching: true,
-              callback: function(opts, success, response)
-              {
-                var view;
+          if (typeof controllerCfg === 'string') {
+            controllerCfg = { vtype: controllerCfg };
+          }
+          else {
+            controllerCfg = controllerCfg || {};
+          }
 
-                if (!success)
-                {
-                  cb(null, 'View could not be loaded due to Ajax error');
+          Ext.Ajax.request({
+            method: 'GET',
+            url: viewURL,
+            disableCaching: true,
+            callback: function(opts, success, response) {
+              var controller,
+                  controllerCls = vtypes[controllerCfg.vtype || 'controller'];
+
+              if (!success) {
+                cb(null, 'View could not be loaded due to Ajax error');
+              }
+              else {
+                try {
+                  cb(new controllerCls(controllerCfg, response.responseText));
                 }
-                else
-                {
-                  try {
-                    view = JSON.parse(response.responseText);
-                    view = WV.create(view.vtype, view);
-                  }
-                  catch (e) {
-                    cb(null, e);
-                    return;
-                  }
-
-                  cb(view);
+                catch (e) {
+                  cb(null, e);
                 }
               }
-            });
+            }
+          });
         }
     };
 
