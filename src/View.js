@@ -37,9 +37,14 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     constructor: function(config)
     {
+        WV.View.superclass.constructor.call(this);
+
         config = config || {};
 
         this.id = config.id || WV.id();
+
+        this.enableBubble('imagerequest');
+        this.enableBubble('imageload');
 
         // Merge styles in from the superclass unless we want to override
         if (this.constructor._styleMerged !== true)
@@ -63,7 +68,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             Ext.applyIf(style, this.constructor.prototype.style);
         }
 
-        var configAnimations = config.animations;
+        var animationConfigs = config.animations;
 
         Ext.apply(this, config);
 
@@ -100,10 +105,20 @@ WV.View = WV.extend(Ext.util.Observable, {
             this.addSubview(subviewsToAdd[i]);
         }
 
-        if (configAnimations)
+        if (animationConfigs)
         {
-          this.addAnimation(configAnimations);
+          this.addAnimation(animationConfigs);
         }
+
+        if (this.mask === true) {
+          this.mask = new WV.LoadMask({ owner: this });
+        }
+        // We got a config object for a mask
+        else if (this.mask && (typeof this.mask === 'object')
+                           && !(this.mask instanceof  WV.LoadMask)) {
+          this.mask = WV.create(this.mask.vtype || 'loadmask', WV.apply({ owner: this }, this.mask));
+        }
+
         return this;
     },
 
@@ -616,29 +631,8 @@ WV.View = WV.extend(Ext.util.Observable, {
     {
         if (this.style.image)
         {
-            // Convert a config object to a WV.Image instance
-            if (!(this.style.image instanceof WV.Image))
-            {
-                this.style.image = new WV.Image(this.style.image, this);
-            }
-
             this.style.image.draw(ctx, rect);
         }
-    },
-
-    imageDidLoad: function(image)
-    {
-      if (image.useNaturalSize)
-      {
-        var w = image.naturalWidth,
-            h = image.naturalHeight;
-
-        if (this.h != h || this.w != w)
-        {
-          return this.setSize(image.naturalWidth, image.naturalHeight);
-        }
-      }
-      return this.setNeedsDisplay();
     },
 
     isOpaque: function()

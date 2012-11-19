@@ -43,6 +43,9 @@
             text: "Window.js",
             path: "src/"
         },{
+            text: "LoadMask.js",
+            path: "src/"
+        },{
             text: "Scroll.js",
             path: "src/"
         },{
