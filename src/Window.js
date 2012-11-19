@@ -8,11 +8,9 @@ WV.Window = WV.extend(WV.View, {
      */
     constructor: function(config)
     {
-        config = config || {};
+        WV.Window.superclass.constructor.call(this, config);
 
-        WV.apply(this, config);
-
-        this.id = config.id || WV.id();
+        this.id = this.id || WV.id();
         this.subviews = [];
         this.style = {};
         this.drawQueue = [];
