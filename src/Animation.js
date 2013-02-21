@@ -313,7 +313,7 @@
             {
                 var anim;
                 config.owner = this;
-                anim = config instanceof WV.Animation ? anim : new WV.Animation(config);
+                anim = config instanceof WV.Animation ? config : new WV.Animation(config);
                 uncommittedAnimations.push(anim);
                 this._animCount = this._animCount || 0;
                 this._animCount += 1;
