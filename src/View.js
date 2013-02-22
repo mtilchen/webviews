@@ -23,6 +23,7 @@ WV.View = WV.extend(Ext.util.Observable, {
     resizeSubviews: true,
     clipToBounds: false,
     enabled: true,
+    interactionEnabled: true,
     draggable: false,
     stateful: false,
     needsDisplay: false,
@@ -440,52 +441,108 @@ WV.View = WV.extend(Ext.util.Observable, {
       return this;
     },
 
-    redrawIfNeeded: function(top)
-    {
-        if (this.visible())
-        {
-//            WV.debug('Drawing: ', this.id);
-            var ctx = this.window.context2d,
-                bounds = { x: 0, y: 0, w: this.w, h: this.h },
-                origin,
-                alpha,
-                st = this.style,
-                i, l = this.subviews.length;
+    redrawIfNeeded: function(top) {
+        if (this.visible()) {
+//        WV.debug('Drawing: ', this.id);
+          var ctx = this.window.context2d,
+              alpha,
+              st = this.style,
+              mask = this.mask,
+              i, l = this.subviews.length;
 
-            alpha = ctx.globalAlpha;
+          alpha = ctx.globalAlpha;
 
-            ctx.save();
+          ctx.save();
 
-            ctx.globalAlpha = alpha * (st.opacity === 0 ? 0 : st.opacity || 1.0);
+          ctx.globalAlpha = alpha * (st.opacity === 0 ? 0 : st.opacity || 1.0);
 
-            if (top !== false)
-            {
-                // Start with the first view in window coordinates
-                origin = this.convertPointToView(bounds);
+          if (top !== false) {
+            // We need to replay the transformations from our superview and up
+            this.accmulateTransforms(ctx);
+          }
+          else {
+            this.applyTransform(ctx);
+          }
+
+          // We are masked and configured to not draw ourself so just draw the mask
+          if (mask && mask.isShowing() && !mask.drawOwnerWhileShowing) {
+            this.mask.redrawIfNeeded(false);
+            this.mask.window = this.window;
+          }
+
+          // Otherwise draw ourself and our subviews
+          else {
+            this.baseDraw({ x: 0, y: 0, w: this.w, h: this.h }, ctx);
+
+            if (l) {
+              for (i = 0; i < l; i++) {
+                  this.subviews[i].window = this.window; // TODO: Do this somewhere else?
+                  this.subviews[i].redrawIfNeeded(false);
+              }
             }
-            else
-            {
-                origin = { x: this.x, y: this.y };
-            }
+          }
 
-            ctx.translate(origin.x, origin.y);
+          ctx.restore();
 
-            this.baseDraw(bounds, ctx);
-
-            if (l)
-            {
-                for (i = 0; i < l; i++)
-                {
-                    this.subviews[i].window = this.window; // TODO: Do this somewhere else?
-                    this.subviews[i].redrawIfNeeded(false);
-                }
-            }
-
-            ctx.restore();
-
-            ctx.globalAlpha = alpha;
-
+          ctx.globalAlpha = alpha;
         }
+    },
+
+    applyTransform: function(ctx) {
+      var st = this.style,
+          tx = (st.translateX || 0) + this.x,
+          ty = (st.translateY || 0) + this.y,
+          orgX = (st.transformOriginX === 0 ? 0 : (st.transformOriginX || 0.5)) * this.w,
+          orgY = -((st.transformOriginY === 0 ? 0 : (st.transformOriginY || 0.5)) * this.h),
+          orgXAdj, orgYAdj;
+
+
+      if (tx || ty) {
+          ctx.translate(tx, ty);
+      }
+
+      // TODO: Support skew
+      if (st.rotate) {
+          // The calculations below assume a) flipped y-axis b) clockwise rotation
+          var deg2Rad = Math.PI * 2 / 360,
+              radians = st.rotate * deg2Rad,
+              cosTheta = Math.cos(radians),
+              sinTheta = Math.sin(radians),
+              m11, m12, m21, m22;
+
+          // Counter-clockwise
+//          m11 = cosTheta, m12 = -sinTheta,
+//          m21 = sinTheta, m22 = cosTheta;
+
+         // Clockwise
+          m11 = cosTheta; m12 = sinTheta;
+          m21 = -sinTheta; m22 = cosTheta;
+
+          // Calculate the shift of the point we are rotating around because the canvas rotates
+          // around its origin.
+          orgXAdj = orgX - (orgX * m11) - (orgY * m12);
+          orgYAdj = orgY - (orgX * m21) - (orgY * m22);
+
+          // Apply the rotation and the shift together
+          ctx.transform(m11, m12, m21, m22, orgXAdj, -orgYAdj);
+      }
+
+      var sx = st.scaleX === 0 ? 0 : st.scaleX || 1,
+          sy = st.scaleY === 0 ? 0 : st.scaleY || 1;
+
+      if (sx !== 1 || sy !== 1) {
+         // TODO: Do all the transformations in one call to transform with a sequence of matrix ops
+         ctx.translate(orgX, -orgY);
+         ctx.scale(sx, sy);
+         ctx.translate(-orgX, orgY);
+      }
+    },
+
+    accmulateTransforms: function(ctx) {
+      if (this.superView) {
+        this.superView.accmulateTransforms(ctx);
+      }
+      this.applyTransform(ctx);
     },
 
     baseDraw: function(rect, ctx)
@@ -496,54 +553,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             clip = this.clipToBounds || bw,
             linearGradient = st.linearGradient ? st.linearGradient.toCanvasGradient(ctx, rect) : null,
             fill = linearGradient || st.color || 'transparent',
-            shadow = st.shadow,
-            deg2Rad = Math.PI * 2 / 360,
-            orgX = (st.tmOriginX === 0 ? 0 : (st.transformOriginX || 0.5)) * this.w,
-            orgY = -((st.transformOriginY === 0 ? 0 : (st.transformOriginY || 0.5)) * this.h),
-            orgXAdj, orgYAdj;
-
-
-        if (st.translateX || st.translateY)
-        {
-            ctx.translate(st.translateX || 0, st.translateY || 0);
-        }
-
-        // TODO: Support skew
-        if (st.rotate)
-        {
-            // The calculations below assume a) flipped y-axis b) clockwise rotation
-            var radians = st.rotate * deg2Rad,
-                cosTheta = Math.cos(radians),
-                sinTheta = Math.sin(radians),
-                m11, m12, m21, m22;
-
-            // Counter-clockwise
-//          m11 = cosTheta, m12 = -sinTheta,
-//          m21 = sinTheta, m22 = cosTheta;
-
-           // Clockwise
-            m11 = cosTheta; m12 = sinTheta;
-            m21 = -sinTheta; m22 = cosTheta;
-
-            // Calculate the shift of the point we are rotating around because the canvas rotates
-            // around its origin.
-            orgXAdj = orgX - (orgX * m11) - (orgY * m12);
-            orgYAdj = orgY - (orgX * m21) - (orgY * m22);
-
-            // Apply the rotation and the shift together
-            ctx.transform(m11, m12, m21, m22, orgXAdj, -orgYAdj);
-        }
-
-        var sx = st.scaleX === 0 ? 0 : st.scaleX || 1,
-            sy = st.scaleY === 0 ? 0 : st.scaleY || 1;
-
-        if (st.scaleX !== 1 || st.scaleY !== 1)
-        {
-           // TODO: Do all the transformations in one call to transform with a sequence of matrix ops
-           ctx.translate(orgX, -orgY);
-           ctx.scale(sx, sy);
-           ctx.translate(-orgX, orgY);
-        }
+            shadow = st.shadow;
 
         if (!this.clipToBounds)
         {
@@ -584,7 +594,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         if (bw)
         {
           // TODO: Draw this on top of subviews?
-          ctx.strokeStyle = st.borderColor;
+          ctx.strokeStyle = st.borderColor || 'black';
           ctx.lineWidth = 2 * bw;
           ctx.stroke();
         }
@@ -798,7 +808,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
     setHidden: function(hide)
     {
-        var sv = this.superView;this.style.opacity
+        var sv = this.superView;
 
         if (!this.hidden && hide)
         {
@@ -815,9 +825,10 @@ WV.View = WV.extend(Ext.util.Observable, {
     },
 
     visible: function() {
-      var alpha = this.style.opacity === undefined ? 1 : this.style.opacity;
+      var st = this.style,
+          alpha = st.opacity === undefined ? 1 : st.opacity;
 
-      return !this.hidden && (alpha > 0) && this.window;
+      return !this.hidden && (alpha >= 0.01) && !!this.window;
     },
 
     setClipToBounds: function(clip)
@@ -961,37 +972,51 @@ WV.View = WV.extend(Ext.util.Observable, {
         this.setFrame(f);
     },
 
-    hitTest: function(point)
-    {
-        var convP, hit,
-            subs = this.subviews,
-            sv = this.superView;
+    // point must be in this view's coordinate system
+    hitTest: function(point, top) {
 
-        if (this.hidden || !this.enabled)
-        {
-            return null;
+      if (!this.visible() || !this.interactionEnabled) {
+          return null;
+      }
+
+      var hit,
+          st = this.style,
+          sv = this.superView,
+          subs = this.subviews,
+          ctx = this.window.context2d;
+
+      ctx.save();
+
+      if (top !== false) {
+        // Identity
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        // TODO: If this is not the window we need to replay all the transformations from our ancestors first.
+        // Point needs to be in window coordinates for use in isPointInPath
+        point = this.convertPointToView(point);
+      }
+
+      // Apply our transform and replay our path, then see if the point is inside
+      this.applyTransform(ctx);
+
+      // Replay our path, but don't draw anything
+      this.roundedRect(ctx, this.w, this.h, st.cornerRadius);
+
+      if (sv && !ctx.isPointInPath(point.x, point.y)) {
+          ctx.restore();
+          return null;
+      }
+
+      if (subs.length) {
+        for (var i = (subs.length - 1); i >= 0; i--) {
+            hit = subs[i].hitTest(point, false);
+            if (hit) { break; }
         }
+      }
 
-        // TODO: Deal with rotated/scaled views. Use layer coords or use larger bounds?
+      ctx.restore();
 
-        if (sv && !WV.isPointInRect(point, this.getFrame()))
-        {
-            return null;
-        }
-
-        convP = this.convertPointFromView(point, sv);
-
-        if (subs && subs.length)
-        {
-            for (var i = (subs.length - 1); i >= 0; i--)
-            {
-                hit = subs[i].hitTest(convP);
-                if (hit) { break; }
-            }
-        }
-
-        // We are either in the hit subview our ourself
-        return hit ? hit : this;
+      // We are either inside the hit subview or inside ourself
+      return hit ? hit : this;
     },
 
     // view passed in must be an ancestor for now, if no ancestor passed, assumes Window
@@ -1001,7 +1026,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             convY = point.y,
             v = this;
 
-//            ancestor = ancestor || WV.Window;
+        ancestor = ancestor || v.window;
 
         while (v !== ancestor && v.superView)
         {
@@ -1021,7 +1046,7 @@ WV.View = WV.extend(Ext.util.Observable, {
             convY = point.y,
             v = this;
 
-//            ancestor = ancestor || WV.Window;
+        ancestor = ancestor || v.window;
 
         while (v && (v !== ancestor))
         {
