@@ -308,6 +308,9 @@
         if (wheelDelta)
         {
           sme.wheelDelta = wheelDelta;
+          if (!wheelDeltaX && !wheelDeltaY) { // Assume the x axis in the ambiguous case
+            sme.wheelDeltaY = wheelDelta;
+          }
         }
         else
         {
