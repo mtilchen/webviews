@@ -11,6 +11,9 @@ WV.LoadMask = WV.extend(WV.View, {
    */
   autoResizeMask: WV.RESIZE_WIDTH_FLEX | WV.RESIZE_HEIGHT_FLEX,
   autoMaskImageLoading: false,
+  drawOwnerWhileShowing: true,
+  initiallyShowing: false,
+
   style: {
     color: 'rgba(0,0,0,0.5)'
   },
@@ -41,18 +44,39 @@ WV.LoadMask = WV.extend(WV.View, {
         }
       }, this);
     }
+
+    if (this.initiallyShowing) {
+      this.show();
+    }
   },
   show: function() {
-    if (this.superView !== this.owner) {
-      var size = this.owner.getSize();
+    if (!this.isShowing()) {
+      var size = this.owner.getSize(),
+          me = this;
+
       this.setSize(size.w, size.h);
+      this.setHidden(true);
       this.owner.addSubview(this);
+      this._timeoutRef = setTimeout(function() {
+        me.setHidden(false);
+      }, 50);
+
       WV.debug('Showing mask for: ' + this.owner.id);
     }
   },
   hide: function() {
-    this.removeFromSuperView();
+    clearTimeout(this._timeoutRef);
+    this._timeoutRef = undefined;
+
+    if (this.isShowing()) {
+      this.removeFromSuperView();
+    }
+
     WV.debug('Hiding mask for: ' + this.owner.id);
+  },
+
+  isShowing: function() {
+    return this.superView === this.owner;
   },
 
   // Swallow all events
@@ -74,4 +98,11 @@ WV.LoadMask = WV.extend(WV.View, {
   touchesMoved: function() {},
   touchesEnded: function() {},
   touchesCancelled: function() {}
+});
+
+WV.AppLoadMask = WV.extend(WV.LoadMask, {
+  vtype: 'apploadmask',
+  autoMaskImageLoading: true,
+  drawOwnerWhileShowing: false,
+  initiallyShowing: true
 });
