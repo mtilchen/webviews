@@ -1,7 +1,7 @@
 
 WV.Text = WV.extend(WV.View, {
     vtype: 'text',
-    tpl: WV.createTemplate('<div id="{id}" style="position:absolute; left:{x}px; top:{y}px; width:{w}px; height:{h}px; overflow:visible; color:transparent; font:{font}">{text}</div>'),
+    tpl: WV.createTemplate('<div id="{id}" style="display:inline; position:absolute; left:{x}px; top:{y}px; overflow:visible; color:transparent; font:{font}">{text}</div>'),
     wrap: false,
     align: 'left',
     vOffset: 0,
@@ -14,10 +14,10 @@ WV.Text = WV.extend(WV.View, {
 
         WV.Text.superclass.constructor.call(this, config);
 
-        this.setText(this.text || '');
         if (this.selectable) {
           this.initDom();
         }
+        this.setText(this.text || '');
 
         this.setAlign(this.align);
 
@@ -73,7 +73,7 @@ WV.Text = WV.extend(WV.View, {
 
         if (this.dom)
         {
-            this.dom.innerText = text.replace(/ /g, '&nbsp;');
+            this.dom.innerHTML = text.replace(/\n/g, '<br>');
         }
         this.setNeedsDisplay();
     },
@@ -101,11 +101,12 @@ WV.Text = WV.extend(WV.View, {
     {
         var vOffset = this.vOffset,
             height = this._lineHeight,
+            firstLine = Ext.isGecko ? 1 : 0,
             startX;
 
         ctx.font = this.style.font;
         ctx.fillStyle = this.style.textColor || 'black';
-        ctx.textBaseline = 'top';
+        ctx.textBaseline = Ext.isGecko ? 'bottom' : 'top';
 
         switch (this.align)
         {
@@ -129,7 +130,8 @@ WV.Text = WV.extend(WV.View, {
 
         //TODO: Support wrapping
         this.lines.forEach(function(line, i) {
-            ctx.fillText(line.replace(/&nbsp;/g, ' ') || '', startX, i * height + vOffset);
+          //TODO: Deal with CSS lineheight in font string when computing _lineHeight
+            ctx.fillText(line.replace(/&nbsp;/g, ' ') || '', startX, (i + firstLine) * height + vOffset);
         });
     },
 
@@ -154,7 +156,7 @@ WV.Text = WV.extend(WV.View, {
 
   WV.Text.measure = function(font, text)
   {
-      el = el || Ext.DomHelper.append(Ext.getBody(), { id: 'wv-shared-text-metrics', style: 'position: absolute; top: -1000px; left: -1000px;'}, true).dom;
+      el = el || Ext.DomHelper.append(Ext.getBody(), { id: 'wv-shared-text-metrics', style: 'display:inline; position: absolute; top: -1000px; left: -1000px; white-space:pre;'}, true).dom;
 
       el.style.font = font;
       el.innerHTML = text.replace(/\n/g, '<br>');
