@@ -136,19 +136,6 @@ WV.Window = WV.extend(WV.View, {
       this.redrawIfNeeded();
     },
 
-    hitTest: function(point) {
-      // We need to scale the point if the canvas is scaled for proper hit testing
-      if (!this.isFullScreen) {
-        var st = getComputedStyle(this.canvas),
-            scaledW = parseFloat(st.width),
-            scaledH = parseFloat(st.height);
-
-        point.x = point.x / (scaledW / this.canvas.width);
-        point.y = point.y / (scaledH / this.canvas.height);
-      }
-      return WV.Window.superclass.hitTest.call(this, point);
-    },
-
     makeFirstResponder: function(newResponder)
     {
         if (this.firstResponder === newResponder) { return true; }

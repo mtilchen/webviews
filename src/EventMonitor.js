@@ -363,9 +363,20 @@
             this.monitorEvent('keyDown');
             this.monitorEvent('keyUp');
         },
+        scalePoint: function(point) {
+          var canvas = this.window.canvas,
+              st = getComputedStyle(canvas),
+              scaledW = parseFloat(st.width),
+              scaledH = parseFloat(st.height);
+
+          return { x: point.x / (scaledW / canvas.width),
+                   y: point.y / (scaledH / canvas.height) };
+
+        },
         monitorEvent: function(name, preserveCase)
         {
             var win = this.window, // Our WV.Window
+                me = this,
                 registerName = preserveCase ? name : name.toLocaleLowerCase(),  // Listen for events using this name/type
                 ename = name.replace('MSPointer', 'mouse');  // ename represents the name of the function we will invoke on firstResponder
 
@@ -423,8 +434,15 @@
                        ev.canvasY = ev[posPropY];
                     }
 
-                    targetV = win.hitTest({ x: ev.canvasX - pointerOffset,
-                                            y: ev.canvasY - 2 * pointerOffset });
+                    var p = { x: ev.canvasX - pointerOffset,
+                              y: ev.canvasY - 2 * pointerOffset };
+
+                    // We need to scale the point if the canvas is scaled for proper hit testing
+                    if (!win.isFullScreen) {
+                      p = me.scalePoint(p);
+                    }
+
+                    targetV = win.hitTest(p);
                 }
 
                 if (targetV)

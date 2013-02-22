@@ -246,7 +246,15 @@
           touch.previousWindowY = touch.windowY;
         }
 
-        touch.view = touch.view || win.hitTest({ x: touch.windowX, y: touch.windowY });
+        if (!touch.view) {
+          var point = { x: touch.windowX, y: touch.windowY };
+
+          // We need to scale the point if the canvas is scaled for proper hit testing
+          if (!win.isFullScreen) {
+            scalePoint(point, win);
+          }
+          touch.view = win.hitTest(point);
+        }
       }
 
       sharedTouchEvent.rotation = ev.rotation;
@@ -274,6 +282,16 @@
 
     }
 
+    function scalePoint(point, win) {
+          var st = getComputedStyle(win.canvas),
+              scaledW = parseFloat(st.width),
+              scaledH = parseFloat(st.height);
+
+      return { x: point.x / (scaledW / win.canvas.width),
+               y: point.y / (scaledH / win.canvas.height) };
+
+    }
+
     WV.TouchEventMonitor = WV.extend(Object, {
         constructor: function(ownerWindow)
         {
@@ -289,6 +307,7 @@
 //            this.monitorEvent('gesturechange');
 //            this.monitorEvent('gestureend');
         },
+
         monitorEvent: function(name, preserveCase)
         {
             var win = this.window, // Our WV.Window
@@ -296,7 +315,7 @@
 
             document.body.addEventListener(name, function(e) {
 
-              var targets, rect, canvasRect, proceed,
+              var targets,  proceed,
                   isKeyEvent = ename.indexOf('key') === 0;
 
               proceed = monitors[ename].before ? monitors[ename].before(e) : true;
