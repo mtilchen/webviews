@@ -247,6 +247,21 @@ WV = (function() {
           return Math.floor(Math.random() * (max - min + 1)) + min;
         },
 
+        // Assumes format for A and B: [m11, m21m, m12, m22, tx, ty] (where tx is m13 and ty is m23)
+        //                             [a,   b,    c,   d,   e,  f]
+        multiplyMatrix: function(A, B) {
+          var C = [];
+
+          C[0] = A[0] * B[0] + A[2] * B[1];
+          C[1] = A[1] * B[0] + A[3] * B[1];
+          C[2] = A[0] * B[2] + A[2] * B[3];
+          C[3] = A[1] * B[2] + A[3] * B[3];
+          C[4] = A[0] * B[4] + A[2] * B[5] + A[4];
+          C[5] = A[1] * B[4] + A[3] * B[5] + A[5];
+
+          return C;
+        },
+
         apply: Ext.apply,
         applyIf: Ext.applyIf,
         isArray: Ext.isArray,
