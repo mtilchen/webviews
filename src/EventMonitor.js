@@ -48,14 +48,14 @@
                         if (prevOver && !WV.rectContainsRect(prevOver.convertRectToView(), targetV.convertRectToView()))
                         {
                             targetV = prevOver;
-                            createMouseEvent();
+                            createMouseEvent(win);
                             prevOver.mouseExited(sharedMouseEvent);
                             targetV = mouseOverOwners[touchId];
                         }
 
                         if (prevOver && !WV.rectContainsRect(targetV.convertRectToView(), prevOver.convertRectToView()))
                         {
-                            createMouseEvent();
+                            createMouseEvent(win);
                             mouseOverOwners[touchId].mouseEntered(sharedMouseEvent);
                         }
                     }
@@ -66,7 +66,7 @@
                         if (targetV.draggable === false)
                         {
                             wasDragged = true;
-                            createMouseEvent();
+                            createMouseEvent(win);
                             mouseDownOwners[touchId].mouseDragged(sharedMouseEvent);
                         }
                         //return false;
@@ -75,12 +75,12 @@
             },
 
             mouseUp: {
-                before: function()
+                before: function(win)
                 {
                     // Always call mouseUp on the mouseDownOwner after a drag
                     if (wasDragged && mouseDownOwners[touchId])
                     {
-                        createMouseEvent();
+                        createMouseEvent(win);
                         mouseDownOwners[touchId].mouseUp(sharedMouseEvent);
                         return false;
                     }
@@ -122,35 +122,12 @@
                 before: function()
                 {
                     ev.preventDefault();
-                    if (ev.wheelDeltaY)
-                    {
-                        wheelDeltaY = ev.wheelDeltaY / 4;
-                    }
-                    if (ev.wheelDelta)
-                    {
-                        wheelDelta = ev.wheelDelta / 4;
-                    }
-                    if (ev.wheelDeltaX)
-                    {
-                      wheelDeltaX = ev.wheelDeltaX / 4;
-                    }
-                    if (ev.detail)
-                    {
-                      //TODO: Buffer these so that we can send X/Y deltas together instead of one at a time in alternation (smoother drawing)
-                      if (ev.axis === ev.HORIZONTAL_AXIS)
-                      {
-                        wheelDeltaX = -ev.detail;
-                      }
-                      else
-                      {
-                        wheelDeltaY = -ev.detail;
-                      }
-                    }
                 },
                 after: function()
                 {
                     wheelDeltaY = 0;
                     wheelDeltaX = 0;
+                    wheelDelta  = 0;
                 }
             },
             click: {
@@ -256,16 +233,49 @@
         wasCancelled = true;
     }
 
+     function scalePoint(point, win) {
+        var canvas = win.canvas,
+            st = getComputedStyle(canvas),
+            scaledW = parseFloat(st.width),
+            scaledH = parseFloat(st.height);
 
-    function createMouseEvent()
+        point.x = Math.round(point.x / (scaledW / canvas.width)),
+        point.y = Math.round(point.y / (scaledH / canvas.height));
+      }
+
+    function computeWheelDelta() {
+      wheelDeltaY = wheelDelta = (ev.wheelDelta || ev.delta || 0) / 4;
+      if (ev.wheelDeltaY || ev.deltaY)
+      {
+          wheelDeltaY = (ev.wheelDeltaY || ev.deltaY) / 4;
+      }
+      wheelDeltaX = (ev.wheelDeltaX || ev.deltaX || 0) / 4;
+
+      if (Ext.isGecko && ev.detail)
+      {
+        //TODO: Buffer these so that we can send X/Y deltas together instead of one at a time in alternation (smoother drawing)
+        if (ev.axis === ev.HORIZONTAL_AXIS)
+        {
+          wheelDeltaX = -Math.ceil(ev.detail/3);
+        }
+        else
+        {
+          wheelDeltaY = -Math.ceil(ev.detail/3);
+        }
+      }
+    }
+
+    function createMouseEvent(win)
     {
         var sme = sharedMouseEvent;
 
-//        sme.x = x < 0 ? 0 : Math.min(x, target.w);
-//        sme.y = y < 0 ? 0 : Math.min(y, target.h);
-//        sme.windowPoint =  { x: ev.clientX,   y: ev.clientY };
         sme.displayPoint = { x: ev.screenX - pointerOffset,   y: ev.screenY - 2 * pointerOffset};
         sme.windowPoint = { x: ev.canvasX - pointerOffset, y: ev.canvasY - 2 * pointerOffset }; // Our WV.Window, not the browser window
+         // We need to scale the point if the canvas is scaled for proper hit testing
+        if (!win.isFullScreen) {
+          scalePoint(sme.windowPoint, win);
+        }
+
         sme.timestamp = ev.timeStamp;
         sme.target = targetV;
         sme.touchId = touchId;
@@ -278,8 +288,13 @@
 
         if (wasDragged === true)
         {
-            sme.deltaX = ev.clientX - downX;
-            sme.deltaY = ev.clientY - downY;
+           var delta = { x: ev.clientX - downX, y: ev.clientY - downY};
+
+           if (!win.isFullScreen) {
+             scalePoint(delta, win);
+           }
+           sme.deltaX = delta.x;
+           sme.deltaY = delta.y;
         }
         else
         {
@@ -287,6 +302,7 @@
             delete sme.deltaY;
         }
 
+        computeWheelDelta();
         if (wheelDeltaX)
         {
             sme.wheelDeltaX = wheelDeltaX;
@@ -308,7 +324,7 @@
         if (wheelDelta)
         {
           sme.wheelDelta = wheelDelta;
-          if (!wheelDeltaX && !wheelDeltaY) { // Assume the x axis in the ambiguous case
+          if (!wheelDeltaX && !wheelDeltaY) { // Assume the Y axis in the ambiguous case
             sme.wheelDeltaY = wheelDelta;
           }
         }
@@ -363,20 +379,9 @@
             this.monitorEvent('keyDown');
             this.monitorEvent('keyUp');
         },
-        scalePoint: function(point) {
-          var canvas = this.window.canvas,
-              st = getComputedStyle(canvas),
-              scaledW = parseFloat(st.width),
-              scaledH = parseFloat(st.height);
-
-          return { x: point.x / (scaledW / canvas.width),
-                   y: point.y / (scaledH / canvas.height) };
-
-        },
         monitorEvent: function(name, preserveCase)
         {
             var win = this.window, // Our WV.Window
-                me = this,
                 registerName = preserveCase ? name : name.toLocaleLowerCase(),  // Listen for events using this name/type
                 ename = name.replace('MSPointer', 'mouse');  // ename represents the name of the function we will invoke on firstResponder
 
@@ -392,10 +397,9 @@
                 wasCancelled = false;
                 targetV = null;
 
-                // Stop everything if we are ignoring events
                 if (ignoreEvents)
                 {
-                    cancel();
+//                    cancel();
                     return wasCancelled;
                 }
 
@@ -413,19 +417,15 @@
                 else // Mouse event
                 {
                     /*
-                     * Target is an element outside a non-full screen app or an absolutely positioned
-                     * within our canvas' rect. In the Translate the point to our canvas' coordinates
+                     * Target is an element outside a non-full screen app or an absolutely positioned element
+                     * within our canvas' rect. Translate the point into the canvas' coordinates.
                      */
                     if (el !== win.canvas)
                     {
-                        if (el.getAttribute('_textOverlay'))
-                        {
-                            rect = el.getBoundingClientRect();
-                            canvasRect = win.canvas.getBoundingClientRect();
-                            ev.canvasX = rect.left + ev[posPropX] - canvasRect.left;
-                            ev.canvasY = rect.top + ev[posPropY] - canvasRect.top;
-                        }
-                        // Not one of our text overlays so do not set targetV, event ignored
+                      rect = el.getBoundingClientRect();
+                      canvasRect = win.canvas.getBoundingClientRect();
+                      ev.canvasX = rect.left + ev[posPropX] - canvasRect.left;
+                      ev.canvasY = rect.top + ev[posPropY] - canvasRect.top;
                     }
                     else
                     {
@@ -434,15 +434,10 @@
                        ev.canvasY = ev[posPropY];
                     }
 
-                    var p = { x: ev.canvasX - pointerOffset,
-                              y: ev.canvasY - 2 * pointerOffset };
+                    createMouseEvent(win);
 
-                    // We need to scale the point if the canvas is scaled for proper hit testing
-                    if (!win.isFullScreen) {
-                      p = me.scalePoint(p);
-                    }
-
-                    targetV = win.hitTest(p);
+                    targetV = win.hitTest(sharedMouseEvent.windowPoint);
+                    sharedMouseEvent.target = targetV;
                 }
 
                 if (targetV)
@@ -456,13 +451,13 @@
                         if (isKeyEvent)
                         {
                             createKeyEvent();
-                            targetV[ename](sharedKeyEvent);
+                            // TODO: Should there ever be a firstResponder with interactionEnabled === false?
+                            if (targetV.interactionEnabled) {
+                              targetV[ename](sharedKeyEvent);
+                            }
                         }
                         else
                         {
-                            createMouseEvent();
-
-                           //console.log(sharedMouseEvent.wheelDeltaX + ', ' + sharedMouseEvent.wheelDeltaY);
                             targetV[ename](sharedMouseEvent);
 
                             // Prevent our handler from being called twice in MSPointer environments
