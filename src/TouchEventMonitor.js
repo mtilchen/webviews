@@ -46,6 +46,9 @@
             return { x: this.previousWindowX - windowOrigin.x, y: this.previousWindowY - windowOrigin.y };
           }
         }
+      },
+      toString: function() {
+        return ['windowX: ', this.windowX, ' windowY: ', this.windowY, ' (',  this.view ? this.view.id : 'null', ')'].join('');
       }
     });
 
@@ -184,6 +187,7 @@
     {
       var domEl, i, l,
           rect, canvasRect,
+          point = {},
           touchIsNew,
           touch, nativeTouch,
           targetTouchesMap = {};
@@ -223,6 +227,12 @@
             touch.windowX = rect.left + nativeTouch.pageX - canvasRect.left;
             touch.windowY = rect.top + nativeTouch.pageY - canvasRect.top;
           }
+          else {
+            // Ignore this event, it is not targeted to a piece of dom we "own"
+            sharedTouchEvent.allTouches.pop();
+            delete touchMap[nativeTouch.identifier];
+            break;
+          }
         }
         else
         {
@@ -240,6 +250,11 @@
           }
         }
 
+        // We need to scale the point if the canvas is scaled for proper hit testing
+        if (!win.isFullScreen) {
+          scaleTouchCoordinates(touch, win);
+        }
+
         if (touchIsNew)
         {
           touch.previousWindowX = touch.windowX;
@@ -247,12 +262,9 @@
         }
 
         if (!touch.view) {
-          var point = { x: touch.windowX, y: touch.windowY };
+          point.x = touch.windowX;
+          point.y =  touch.windowY;
 
-          // We need to scale the point if the canvas is scaled for proper hit testing
-          if (!win.isFullScreen) {
-            scalePoint(point, win);
-          }
           touch.view = win.hitTest(point);
         }
       }
@@ -261,17 +273,21 @@
       sharedTouchEvent.scale = ev.scale;
       sharedTouchEvent.timestamp = Date.now();
 
-      // Build the target/touches map containing the changed touches for each target
+      // Build the target -> touches map containing the changed touches for each target
       for (i = 0, l = ev.changedTouches.length; i < l; i++)
       {
         touch = touchMap[ev.changedTouches.item(i).identifier];
-        touch.timestamp = sharedTouchEvent.timestamp;
 
-        if (!targetTouchesMap[touch.view.id])
-        {
-          targetTouchesMap[touch.view.id] = [];
+        // This may be a touch we decided to ignore in the loop above
+        if (touch) {
+          touch.timestamp = sharedTouchEvent.timestamp;
+
+          if (!targetTouchesMap[touch.view.id])
+          {
+            targetTouchesMap[touch.view.id] = [];
+          }
+          targetTouchesMap[touch.view.id].push(touch);
         }
-        targetTouchesMap[touch.view.id].push(touch);
       }
 
       return targetTouchesMap;
@@ -282,14 +298,14 @@
 
     }
 
-    function scalePoint(point, win) {
-          var st = getComputedStyle(win.canvas),
+    function scaleTouchCoordinates(touch, win) {
+          var canvas = win.canvas,
+              st = getComputedStyle(canvas),
               scaledW = parseFloat(st.width),
               scaledH = parseFloat(st.height);
 
-      return { x: point.x / (scaledW / win.canvas.width),
-               y: point.y / (scaledH / win.canvas.height) };
-
+      touch.windowX = Math.round(touch.windowX / (scaledW / canvas.width));
+      touch.windowY = Math.round(touch.windowY / (scaledH / canvas.height));
     }
 
     WV.TouchEventMonitor = WV.extend(Object, {
