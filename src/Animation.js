@@ -2,7 +2,7 @@
 (function() {
 
     var SEC_MS = 1000,
-        FPS = 35,
+        FPS = 60,
         UNIT_RE = /(^-?(\d+)(.\d*)?)(px|deg)/,
         COLOR_RE = /^#((\d|[A-F]){6})/i,
         animIdSeed = 0,
@@ -314,6 +314,7 @@
                 var anim;
                 config.owner = this;
                 anim = config instanceof WV.Animation ? config : new WV.Animation(config);
+                anim.reversed = false;
                 uncommittedAnimations.push(anim);
                 this._animCount = this._animCount || 0;
                 this._animCount += 1;
@@ -337,7 +338,10 @@
         removeAnimation: function(animation)
         {
             // The animation loop will pick this up and it will be removed properly
-           this.animations[animation.id].cancelled = true;
+          var a = this.animations[animation.id];
+          if (a) {
+            a.cancelled = true;
+          }
           return this;
         }
     });
