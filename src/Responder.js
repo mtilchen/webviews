@@ -65,7 +65,8 @@ WV.Responder = {
             }
             else if (eName.indexOf('touch') === 0)
             {
-                WV.log(eName, ':\t', misc, '\t', e);
+               // misc in an array of touches
+                WV.log('(', eName, ') ', this.id, ' - ', misc.join('\t '));
             }
             else
             {
