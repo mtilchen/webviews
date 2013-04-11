@@ -89,7 +89,7 @@ WV.View = WV.extend(Ext.util.Observable, {
         // Set the styles and other visual properties
         this.setStyle(style, true);
         this.setHidden(this.hidden);
-        this.setClipToBounds(this.clipToBounds);
+        this.clipToBounds = !!this.clipToBounds;
         this.setEnabled(this.enabled);
 
         WV.addToCache(this);
@@ -99,6 +99,9 @@ WV.View = WV.extend(Ext.util.Observable, {
         {
             this.convertDimensions();
         }
+
+        // m11, m12, m21, m22, tx, ty - Identitity matrix
+        this._transform = [1, 0, 0, 1, 0, 0];
 
         // Add all of our subviews
         for (var i = 0, l = subviewsToAdd.length; i < l; i++)
@@ -458,7 +461,7 @@ WV.View = WV.extend(Ext.util.Observable, {
 
           if (top !== false) {
             // We need to replay the transformations from our superview and up
-            this.accmulateTransforms(ctx);
+            this.accumulateTransforms(ctx);
           }
           else {
             this.applyTransform(ctx);
@@ -489,58 +492,60 @@ WV.View = WV.extend(Ext.util.Observable, {
     },
 
     applyTransform: function(ctx) {
+      /*
+       Transforms are applied from style properties in order:
+          1) translate
+          2) rotate (clockwise around transform origin),
+          3) scale (centered on transform origin)
+       */
+      // TODO: Support skew
+
       var st = this.style,
           tx = (st.translateX || 0) + this.x,
           ty = (st.translateY || 0) + this.y,
+          tm = [1, 0, 0, 1, tx, ty], // Identity plus the original translation
+          sx = st.scaleX === 0 ? 0 : st.scaleX || 1,
+          sy = st.scaleY === 0 ? 0 : st.scaleY || 1,
           orgX = (st.transformOriginX === 0 ? 0 : (st.transformOriginX || 0.5)) * this.w,
-          orgY = -((st.transformOriginY === 0 ? 0 : (st.transformOriginY || 0.5)) * this.h),
-          orgXAdj, orgYAdj;
+          orgY = (st.transformOriginY === 0 ? 0 : (st.transformOriginY || 0.5)) * this.h;
 
+      // Translate to the transform origin so rotation and scaling will take place around that point
+      tm = WV.multiplyMatrix(tm, [1,0,0,1, orgX, orgY]);
 
-      if (tx || ty) {
-          ctx.translate(tx, ty);
-      }
-
-      // TODO: Support skew
       if (st.rotate) {
           // The calculations below assume a) flipped y-axis b) clockwise rotation
-          var deg2Rad = Math.PI * 2 / 360,
+          var deg2Rad = Math.PI / 180,
               radians = st.rotate * deg2Rad,
               cosTheta = Math.cos(radians),
               sinTheta = Math.sin(radians),
               m11, m12, m21, m22;
 
-          // Counter-clockwise
-//          m11 = cosTheta, m12 = -sinTheta,
-//          m21 = sinTheta, m22 = cosTheta;
+          // Clockwise
+          m11 = cosTheta, m12 = -sinTheta,
+          m21 = sinTheta, m22 = cosTheta;
 
-         // Clockwise
-          m11 = cosTheta; m12 = sinTheta;
-          m21 = -sinTheta; m22 = cosTheta;
+         // Counter-Clockwise
+//          m11 = cosTheta; m12 = sinTheta;
+//          m21 = -sinTheta; m22 = cosTheta;
 
-          // Calculate the shift of the point we are rotating around because the canvas rotates
-          // around its origin.
-          orgXAdj = orgX - (orgX * m11) - (orgY * m12);
-          orgYAdj = orgY - (orgX * m21) - (orgY * m22);
-
-          // Apply the rotation and the shift together
-          ctx.transform(m11, m12, m21, m22, orgXAdj, -orgYAdj);
+          // Rotate
+          tm = WV.multiplyMatrix(tm, [m11, m21, m12, m22, 0, 0]);
       }
-
-      var sx = st.scaleX === 0 ? 0 : st.scaleX || 1,
-          sy = st.scaleY === 0 ? 0 : st.scaleY || 1;
 
       if (sx !== 1 || sy !== 1) {
-         // TODO: Do all the transformations in one call to transform with a sequence of matrix ops
-         ctx.translate(orgX, -orgY);
-         ctx.scale(sx, sy);
-         ctx.translate(-orgX, orgY);
+        // Scale
+        tm = WV.multiplyMatrix(tm, [sx, 0, 0, sy, 0, 0]);
       }
+
+      // Undo the transform origin translation
+      tm = WV.multiplyMatrix(tm, [1,0,0,1, -orgX, -orgY]);
+      this._transform = tm;
+      ctx.transform(tm[0], tm[1], tm[2], tm[3], tm[4], tm[5]);
     },
 
-    accmulateTransforms: function(ctx) {
+    accumulateTransforms: function(ctx) {
       if (this.superView) {
-        this.superView.accmulateTransforms(ctx);
+        this.superView.accumulateTransforms(ctx);
       }
       this.applyTransform(ctx);
     },
@@ -990,17 +995,20 @@ WV.View = WV.extend(Ext.util.Observable, {
       if (top !== false) {
         // Identity
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        // TODO: If this is not the window we need to replay all the transformations from our ancestors first.
+        // Replay all the transforms from the window down to ourself.
+        this.accumulateTransforms(ctx);
         // Point needs to be in window coordinates for use in isPointInPath
         point = this.convertPointToView(point);
       }
-
-      // Apply our transform and replay our path, then see if the point is inside
-      this.applyTransform(ctx);
+      else {
+        // We don't need to replay the transformations of our ancestors because we are ina a recursive call
+        this.applyTransform(ctx);
+      }
 
       // Replay our path, but don't draw anything
       this.roundedRect(ctx, this.w, this.h, st.cornerRadius);
 
+      // Check to see if the point is inside
       if (sv && !ctx.isPointInPath(point.x, point.y)) {
           ctx.restore();
           return null;
@@ -1019,44 +1027,49 @@ WV.View = WV.extend(Ext.util.Observable, {
       return hit ? hit : this;
     },
 
-    // view passed in must be an ancestor for now, if no ancestor passed, assumes Window
-    convertPointFromView: function(point, ancestor)
-    {
-        var convX = point.x,
-            convY = point.y,
-            v = this;
+    computeTransform: function() {
+      var tm = this._transform,
+          sv = this.superView;
 
-        ancestor = ancestor || v.window;
+      if (sv) {
+        tm = WV.multiplyMatrix(sv.computeTransform(), tm);
+      }
 
-        while (v !== ancestor && v.superView)
-        {
-            convX = convX - v.x;
-            convY = convY - v.y;
-
-            v = v.superView;
-        }
-
-        return { x: convX, y: convY };
+      return tm;
     },
 
-    // view passed in must be an ancestor for now, if no ancestor passed, assumes Window
-    convertPointToView: function(point, ancestor)
-    {
-        var convX = point.x,
-            convY = point.y,
-            v = this;
+    // If "fromView" is null/undefined then assume "from" is the window
+    convertPointFromView: function(point, fromView) {
+      var tmTo = this.computeTransform(),
+          x, y;
 
-        ancestor = ancestor || v.window;
+      if (fromView) {
+        // Get the point in window coordinates
+        point = fromView.convertPointToView(point, null);
+      }
 
-        while (v && (v !== ancestor))
-        {
-            convX = convX + v.x;
-            convY = convY + v.y;
+      y = (tmTo[1] * point.x - tmTo[1] * tmTo[4] + tmTo[5] * tmTo[0] -point.y * tmTo[0]) /
+          (tmTo[1] * tmTo[2] - tmTo[3] * tmTo[0]);
 
-            v = v.superView;
-        }
+      x = (point.x - tmTo[2] * y - tmTo[4]) / tmTo[0];
 
-        return { x: convX, y: convY };
+      return { x: x, y: y };
+    },
+
+    // If "fromView" is null/undefined then assume "from" is the window
+    convertPointToView: function(point, toView) {
+      var tmFrom = this.computeTransform(),
+          x, y;
+
+      // Convert the point to window coordinates. The window always has the identity transform
+      x = tmFrom[0] * point.x + tmFrom[2] * point.y + tmFrom[4];
+      y = tmFrom[1] * point.x + tmFrom[3] * point.y + tmFrom[5];
+
+      if (toView) {
+        return toView.convertPointFromView({x: x, y: y}, null);
+      }
+
+      return { x: x, y: y };
     },
 
     convertRectToView: function(rect, ancestor)
