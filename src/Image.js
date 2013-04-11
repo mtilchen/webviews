@@ -69,6 +69,7 @@
             imageViewRefs[this.ownerView.id] = Math.max(0, count);
             this.ownerView.fireEvent('imageload', this.ownerView, this, count);
           }
+          this.onLoad(this.ownerView, this._image);
         }, this, { single: true });
         if (this.ownerView) {
           var count = imageViewRefs[this.ownerView.id] = imageViewRefs[this.ownerView.id] || 0;
@@ -76,7 +77,9 @@
           this.ownerView.fireEvent('imagerequest', this.ownerView, this, count);
         }
         this._image.src = this.src;
-      }
+      },
+
+      onLoad: function(owner, img) {}
 
     //    setHeight: function(h)
     //    {
