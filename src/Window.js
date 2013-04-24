@@ -72,35 +72,35 @@ WV.Window = WV.extend(WV.View, {
         this.window = this; // For consistency
     },
 
-    setViewsNeedDisplay: function(view)
-    {
-        var queue = this.drawQueue;
+    setViewsNeedDisplay: function(view) {
+      var queue = this.drawQueue,
+          wasEmpty = queue.length < 1;
 
-        // Prevent views from being re-added to the queue if they are already in line by using a flag.
-        // This will prevent recursive death if a view gets setNeedsDisplay called while drawing
-        // Also, if a view is already in the queue and not at the end, move it to the end of the queue.
-        if (!view || queue[queue.length] === view) { return; }
+      // Prevent views from being re-added to the queue if they are already in line by using a flag.
+      // This will prevent recursive death if a view gets setNeedsDisplay called while drawing
+      // Also, if a view is already in the queue and not at the end, move it to the end of the queue.
+      if (!view || queue[queue.length] === view) { return; }
 
-        if (view._inDrawQueue_) {
-          queue.splice(queue.indexOf(view), 1);
-        }
-
+      if (view._inDrawQueue_) {
+        queue.splice(queue.indexOf(view), 1);
+      }
+      else {
         view._inDrawQueue_ = true;
-        queue[queue.length] = view;
+      }
 
-        if (queue.length === 1) // We were empty, just added a view
-        {
-          window.requestAnimationFrame(function() {
-            while (queue.length)
-            {
-              queue[0].redrawIfNeeded();
-              delete queue[0]._inDrawQueue_;
-              queue.shift();
-            }
-            //WV.debug('**** Finish Drawing Window ****');
-          }, this.canvas);
-          //WV.debug('**** Start Drawing Window ****');
-        }
+      queue[queue.length] = view;
+
+      if (wasEmpty) {
+        window.requestAnimationFrame(function() {
+          while (queue.length) {
+            queue[0].redrawIfNeeded();
+            delete queue[0]._inDrawQueue_;
+            queue.shift();
+          }
+          //WV.debug('**** Finish Drawing Window ****');
+        }, this.canvas);
+        //WV.debug('**** Start Drawing Window ****');
+      }
     },
 
     baseDraw: function(rect, ctx)
