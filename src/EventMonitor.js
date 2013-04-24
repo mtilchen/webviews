@@ -14,7 +14,6 @@
         wasCancelled = false,
         ignoreEvents = false,
         ev, // Current Ext event
-        be, // Current browserEvent
         targetV, // Current target View
         sharedMouseEvent = { cancel: cancel },
         sharedKeyEvent = { cancel: cancel },
