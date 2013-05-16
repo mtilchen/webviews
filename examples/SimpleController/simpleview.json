@@ -1,0 +1,12 @@
+{
+  "x": "center",
+  "y": "center",
+  "w": "80%",
+  "h": "80%",
+  "style": {
+    "borderWidth": 3,
+    "borderColor": "black",
+    "color": "gray"
+  },
+  "ref": "simple"
+}
