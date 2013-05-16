@@ -7,6 +7,14 @@ WV.Controller = WV.extend(Object, {
     config = config || {};
     WV.apply(this, config);
 
+    this.refs = {};
+
+    if (this.view) {
+      this.setView(this.view);
+    }
+  },
+
+  setView: function(view) {
     if (typeof view === 'object') {  // We got a view instance
       if (view instanceof WV.View) {
         this.view = view;
@@ -25,22 +33,22 @@ WV.Controller = WV.extend(Object, {
 
     else { throw 'View parameter must be an instance of WV.View, a view config object or a JSON string'; }
 
-    this.refs = {};
-
     var me = this;
     setTimeout(function() {
       me.enterResponderChain();
       me.establishConnections();
-      me.init();
+      me.viewDidLoad(me.view);
     }, 0);
   },
 
-  init: function() {},
+  viewDidLoad: function(view) {},
 
   establishConnections: function(view) {
     var v = view || this.view,
         me = this,
         i, len;
+
+    if (!v) { return; }
 
     // Add refs
     if (typeof v.ref === 'string') {
@@ -49,6 +57,7 @@ WV.Controller = WV.extend(Object, {
 
     // Add actions
     // TODO: Support 'target' as a key-path into this controller
+    // TODO: Action defs should be normalized to an object literal: { 'ename': 'methodname' } or  { 'ename': { 'action': 'methodname', 'target': 'target.key.path' } }
     if (typeof v.actions === 'string' || Array.isArray(v.actions)) {
       var actionCfgs = Array.isArray(v.actions) ? v.actions : [v.actions];
 
@@ -70,6 +79,8 @@ WV.Controller = WV.extend(Object, {
   },
 
   enterResponderChain: function() {
+    if (!this.view) { return; }
+
     if (this.view.nextResponder instanceof WV.View) {
       this.nextResponder = this.view.nextResponder;
       this.view.nextResponder = this;
