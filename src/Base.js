@@ -301,14 +301,23 @@ WV = (function() {
         },
 
         // Asynchronously load the view and pass it to the controller constructor.
-        load: function(controllerCfg, viewURL, cb) {
-          if (typeof cb !== 'function') { cb = function(){}; }
+        load: function(viewURL /* [controllerCfg], [cb] */) {
+          var controllerCfg = {},
+              viewOnly = false,
+              cb = WV.emptyFn;
 
-          if (typeof controllerCfg === 'string') {
+          if (typeof arguments[1] === 'string') {
             controllerCfg = { vtype: controllerCfg };
           }
-          else {
-            controllerCfg = controllerCfg || {};
+          else if (typeof arguments[1] === 'object') {
+            controllerCfg = arguments[1];
+          }
+          else if (typeof arguments[1] === 'function') {
+            cb = arguments[1];
+            viewOnly = true;
+          }
+          if (typeof arguments[2] === 'function') {
+            cb = arguments[2];
           }
 
           Ext.Ajax.request({
@@ -316,18 +325,25 @@ WV = (function() {
             url: viewURL,
             disableCaching: true,
             callback: function(opts, success, response) {
-              var controller,
-                  controllerCls = vtypes[controllerCfg.vtype || 'controller'];
+              var controllerCls = vtypes[controllerCfg.vtype || 'controller'],
+                  view;
 
               if (!success) {
-                cb(null, 'View could not be loaded due to Ajax error');
+                cb(new Error('View could not be loaded due to Ajax error'));
               }
               else {
                 try {
-                  cb(new controllerCls(controllerCfg, response.responseText));
+                  view = JSON.parse(response.responseText);
+                  if (viewOnly) {
+                    cb(null, view);
+                  }
+                  else {
+                    controllerCfg.view = view;
+                    cb(null, new controllerCls(controllerCfg));
+                  }
                 }
                 catch (e) {
-                  cb(null, e);
+                  cb(e);
                 }
               }
             }
